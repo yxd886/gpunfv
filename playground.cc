@@ -413,8 +413,6 @@ int main(int ac, char** av) {
         }).then([port](){
            std::cout << "Seastar TCP server1 listening on port " << port << " ...\n";
            return;
-        }).then([] {
-                return main1();
-            });;
+        });
     });
 }
