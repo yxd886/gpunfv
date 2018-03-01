@@ -383,6 +383,8 @@ int main(int ac, char** av) {
             return stack_manager::get().add_stack(1, "10.29.1.13", "10.29.1.1", "255.255.255.0");
         }).then([]{
             return hook_manager::get().add_hook_point(hook_type::pure_stack, 0);
+        }).then([] {
+                return main1();
         }).then([]{
             return hook_manager::get().add_hook_point(hook_type::pure_stack, 1);
         }).then([]{
