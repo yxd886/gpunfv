@@ -33,6 +33,8 @@
 #include "netstar/preprocessor/udp_ppr.hh"
 #include "netstar/asyncflow/async_flow_io.hh"
 #include "netstar/asyncflow/sd_async_flow.hh"
+#include <cuda_runtime.h>
+#include <helper_cuda.h>
 
 using namespace seastar;
 using namespace netstar;
