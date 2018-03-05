@@ -52,8 +52,8 @@ CXXFLAGS += -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
 	    
 CUDAFLAGS += -I/usr/local/cuda-8.0/samples/common/inc  -I/usr/local/cuda-8.0/include
 
-
-LDFLAGS += `pkg-config --cflags --lib $(SEASTAR)/build/release/seastar.pc` -L/usr/local/cuda-8.0/lib64
+SEASTAR_FLAGS=$(shell pkg-config --cflags --lib $(SEASTAR)/build/release/seastar.pc)
+LDFLAGS += $(SEASTAR_FLAGS) -L/usr/local/cuda-8.0/lib64
 
 LIBS +=-lcudart
 
