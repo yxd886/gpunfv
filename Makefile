@@ -26,6 +26,7 @@ endif
 RTE_SDK ?= $(abspath ~/async-nf/seastar/dpdk)
 RTE_TARGET ?= $(shell uname -m)-native-linuxapp-gcc
 DPDK_LIB ?= dpdk
+SEASTAR=~/async-nf/seastar
 
 ifneq ($(wildcard $(RTE_SDK)/$(RTE_TARGET)/*),)
     DPDK_INC_DIR = $(RTE_SDK)/$(RTE_TARGET)/include
@@ -52,7 +53,7 @@ CXXFLAGS += -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
 CUDAFLAGS += -I$(CUDA_INC_DIR)  -I$(DPDK_INC_DIR)
 
 
-LDFLAGS += `pkg-config --cflags --lib $SEASTAR/build/release/seastar.pc` -L/usr/local/cuda-8.0/lib64
+LDFLAGS += `pkg-config --cflags --lib $(SEASTAR)/build/release/seastar.pc` -L/usr/local/cuda-8.0/lib64
 
 LIBS +=-lcudart
 
