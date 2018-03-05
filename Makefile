@@ -57,7 +57,7 @@ LDFLAGS += $(SEASTAR_FLAGS) -L/usr/local/cuda-8.0/lib64
 
 LIBS +=-lcudart
 
-ALL_SRCS = $(wildcard ./*.cc) 
+ALL_SRCS = $(wildcard ./*.cc ./samples/*.cc) 
                       
 HEADERS =  $(wildcard ./*.h )
 
