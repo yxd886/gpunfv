@@ -23,7 +23,7 @@ ifeq "$(CXXVERSION_4_8_OR_HIGHER)" "0"
   $(error g++ 4.8 or higher is required)
 endif
 
-RTE_SDK ?= $(abspath ~/async-nf/seastar/dpdk)
+RTE_SDK ?= $(abspath /home/net/async-nf/seastar/dpdk)
 RTE_TARGET ?= $(shell uname -m)-native-linuxapp-gcc
 DPDK_LIB ?= dpdk
 SEASTAR=/home/net/async-nf/seastar
