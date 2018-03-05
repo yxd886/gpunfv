@@ -81,8 +81,8 @@ PLAYGROUND_OBJS = $(filter-out main.o $(filter-out samples/playground.o,$(SAMPLE
 
 .PHONY: all clean tests protobuf
 
-#all: $(OBJS) $(CU_OBJS) $(PLAYGROUND_EXEC) 
-all: echo $(SEASTAR_FLAGS)
+all: $(OBJS) $(CU_OBJS) $(PLAYGROUND_EXEC) 
+
 clean:
 	rm -rf $(EXEC) .deps/*.d .deps/*/*.d *_test */*_test *_bench */*_bench \
 		*.a *.pb.* *.o */*.o *.gcda *.gcno */*.gcda */*.gcno \
