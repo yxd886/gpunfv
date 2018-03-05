@@ -43,7 +43,7 @@ else
         endif
     endif
 endif
-SEASTAR_FLAGS:=$(shell pkg-config --cflags --lib $(SEASTAR)/build/release/seastar.pc)
+SEASTAR_FLAGS:=$(shell pkg-config --cflags --lib /home/net/async-nf/seastar/build/release/seastar.pc)
 
 CUDA_INC_DIR= /usr/local/cuda-8.0/samples/common/inc /usr/local/cuda-8.0/include
 
@@ -81,8 +81,8 @@ PLAYGROUND_OBJS = $(filter-out main.o $(filter-out samples/playground.o,$(SAMPLE
 
 .PHONY: all clean tests protobuf
 
-all: $(OBJS) $(CU_OBJS) $(PLAYGROUND_EXEC) 
-
+#all: $(OBJS) $(CU_OBJS) $(PLAYGROUND_EXEC) 
+all: echo $(SEASTAR_FLAGS)
 clean:
 	rm -rf $(EXEC) .deps/*.d .deps/*/*.d *_test */*_test *_bench */*_bench \
 		*.a *.pb.* *.o */*.o *.gcda *.gcno */*.gcda */*.gcno \
