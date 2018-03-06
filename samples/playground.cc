@@ -50,6 +50,8 @@
 #define MAX_MATCH 8192
 #include <stdlib.h>
 #include <time.h>
+#include <cuda_runtime.h>
+#include <helper_cuda.h>
 
 using namespace seastar;
 using namespace netstar;
@@ -509,7 +511,16 @@ public:
        }
        void ips_detect(net::packet *rte_pkt, struct ips_flow_state* state){
 
+           cudaError_t err=cudaSuccess;
            struct aho_pkt* pkts=(struct aho_pkt* )malloc(sizeof(struct aho_pkt));
+           err=cudaHostRegister(rte_pkt,sizeof(net::packet),cudaHostRegisterPortable);
+           if(err==cudaSuccess){
+               printf("cudaHostRegister success!\n");
+           }else if(err==cudaErrorHostMemoryAlreadyRegistered){
+               printf("cudaErrorHostMemoryAlreadyRegistered!\n");
+           }else{
+               printf("cudaHostRegister fail!\n");
+           }
            parse_pkt(rte_pkt, state,pkts);
            struct aho_ctrl_blk worker_cb;
            worker_cb.stats = _f.ips.stats;
