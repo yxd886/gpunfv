@@ -462,8 +462,8 @@ public:
             forward_pkts(index);
 
         }
-        future<>update_state(){
-            if(packets[current_idx].size()==1){   //if it is the first packets[current_idx] of this flow in this batch
+        future<>update_state(uint64_t index){
+            if(packets[index].size()==1){   //if it is the first packets[current_idx] of this flow in this batch
                 if(_initialized){    //if it has already processed previous batch, then the state is newer than remote, so update to remote.
                     auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
                     return _f._mc.query(Operation::kSet, mica_key(key),
@@ -515,18 +515,21 @@ public:
                 if(packets[_f._batch.current_idx].empty()){
                     _f._batch._flows[_f._batch.current_idx].push_back(this);
                 }
-                packets[_f._batch.current_idx].push_back(std::move(_ac.cur_packet()));
+
                 _f._pkt_counter++;
                 std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
-                if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
-                    _f._batch.need_process=true;
-                    _f._pkt_counter=0;
-                    _f._batch.current_idx=!_f._batch.current_idx;
 
-
-                }
-                return update_state()                       //update the flow state when receive the first pkt of this flow in this batch.
+                return update_state(_f._batch.current_idx)                       //update the flow state when receive the first pkt of this flow in this batch.
                         .then([this](){
+                    packets[_f._batch.current_idx].push_back(std::move(_ac.cur_packet()));
+
+                    if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
+                         _f._batch.need_process=true;
+                         _f._pkt_counter=0;
+                         _f._batch.current_idx=!_f._batch.current_idx;
+
+
+                     }
                     if(_f._batch.need_process==true&&_f._batch.processing==false){
                         //reach batch size schedule
                         _f._batch.processing=true;
