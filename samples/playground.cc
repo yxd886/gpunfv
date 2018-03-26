@@ -144,6 +144,10 @@ public:
         assert(num_threads >= 1 && num_threads <= AHO_MAX_THREADS);
 
         stats =(struct stat_t*)malloc(num_threads * sizeof(struct stat_t));
+
+        //gpu map
+        gpu_mem_map(stats,num_threads * sizeof(struct stat_t));
+
         for(i = 0; i < num_threads; i++) {
             stats[i].tput = 0;
         }
@@ -174,6 +178,15 @@ public:
             aho_build_ff(&dfa_arr[i]);
             aho_preprocess_dfa(&dfa_arr[i]);
         }
+
+        // Map ips object
+
+        gpu_mem_map(this, sizeof(IPS));
+    }
+    ~IPS(){
+        gpu_mem_unmap(stats);
+        gpu_mem_unmap(this);
+        free(stats);
     }
     struct aho_dfa dfa_arr[AHO_MAX_DFA];
     struct stat_t *stats;
@@ -735,9 +748,7 @@ public:
                 }
             }
 
-            // Map ips object
-            IPS *ips = &_flows[0]->_f.ips;
-            gpu_mem_map(ips, sizeof(IPS));
+
 
             /////////////////////////////////////////////
             // Launch kernel
@@ -754,8 +765,6 @@ public:
             // Wait for GPU process
             gpu_sync();
 
-            // Unmap ips object
-            gpu_mem_unmap(ips);
 
             // Unmap every packet
             for(int i = 0; i < partition; i++){
