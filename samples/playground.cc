@@ -116,8 +116,8 @@ public:
 
 public:
     struct async_flow_config {
-        static constexpr int max_event_context_queue_size = 6;
-        static constexpr int new_flow_queue_size = 1000;
+        static constexpr int max_event_context_queue_size = 50;
+        static constexpr int new_flow_queue_size = 10000;
         static constexpr int max_flow_table_size = 100000;
         static constexpr int max_directions = 2;
 
