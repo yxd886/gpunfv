@@ -752,7 +752,7 @@ public:
 
             /////////////////////////////////////////////
             // Launch kernel
-            gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)ips, max_pkt_num_per_flow, partition);
+            gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)&(_flows[0]->_f.ips), max_pkt_num_per_flow, partition);
             //
             /////////////////////////////////////////////
             
