@@ -409,7 +409,7 @@ public:
 
             _f._pkt_counter-=packets.size();
             process_pkts();
-            std::vector<flow_operator*>it;
+            std::vector<flow_operator*>::iterator it;
             for(it=_f._batch._flows.begin();it!=_f._batch._flows.end();it++){
                 if(*it==this){
                     break;
