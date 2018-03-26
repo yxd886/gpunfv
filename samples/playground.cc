@@ -375,7 +375,7 @@ public:
     	sd_async_flow<dummy_udp_ppr> _ac;
         forwarder& _f;
         ips_flow_state _fs;
-        std::vector<net::packet> packets;
+        std::vector<net::packet> packets[2];
         bool _initialized;
 
 
@@ -387,15 +387,15 @@ public:
         /*flow_operator(flow_operator&& other) noexcept
             : _ac(std::move(other._ac)),_f(other._f),_fs(other._fs) ,_initialized(other._initialized){
 
-        	for(unsigned int i=0;i<other.packets.size();i++){
-        		packets.push_back(std::move(other.packets[i]));
+        	for(unsigned int i=0;i<other.packets[current_idx].size();i++){
+        		packets[current_idx].push_back(std::move(other.packets[current_idx][i]));
         	}
         }
         ~flow_operator(){
-        	std::cout<<"packets.size:"<<packets.size()<<std::endl;
+        	std::cout<<"packets[current_idx].size:"<<packets[current_idx].size()<<std::endl;
         	std::cout<<"deconstruction:"<<std::endl;
 
-        	assert(packets.size()<100);
+        	assert(packets[current_idx].size()<100);
 
 
         }*/
@@ -407,16 +407,16 @@ public:
 
         void post_process(){
 
-            _f._pkt_counter-=packets.size();
+            _f._pkt_counter-=packets[_f._batch.current_idx].size();
             assert(_f._pkt_counter>=0);
-            process_pkts();
+            process_pkts(_f._batch.current_idx);
             std::vector<flow_operator*>::iterator it;
-            for(it=_f._batch._flows.begin();it!=_f._batch._flows.end();it++){
+            for(it=_f._batch._flows[_f._batch.current_idx].begin();it!=_f._batch._flows[_f._batch.current_idx].end();it++){
                 if(*it==this){
                     break;
                 }
             }
-            _f._batch._flows.erase(it);
+            _f._batch._flows[_f._batch.current_idx].erase(it);
 
         }
         void process_pkt(net::packet* pkt, ips_flow_state* fs){
@@ -441,29 +441,29 @@ public:
 
         }
 
-        void forward_pkts(){
-            for(unsigned int i=0;i<packets.size();i++){
+        void forward_pkts(uint64_t index){
+            for(unsigned int i=0;i<packets[index].size();i++){
 
                 std::cout<<"begin to send pkt"<<std::endl;
-                _ac.internal_send(std::move(packets[i]));
+                _ac.internal_send(std::move(packets[index][i]));
                 std::cout<<"finish sending pkt"<<std::endl;
             }
-            packets.clear();
-            assert(packets.size()==0);
+            packets[index].clear();
+            assert(packets[index].size()==0);
         }
-        void process_pkts(){
-            std::cout<<"packets.size:"<<packets.size()<<std::endl;
-            for(unsigned int i=0;i<packets.size();i++){
-            	std::cout<<"packets.size:"<<packets.size()<<std::endl;
-                std::cout<<"process "<<i<<" packets"<<std::endl;
-                //process_pkt(&packets[i],&_fs);
+        void process_pkts(uint64_t index){
+            std::cout<<"packets[index].size:"<<packets[index].size()<<std::endl;
+            for(unsigned int i=0;i<packets[index].size();i++){
+            	std::cout<<"packets[current_idx].size:"<<packets[index].size()<<std::endl;
+                std::cout<<"process "<<i<<" packets[index]"<<std::endl;
+                //process_pkt(&packets[current_idx][i],&_fs);
 
             }
-            forward_pkts();
+            forward_pkts(index);
 
         }
         future<>update_state(){
-            /*if(packets.size()==1){   //if it is the first packets of this flow in this batch
+            /*if(packets[current_idx].size()==1){   //if it is the first packets[current_idx] of this flow in this batch
                 if(_initialized){    //if it has already processed previous batch, then the state is newer than remote, so update to remote.
                     auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
                     return _f._mc.query(Operation::kSet, mica_key(key),
@@ -507,18 +507,23 @@ public:
                 }
 
 
-                if(packets.size()>200){
-                    assert(1==0);
+                if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==true){
+
+                    return make_ready_future<af_action>(af_action::drop);
+
+                 }
+                if(packets[_f._batch.current_idx].empty()){
+                    _f._batch._flows[_f._batch.current_idx].push_back(this);
                 }
-                if(packets.empty()){
-                    _f._batch._flows.push_back(this);
-                }
-                packets.push_back(std::move(_ac.cur_packet()));
+                packets[_f._batch.current_idx].push_back(std::move(_ac.cur_packet()));
                 _f._pkt_counter++;
                 std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
                 if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
                     _f._batch.need_process=true;
                     _f._pkt_counter=0;
+                    _f._batch.current_idx=!_f._batch.current_idx;
+
+
                 }
                 return update_state()                       //update the flow state when receive the first pkt of this flow in this batch.
                         .then([this](){
@@ -526,7 +531,7 @@ public:
                         //reach batch size schedule
                         _f._batch.processing=true;
                         std::cout<<"schedule_task"<<std::endl;
-                        return  _f._batch.schedule_task()
+                        return  _f._batch.schedule_task(!_f._batch.current_idx)
                                 .then([this](){
                             _f._batch.need_process=false;
                             _f._batch.processing=false;
@@ -633,8 +638,8 @@ public:
              *  process_batch functions don't get optimized out */
 
 
-           //int tot_proc = 0;     /* How many packets did we actually match ? */
-           //int tot_success = 0;  /* Packets that matched a DFA state */
+           //int tot_proc = 0;     /* How many packets[_f._batch.current_idx] did we actually match ? */
+           //int tot_success = 0;  /* packets[_f._batch.current_idx] that matched a DFA state */
            // tot_bytes = 0;       /* Total bytes matched through DFAs */
 
            for(i = 0; i < num_pkts; i += BATCH_SIZE) {
@@ -697,7 +702,7 @@ public:
 
     static bool CompLess(const flow_operator* lhs, const flow_operator* rhs)
     {
-        return lhs->packets.size() < rhs->packets.size();
+        return lhs->packets[!lhs->_f._batch.current_idx].size() < rhs->packets[!lhs->_f._batch.current_idx].size();
     }
 
 
@@ -713,13 +718,14 @@ public:
         //char* gpu_states;
         //uint64_t max_pktnumber;
         //uint64_t gpu_flow_num;
-        std::vector<flow_operator*> _flows;
+        std::vector<flow_operator*> _flows[2];
         char** gpu_pkts;
         char** gpu_states;
         bool need_process;
         bool processing;
+        uint64_t current_idx;
 
-        batch():gpu_pkts(nullptr),gpu_states(nullptr),need_process(false),processing(false){
+        batch():gpu_pkts(nullptr),gpu_states(nullptr),need_process(false),processing(false),current_idx(0){
 
         }
         ~batch(){
@@ -728,20 +734,20 @@ public:
 
 
 
-        future<> schedule_task(){
+        future<> schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-            std::cout<<"flow_size:"<<_flows.size()<<std::endl;
+            std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
             std::cout<<"before sort packet num begin"<<std::endl;
-            for(unsigned int i=0;i<_flows.size();i=i+1){
-                std::cout<<_flows[i]->packets.size()<<" ";
+            for(unsigned int i=0;i<_flows[index].size();i=i+1){
+                std::cout<<_flows[index][i]->packets[index].size()<<" ";
             }
             std::cout<<"end before sort"<<std::endl;
-            sort(_flows.begin(),_flows.end(),CompLess);
-            int partition=get_partition();
+            sort(_flows[index].begin(),_flows[index].end(),CompLess);
+            int partition=get_partition(index);
             assert(partition!=-1);
             std::cout<<"   partition:"<<partition<<std::endl;
-            int max_pkt_num_per_flow=_flows[partition]->packets.size();
+            int max_pkt_num_per_flow=_flows[index][partition]->packets[index].size();
 
             int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char*);
             int ngpu_states = partition * sizeof(char*);
@@ -759,16 +765,16 @@ public:
 
             //std::cout<<"memory alloc finished"<<std::endl;
             for(int i = 0; i < partition; i++){
-                gpu_states[i] = reinterpret_cast<char*>(&(_flows[i]->_fs));
+                gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
                 gpu_mem_map(gpu_states[i], sizeof(struct ips_flow_state));
                 //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
-                for(int j = 0; j < (int)_flows[i]->packets.size(); j++){
+                for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
 
-                    gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[i]->packets[j].get_header<net::eth_hdr>(0));
+                    gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0));
                     //std::cout<<"assign gpu_pkts["<<i<<"]"<<"["<<j<<"]"<<std::endl;
                     
                     // Map every packet
-                    gpu_mem_map(gpu_pkts[i*max_pkt_num_per_flow+j], _flows[i]->packets[j].len());
+                    gpu_mem_map(gpu_pkts[i*max_pkt_num_per_flow+j], _flows[index][i]->packets[index][j].len());
                 }
             }
 
@@ -776,14 +782,14 @@ public:
 
             /////////////////////////////////////////////
             // Launch kernel
-           // gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)&(_flows[0]->_f.ips), max_pkt_num_per_flow, partition);
+           // gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)&(_flows[0][index]->_f.ips), max_pkt_num_per_flow, partition);
             //
             /////////////////////////////////////////////
             
             std::cout<<"begin to process_pkts"<<std::endl;
 
-            for(unsigned int i = partition; i < _flows.size(); i++){
-                _flows[i]->process_pkts();
+            for(unsigned int i = partition; i < _flows[index].size(); i++){
+                _flows[index][i]->process_pkts(index);
             }
 
             // Wait for GPU process
@@ -794,7 +800,7 @@ public:
             for(int i = 0; i < partition; i++){
                 gpu_mem_unmap(gpu_states[i]);
 
-                for(int j = 0; j < (int)_flows[i]->packets.size(); j++){
+                for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
                     gpu_mem_unmap(gpu_pkts[i * max_pkt_num_per_flow + j]);
                 }
             }
@@ -802,13 +808,13 @@ public:
             gpu_mem_unmap(gpu_pkts);
             gpu_mem_unmap(gpu_states);
 
-            // Forward GPU packets
+            // Forward GPU packets[current_idx]
             for(int i = 0; i < partition; i++){
-                _flows[i]->forward_pkts();
+                _flows[index][i]->forward_pkts(index);
             }
 
 
-            _flows.clear();
+            _flows[index].clear();
             if(gpu_pkts){
                 free(gpu_pkts);
             }
@@ -848,22 +854,22 @@ public:
 
 
         }
-        uint64_t get_partition(){
+        uint64_t get_partition(uint64_t index){
 
             std::vector<float> processing_time;
-            for(unsigned int i=0;i<_flows.size();i++){
+            for(unsigned int i=0;i<_flows[index].size();i++){
                 float cpu_time=0;
-                float gpu_time=_flows[i]->packets.size();
-                for(unsigned int j=i+1;j<_flows.size();j++){
-                    cpu_time+=_flows[j]->packets.size();
+                float gpu_time=_flows[index][i]->packets[index].size();
+                for(unsigned int j=i+1;j<_flows[index].size();j++){
+                    cpu_time+=_flows[index][j]->packets[index].size();
                 }
                 processing_time.push_back(std::max(gpu_time,cpu_time/COMPUTE_RATIO));
             }
 
 
             std::cout<<"packet num begin"<<std::endl;
-            for(unsigned int i=0;i<_flows.size();i++){
-                std::cout<<_flows[i]->packets.size()<<" ";
+            for(unsigned int i=0;i<_flows[index].size();i++){
+                std::cout<<_flows[index][i]->packets[index].size()<<" ";
             }
             std::cout<<"packet num end"<<std::endl;
 
