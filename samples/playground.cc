@@ -504,7 +504,7 @@ public:
                     post_process();
                     return make_ready_future<af_action>(af_action::close_forward);
                 }
-                std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
+
 
 
                 if(packets.empty()){
@@ -512,14 +512,21 @@ public:
                 }
                 packets.push_back(std::move(_ac.cur_packet()));
                 _f._pkt_counter++;
+                std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
+                if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
+                    _f._batch.need_process=true;
+                    _f._pkt_counter=0;
+                }
                 return update_state()                       //update the flow state when receive the first pkt of this flow in this batch.
                         .then([this](){
-                    if(_f._pkt_counter>=GPU_BATCH_SIZE){
+                    if(_f._batch.need_process==true&&_f._batch.processing==false){
                         //reach batch size schedule
-                        _f._pkt_counter=0;
+                        _f._batch.processing=true;
                         std::cout<<"schedule_task"<<std::endl;
                         return  _f._batch.schedule_task()
                                 .then([this](){
+                            _f._batch.need_process=false;
+                            _f._batch.processing=false;
                             return make_ready_future<af_action>(af_action::hold);
                         });
 
@@ -706,8 +713,10 @@ public:
         std::vector<flow_operator*> _flows;
         char** gpu_pkts;
         char** gpu_states;
+        bool need_process;
+        bool processing;
 
-        batch():gpu_pkts(nullptr),gpu_states(nullptr){
+        batch():gpu_pkts(nullptr),gpu_states(nullptr),need_process(false),processing(false){
 
         }
         ~batch(){
