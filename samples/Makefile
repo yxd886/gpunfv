@@ -23,10 +23,10 @@ ifeq "$(CXXVERSION_4_8_OR_HIGHER)" "0"
   $(error g++ 4.8 or higher is required)
 endif
 
-RTE_SDK ?= $(abspath /home/net/gpunfv/seastar/dpdk)
+RTE_SDK ?= $(abspath /home/net/jjwang/gpunfv/seastar/dpdk)
 RTE_TARGET ?= $(shell uname -m)-native-linuxapp-gcc
 DPDK_LIB ?= dpdk
-SEASTAR=/home/net/gpunfv/seastar
+SEASTAR=/home/net/jjwang/gpunfv/seastar
 
 ifneq ($(wildcard $(RTE_SDK)/$(RTE_TARGET)/*),)
     DPDK_INC_DIR = $(RTE_SDK)/$(RTE_TARGET)/include
@@ -43,7 +43,7 @@ else
         endif
     endif
 endif
-SEASTAR_FLAGS:=$(shell pkg-config --cflags --libs /home/net/gpunfv/seastar/build/release/seastar.pc)
+SEASTAR_FLAGS:=$(shell pkg-config --cflags --libs $(SEASTAR)/build/release/seastar.pc)
 
 CUDA_INC_DIR= /usr/local/cuda-8.0/samples/common/inc /usr/local/cuda-8.0/include
 
@@ -51,14 +51,14 @@ CUDA_INC_DIR= /usr/local/cuda-8.0/samples/common/inc /usr/local/cuda-8.0/include
 CXXFLAGS += -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
 	    -isystem $(DPDK_INC_DIR) -isystem /usr/local/cuda-8.0/samples/common/inc -isystem /usr/local/cuda-8.0/include $(SEASTAR_FLAGS)
 	    
-CUDAFLAGS += -I/usr/local/cuda-8.0/samples/common/inc  -I/usr/local/cuda-8.0/include
+CUDAFLAGS += -I/usr/local/cuda-8.0/samples/common/inc  -I/usr/local/cuda-8.0/include -I$(DPDK_INC_DIR)
 
 
 LDFLAGS += $(SEASTAR_FLAGS) -L/usr/local/cuda-8.0/lib64
 
 LIBS +=-lcudart
 
-ALL_SRCS = $(wildcard ./*.cc ./samples/*.cc) 
+ALL_SRCS = $(wildcard ./*.cc ) 
                       
 HEADERS =  $(wildcard ./*.h )
 
@@ -71,12 +71,12 @@ CU_OBJS = $(CU_SRCS:.cu=.o)
 
 # The following variables are defined for sample examples.
 
-SAMPLES_SRCS = $(wildcard samples/*.cc)
-SAMPLES_SRCS += $(wildcard samples/*/*.cc)
-SAMPLES_OBJS = $(SAMPLES_SRCS:.cc=.o)
+#SAMPLES_SRCS = $(wildcard samples/*.cc)
+#SAMPLES_SRCS += $(wildcard samples/*/*.cc)
+#SAMPLES_OBJS = $(SAMPLES_SRCS:.cc=.o)
 
-PLAYGROUND_EXEC = samples/playground
-PLAYGROUND_OBJS = $(filter-out main.o $(filter-out samples/playground.o,$(SAMPLES_OBJS)),$(OBJS)) $(CU_OBJS)
+PLAYGROUND_EXEC = playground
+PLAYGROUND_OBJS = $(OBJS) $(CU_OBJS)
 
 
 .PHONY: all clean tests protobuf
