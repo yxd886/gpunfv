@@ -728,7 +728,7 @@ public:
         future<> schedule_task(){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-
+            std::cout<<"flow_size:"<<_flows.size()<<std::endl;
             std::cout<<"before sort packet num begin"<<std::endl;
             for(unsigned int i=0;i<_flows.size();i=i+1){
                 std::cout<<_flows[i]->packets.size()<<" ";
