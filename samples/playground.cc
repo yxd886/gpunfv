@@ -512,15 +512,16 @@ public:
                     return make_ready_future<af_action>(af_action::drop);
 
                  }
-                if(packets[_f._batch.current_idx].empty()){
-                    _f._batch._flows[_f._batch.current_idx].push_back(this);
-                }
 
-                _f._pkt_counter++;
                 //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
 
                 return update_state(_f._batch.current_idx)                       //update the flow state when receive the first pkt of this flow in this batch.
                         .then([this](){
+                    if(packets[_f._batch.current_idx].empty()){
+                        _f._batch._flows[_f._batch.current_idx].push_back(this);
+                    }
+
+                    _f._pkt_counter++;
                     packets[_f._batch.current_idx].push_back(std::move(_ac.cur_packet()));
 
                     if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
