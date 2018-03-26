@@ -408,6 +408,7 @@ public:
         void post_process(){
 
             _f._pkt_counter-=packets.size();
+            assert(_f._pkt_counter>=0);
             process_pkts();
             std::vector<flow_operator*>::iterator it;
             for(it=_f._batch._flows.begin();it!=_f._batch._flows.end();it++){
