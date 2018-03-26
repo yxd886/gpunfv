@@ -427,9 +427,9 @@ public:
             old._dfa_id=fs->_dfa_id;
             old._state=fs->_state;
             old.tag=fs->tag;
-            std::cout<<"before ips_detect"<<std::endl;
+            //std::cout<<"before ips_detect"<<std::endl;
             ips_detect(pkt,fs);
-            std::cout<<"after ips_detect"<<std::endl;
+            //std::cout<<"after ips_detect"<<std::endl;
             auto state_changed=state_updated(&old,fs);
             if(state_changed) {
                 auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
@@ -444,18 +444,18 @@ public:
         void forward_pkts(uint64_t index){
             for(unsigned int i=0;i<packets[index].size();i++){
 
-                std::cout<<"begin to send pkt"<<std::endl;
+                //std::cout<<"begin to send pkt"<<std::endl;
                 _ac.internal_send(std::move(packets[index][i]));
-                std::cout<<"finish sending pkt"<<std::endl;
+                //std::cout<<"finish sending pkt"<<std::endl;
             }
             packets[index].clear();
             assert(packets[index].size()==0);
         }
         void process_pkts(uint64_t index){
-            std::cout<<"packets[index].size:"<<packets[index].size()<<std::endl;
+            //std::cout<<"packets[index].size:"<<packets[index].size()<<std::endl;
             for(unsigned int i=0;i<packets[index].size();i++){
-            	std::cout<<"packets[current_idx].size:"<<packets[index].size()<<std::endl;
-                std::cout<<"process "<<i<<" packets[index]"<<std::endl;
+            	//std::cout<<"packets[current_idx].size:"<<packets[index].size()<<std::endl;
+                //std::cout<<"process "<<i<<" packets[index]"<<std::endl;
                 //process_pkt(&packets[current_idx][i],&_fs);
 
             }
@@ -517,7 +517,7 @@ public:
                 }
 
                 _f._pkt_counter++;
-                std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
+                //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
 
                 return update_state(_f._batch.current_idx)                       //update the flow state when receive the first pkt of this flow in this batch.
                         .then([this](){
@@ -533,7 +533,7 @@ public:
                     if(_f._batch.need_process==true&&_f._batch.processing==false){
                         //reach batch size schedule
                         _f._batch.processing=true;
-                        std::cout<<"schedule_task"<<std::endl;
+                        //std::cout<<"schedule_task"<<std::endl;
                         return  _f._batch.schedule_task(!_f._batch.current_idx)
                                 .then([this](){
                             _f._batch.need_process=false;
@@ -558,16 +558,16 @@ public:
              state._state=0;
              state._alert=false;
              state._dfa_id=rand()%AHO_MAX_DFA;
-             std::cout<<"init_automataState_dfa_id:"<<state._dfa_id<<std::endl;
+             //std::cout<<"init_automataState_dfa_id:"<<state._dfa_id<<std::endl;
          }
        void parse_pkt(net::packet *rte_pkt, struct ips_flow_state* state,struct aho_pkt*  aho_pkt){
 
            aho_pkt->content=(uint8_t*)malloc(rte_pkt->len());
-           std::cout<<"    rte_pkt->len():"<<rte_pkt->len()<<std::endl;
+           //std::cout<<"    rte_pkt->len():"<<rte_pkt->len()<<std::endl;
            memcpy(aho_pkt->content,reinterpret_cast<uint8_t*>(rte_pkt->get_header(0,sizeof(char))),rte_pkt->len()-1);
            aho_pkt->dfa_id=state->_dfa_id;
            aho_pkt->len=rte_pkt->len();
-           std::cout<<"    aho_pkt->len:"<<rte_pkt->len()<<std::endl;
+           //std::cout<<"    aho_pkt->len:"<<rte_pkt->len()<<std::endl;
        }
        bool state_updated(struct ips_flow_state* old_,struct ips_flow_state* new_){
            if(old_->_alert==new_->_alert&&old_->_dfa_id==new_->_dfa_id&&old_->_state==new_->_state){
@@ -583,9 +583,9 @@ public:
 
            for(I = 0; I < BATCH_SIZE; I++) {
                int dfa_id = pkts[I].dfa_id;
-               std::cout<<"      dfa_id:"<<dfa_id<<std::endl;
+               //std::cout<<"      dfa_id:"<<dfa_id<<std::endl;
                int len = pkts[I].len;
-               std::cout<<"      len:"<<len<<std::endl;
+               //std::cout<<"      len:"<<len<<std::endl;
                struct aho_state *st_arr = dfa_arr[dfa_id].root;
 
                int state = ips_state->_state;
@@ -594,8 +594,8 @@ public:
                  ips_state->_state=state;
                  return;
              }
-               std::cout<<"      state:"<<state<<std::endl;
-               std::cout<<"      before for loop"<<std::endl;
+               //std::cout<<"      state:"<<state<<std::endl;
+               //std::cout<<"      before for loop"<<std::endl;
                for(j = 0; j < len; j++) {
 
                    int count = st_arr[state].output.count;
@@ -615,7 +615,7 @@ public:
                    int inp = pkts[I].content[j];
                    state = st_arr[state].G[inp];
                }
-               std::cout<<"      after for loop"<<std::endl;
+               //std::cout<<"      after for loop"<<std::endl;
                ips_state->_state=state;
            }
 
@@ -646,9 +646,9 @@ public:
            // tot_bytes = 0;       /* Total bytes matched through DFAs */
 
            for(i = 0; i < num_pkts; i += BATCH_SIZE) {
-               std::cout<<"    before process_batch"<<std::endl;
+               //std::cout<<"    before process_batch"<<std::endl;
                process_batch(dfa_arr, &pkts[i], mp_list,state);
-               std::cout<<"    after process_batch"<<std::endl;
+               //std::cout<<"    after process_batch"<<std::endl;
 
                for(j = 0; j < BATCH_SIZE; j++) {
                    int num_match = mp_list[j].num_match;
@@ -674,9 +674,9 @@ public:
            //}else{
             //   printf("cudaHostRegister fail!\n");
            //}
-           std::cout<<"  before parse_pkt"<<std::endl;
+           //std::cout<<"  before parse_pkt"<<std::endl;
            parse_pkt(rte_pkt, state,pkts);
-           std::cout<<"  after parse_pkt"<<std::endl;
+           //std::cout<<"  after parse_pkt"<<std::endl;
            struct aho_ctrl_blk worker_cb;
            worker_cb.stats = _f.ips.stats;
            worker_cb.tot_threads = 1;
@@ -684,9 +684,9 @@ public:
            worker_cb.dfa_arr = _f.ips.dfa_arr;
            worker_cb.pkts = pkts;
            worker_cb.num_pkts = 1;
-           std::cout<<"  before ids_func"<<std::endl;
+           //std::cout<<"  before ids_func"<<std::endl;
            ids_func(&worker_cb,state);
-           std::cout<<"  after ids_func"<<std::endl;
+           //std::cout<<"  after ids_func"<<std::endl;
            free(pkts->content);
            free(pkts);
 
@@ -740,16 +740,16 @@ public:
         future<> schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-            std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
-            std::cout<<"before sort packet num begin"<<std::endl;
+            //std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
+            //std::cout<<"before sort packet num begin"<<std::endl;
             for(unsigned int i=0;i<_flows[index].size();i=i+1){
-                std::cout<<_flows[index][i]->packets[index].size()<<" ";
+                //std::cout<<_flows[index][i]->packets[index].size()<<" ";
             }
-            std::cout<<"end before sort"<<std::endl;
+            //std::cout<<"end before sort"<<std::endl;
             sort(_flows[index].begin(),_flows[index].end(),CompLess);
             int partition=get_partition(index);
             assert(partition!=-1);
-            std::cout<<"   partition:"<<partition<<std::endl;
+            //std::cout<<"   partition:"<<partition<<std::endl;
             int max_pkt_num_per_flow=_flows[index][partition]->packets[index].size();
 
             int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char*);
@@ -789,7 +789,7 @@ public:
             //
             /////////////////////////////////////////////
             
-            std::cout<<"begin to process_pkts"<<std::endl;
+            //std::cout<<"begin to process_pkts"<<std::endl;
 
             for(unsigned int i = partition; i < _flows[index].size(); i++){
                 _flows[index][i]->process_pkts(index);
@@ -870,23 +870,23 @@ public:
             }
 
 
-            std::cout<<"packet num begin"<<std::endl;
+            //std::cout<<"packet num begin"<<std::endl;
             for(unsigned int i=0;i<_flows[index].size();i++){
-                std::cout<<_flows[index][i]->packets[index].size()<<" ";
+                //std::cout<<_flows[index][i]->packets[index].size()<<" ";
             }
-            std::cout<<"packet num end"<<std::endl;
+            //std::cout<<"packet num end"<<std::endl;
 
 
 
-            std::cout<<"processing time begin"<<std::endl;
+            //std::cout<<"processing time begin"<<std::endl;
             for(unsigned int i=0;i<processing_time.size();i++){
-                std::cout<<processing_time[i]<<" ";
+                //std::cout<<processing_time[i]<<" ";
             }
-            std::cout<<"processing time end"<<std::endl;
+            //std::cout<<"processing time end"<<std::endl;
 
 
             std::vector<float>::iterator result = std::min_element(std::begin(processing_time), std::end(processing_time));
-            std::cout<<"    min_processing_time:"<<*result<<std::endl;
+            //std::cout<<"    min_processing_time:"<<*result<<std::endl;
             return std::distance(std::begin(processing_time), result);
         }
 
