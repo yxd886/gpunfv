@@ -54,7 +54,7 @@
 #include <time.h>
 
 #include <unordered_map>
-#define GPU_BATCH_SIZE 200
+#define GPU_BATCH_SIZE 2000
 
 #define COMPUTE_RATIO 50
 
@@ -762,47 +762,51 @@ public:
             sort(_flows[index].begin(),_flows[index].end(),CompLess);
             int partition=get_partition(index);
             assert(partition!=-1);
-            //std::cout<<"   partition:"<<partition<<std::endl;
-            int max_pkt_num_per_flow=_flows[index][partition]->packets[index].size();
 
-            int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char*);
-            int ngpu_states = partition * sizeof(char*);
-            gpu_pkts = (char **)malloc(ngpu_pkts);
-            gpu_states = (char **)malloc(ngpu_states);
-            
-            assert(gpu_pkts);
-            assert(gpu_states);
-
-            // Clear and map gpu_pkts and gpu_states
-            memset(gpu_pkts, 0, ngpu_pkts);
-            memset(gpu_states, 0, ngpu_states);
-            //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
-            gpu_mem_map(gpu_pkts, ngpu_pkts);
-            gpu_mem_map(gpu_states, ngpu_states);
-
-            //std::cout<<"memory alloc finished"<<std::endl;
-            for(int i = 0; i < partition; i++){
-                gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
-                gpu_mem_map(gpu_states[i], sizeof(struct ips_flow_state));
-                //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
-                for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
-
-                    gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0));
-                    //std::cout<<"assign gpu_pkts["<<i<<"]"<<"["<<j<<"]"<<std::endl;
-                    
-                    // Map every packet
-                    gpu_mem_map(gpu_pkts[i*max_pkt_num_per_flow+j], _flows[index][i]->packets[index][j].len());
-                }
-            }
-
-            //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
-
-            /////////////////////////////////////////////
-            // Launch kernel
             if(partition>0){
+                int max_pkt_num_per_flow=_flows[index][partition]->packets[index].size();
+
+                int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char*);
+                int ngpu_states = partition * sizeof(char*);
+                gpu_pkts = (char **)malloc(ngpu_pkts);
+                gpu_states = (char **)malloc(ngpu_states);
+
+                assert(gpu_pkts);
+                assert(gpu_states);
+
+                // Clear and map gpu_pkts and gpu_states
+                memset(gpu_pkts, 0, ngpu_pkts);
+                memset(gpu_states, 0, ngpu_states);
+                //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
+                gpu_mem_map(gpu_pkts, ngpu_pkts);
+                gpu_mem_map(gpu_states, ngpu_states);
+
+                //std::cout<<"memory alloc finished"<<std::endl;
+                for(int i = 0; i < partition; i++){
+                    gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
+                    gpu_mem_map(gpu_states[i], sizeof(struct ips_flow_state));
+                    //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
+                    for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
+
+                        gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0));
+                        //std::cout<<"assign gpu_pkts["<<i<<"]"<<"["<<j<<"]"<<std::endl;
+
+                        // Map every packet
+                        gpu_mem_map(gpu_pkts[i*max_pkt_num_per_flow+j], _flows[index][i]->packets[index][j].len());
+                    }
+                }
+
+                //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
+
+                /////////////////////////////////////////////
+                // Launch kernel
+
 
                 gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)&(_flows[0][index]->_f.ips), max_pkt_num_per_flow, partition);
+
             }
+            //std::cout<<"   partition:"<<partition<<std::endl;
+
             //
             /////////////////////////////////////////////
             
@@ -813,34 +817,38 @@ public:
             }
 
             // Wait for GPU process
-            gpu_sync();
+            if(partition>0){
+                gpu_sync();
 
 
-            // Unmap every packet
-            for(int i = 0; i < partition; i++){
-                gpu_mem_unmap(gpu_states[i]);
+                // Unmap every packet
+                for(int i = 0; i < partition; i++){
+                    gpu_mem_unmap(gpu_states[i]);
 
-                for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
-                    gpu_mem_unmap(gpu_pkts[i * max_pkt_num_per_flow + j]);
+                    for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
+                        gpu_mem_unmap(gpu_pkts[i * max_pkt_num_per_flow + j]);
+                    }
+                }
+                // Unmap gpu_pkts and gpu_states
+                gpu_mem_unmap(gpu_pkts);
+                gpu_mem_unmap(gpu_states);
+
+                // Forward GPU packets[current_idx]
+                for(int i = 0; i < partition; i++){
+                    _flows[index][i]->forward_pkts(index);
+                }
+
+
+
+                if(gpu_pkts){
+                    free(gpu_pkts);
+                }
+                if(gpu_states){
+                    free(gpu_states);
                 }
             }
-            // Unmap gpu_pkts and gpu_states
-            gpu_mem_unmap(gpu_pkts);
-            gpu_mem_unmap(gpu_states);
-
-            // Forward GPU packets[current_idx]
-            for(int i = 0; i < partition; i++){
-                _flows[index][i]->forward_pkts(index);
-            }
-
-
             _flows[index].clear();
-            if(gpu_pkts){
-                free(gpu_pkts);
-            }
-            if(gpu_states){
-                free(gpu_states);
-            }
+
             return make_ready_future<>();
 
             //std::cout<<"gpu_process_pkts finished"<<std::endl;
