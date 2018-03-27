@@ -101,7 +101,7 @@ __device__ void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state *state)
 
         for(j = 0; j < BATCH_SIZE; j++) {
             int num_match = mp_list[j].num_match;
-            assert(num_match < MAX_MATCH);
+            //assert(num_match < MAX_MATCH);
 
             mp_list[j].num_match = 0;
         }

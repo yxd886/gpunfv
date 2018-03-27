@@ -14,7 +14,7 @@ __global__ void testKernel(char *s) {
 	int i = threadIdx.x;
 	
 	memcpy(s + i + 5, s + i, 1);
-	assert(1);
+	//assert(1);
 }
 
 bool test_cudaHostAlloc() {
@@ -57,7 +57,7 @@ bool test_cudaHostRegister() {
 	// Second way: using cudaHostRegister()
 	// Alloc host memory
 	hptr1 = new char[10];
-	assert(hptr1);
+	//assert(hptr1);
 
 	// Page-lock host memory
 	cudaHostRegister(hptr1, 10, cudaHostRegisterMapped);
@@ -127,7 +127,7 @@ __global__ void gpu_nf_logic(char **pkt_batch, char **state_batch, char *extra_i
 
 void gpu_launch(char **pkt_batch, char **state_batch, char *extra_info, int flowDim, int nflows) {
 	// Calculate block amounts
-	assert(nflows > 0);
+	//assert(nflows > 0);
 	int nblocks = (nflows + THREADPERBLOCK - 1) / THREADPERBLOCK;
 
 	gpu_nf_logic<<<nblocks, THREADPERBLOCK>>>(pkt_batch, state_batch, extra_info, flowDim);
