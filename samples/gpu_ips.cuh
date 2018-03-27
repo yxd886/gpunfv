@@ -77,6 +77,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
 		
             int inp = pkts[I].content[j];
             state = st_arr[state].G[inp];
+            printf("--state:%d\n",state);
        }
        printf("666666666666666\n");
 
