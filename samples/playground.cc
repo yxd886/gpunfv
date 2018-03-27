@@ -1032,6 +1032,12 @@ int main(int ac, char** av) {
         })*/.then([]{
             return forwarders.invoke_on_all(&forwarder::configure, 1);
         }).then([]{
+                for(unsigned int i = 0; i>netstar_pools.size();i++){
+                    gpu_mem_map(netstar_pools[i],mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private));
+                }
+                return make_ready_future<>();
+
+        }).then([]{
             return forwarders.invoke_on_all(&forwarder::run_udp_manager, 1);
         }).then([]{
             return forwarders.invoke_on(0, &forwarder::collect_stats, 1);
