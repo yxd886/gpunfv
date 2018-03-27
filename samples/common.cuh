@@ -43,7 +43,7 @@ __device__ uint32_t pkt_len(void *pkt) {
 	//struct ether_hdr* m_pEthhdr = (struct ether_hdr*)pkt;
 	struct iphdr* m_pIphdr = (struct iphdr*)(pkt + sizeof(struct ether_hdr));
 
-  return m_pIphdr->tot_len + sizeof(struct ether_hdr);
+  return Ntohs(m_pIphdr->tot_len) + sizeof(struct ether_hdr);
 }
 
 #endif
