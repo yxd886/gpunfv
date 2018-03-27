@@ -39,11 +39,16 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
    const struct aho_pkt *pkts, struct mp_list_t *mp_list, struct ips_flow_state *ips_state) {
     int I, j;
     printf("in process_batch\n");
+    printf("batch_size:%d\n",BATCH_SIZE);
 
     for(I = 0; I < BATCH_SIZE; I++) {
+    		printf("00000000000000");
         int dfa_id = pkts[I].dfa_id;
+        printf("111111111111111");
         int len = pkts[I].len;
+        printf("33333333333333");
         struct aho_state *st_arr = dfa_arr[dfa_id].root;
+        printf("4444444444444444");
         int state = ips_state->_state;
         printf("length:%d\n",len);
         printf("state:%d\n",state);
@@ -53,7 +58,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
             ips_state->_state=state;
             return ;
         }
-        printf("11111111111111111111111\n");
+        printf("555555555555555\n");
 
        for(j = 0; j < len; j++) {
 
@@ -73,7 +78,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
             int inp = pkts[I].content[j];
             state = st_arr[state].G[inp];
        }
-       printf("222222222222222222222222\n");
+       printf("666666666666666\n");
 
        ips_state->_state = state;
    }
