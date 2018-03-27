@@ -42,14 +42,14 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
     printf("batch_size:%d\n",BATCH_SIZE);
 
     for(I = 0; I < BATCH_SIZE; I++) {
-    		printf("00000000000000");
+    		printf("00000000000000\n");
         int dfa_id = pkts[I].dfa_id;
-        printf("111111111111111");
-        printf("dfa_id:%d",dfa_id);
+        printf("111111111111111\n");
+        printf("dfa_id:%d\n",dfa_id);
         int len = pkts[I].len;
-        printf("33333333333333");
+        printf("33333333333333\n");
         struct aho_state *st_arr = dfa_arr[dfa_id].root;
-        printf("4444444444444444");
+        printf("4444444444444444\n");
         int state = ips_state->_state;
         printf("length:%d\n",len);
         printf("state:%d\n",state);
