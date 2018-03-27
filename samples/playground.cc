@@ -741,12 +741,12 @@ public:
         future<> schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-            std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
-            std::cout<<"before sort packet num begin"<<std::endl;
+            //std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
+            //std::cout<<"before sort packet num begin"<<std::endl;
             for(unsigned int i=0;i<_flows[index].size();i=i+1){
-                std::cout<<_flows[index][i]->packets[index].size()<<" ";
+                //std::cout<<_flows[index][i]->packets[index].size()<<" ";
             }
-            std::cout<<"end before sort"<<std::endl;
+            //std::cout<<"end before sort"<<std::endl;
             sort(_flows[index].begin(),_flows[index].end(),CompLess);
             int partition=get_partition(index);
             assert(partition!=-1);
@@ -871,19 +871,19 @@ public:
             }
 
 
-            std::cout<<"packet num begin"<<std::endl;
-            for(unsigned int i=0;i<_flows[index].size();i++){
-                std::cout<<_flows[index][i]->packets[index].size()<<" ";
+           // std::cout<<"packet num begin"<<std::endl;
+           // for(unsigned int i=0;i<_flows[index].size();i++){
+           //     std::cout<<_flows[index][i]->packets[index].size()<<" ";
             }
-            std::cout<<"packet num end"<<std::endl;
+           // std::cout<<"packet num end"<<std::endl;
 
 
 
-            std::cout<<"processing time begin"<<std::endl;
-            for(unsigned int i=0;i<processing_time.size();i++){
-                std::cout<<processing_time[i]<<" ";
-            }
-            std::cout<<"processing time end"<<std::endl;
+          //  std::cout<<"processing time begin"<<std::endl;
+          //  for(unsigned int i=0;i<processing_time.size();i++){
+          //      std::cout<<processing_time[i]<<" ";
+          //  }
+          //  std::cout<<"processing time end"<<std::endl;
 
 
             std::vector<float>::iterator result = std::min_element(std::begin(processing_time), std::end(processing_time));
