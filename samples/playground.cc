@@ -1000,7 +1000,7 @@ int main(int ac, char** av) {
     ports_env all_ports;
     per_core_objs<mica_client> mica_clients;
     vector<vector<port_pair>> queue_map;
-    std::cout<<"size: "<<seastar::dpdk::default_ring_size<<std::endl;
+
     return app.run_deprecated(ac, av, [&app, &all_ports, &mica_clients, &queue_map] {
         auto& opts = app.configuration();
         return all_ports.add_port(opts, 0, smp::count, port_type::netstar_dpdk).then([&opts, &all_ports]{
