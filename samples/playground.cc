@@ -1000,7 +1000,11 @@ my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
         void *obj, unsigned i)
 {
     gpu_mem_map(obj,mp->elt_size);
+    struct rte_mbuf* rte_pkt=(struct rte_mbuf*)obj;
+    unsigned char *t =rte_pktmbuf_mtod(rte_pkt, unsigned char*);
+    char* raw_packet = (char*)t;
     printf("obj_addr:%p\n",obj);
+    printf("raw_packet_addr:%p\n",raw_packet);
 
 }
 
