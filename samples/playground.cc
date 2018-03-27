@@ -764,7 +764,7 @@ public:
             // Clear and map gpu_pkts and gpu_states
             memset(gpu_pkts, 0, ngpu_pkts);
             memset(gpu_states, 0, ngpu_states);
-            gpu_mem_map(gpu_pkts, ngpu_pkts);
+           /* gpu_mem_map(gpu_pkts, ngpu_pkts);
             gpu_mem_map(gpu_states, ngpu_states);
 
             //std::cout<<"memory alloc finished"<<std::endl;
@@ -781,7 +781,7 @@ public:
                     gpu_mem_map(gpu_pkts[i*max_pkt_num_per_flow+j], _flows[index][i]->packets[index][j].len());
                 }
             }
-
+*/
 
 
             /////////////////////////////////////////////
@@ -801,7 +801,7 @@ public:
 
 
             // Unmap every packet
-            for(int i = 0; i < partition; i++){
+          /*  for(int i = 0; i < partition; i++){
                 gpu_mem_unmap(gpu_states[i]);
 
                 for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
@@ -811,7 +811,7 @@ public:
             // Unmap gpu_pkts and gpu_states
             gpu_mem_unmap(gpu_pkts);
             gpu_mem_unmap(gpu_states);
-
+*/
             // Forward GPU packets[current_idx]
             for(int i = 0; i < partition; i++){
                 _flows[index][i]->forward_pkts(index);
