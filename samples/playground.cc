@@ -63,6 +63,7 @@ using namespace netstar;
 using namespace std;
 using namespace std::chrono_literals;
 using std::vector;
+extern std::vector<struct rte_mempool*> netstar_pools;
 
 enum class dummy_udp_events : uint8_t{
     pkt_in=0
