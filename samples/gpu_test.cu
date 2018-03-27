@@ -111,6 +111,7 @@ void start_test() {
 }
 
 __global__ void gpu_nf_logic(char **pkt_batch, char **state_batch, char *extra_info, int flowDim) {
+	printf("in process_batch\n");
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 
 	// Get start address

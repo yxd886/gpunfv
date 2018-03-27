@@ -38,6 +38,7 @@ struct gpu_IPS{
 __device__ void process_batch(const struct aho_dfa *dfa_arr,    
    const struct aho_pkt *pkts, struct mp_list_t *mp_list, struct ips_flow_state *ips_state) {
     int I, j;
+    printf("in process_batch\n");
 
     for(I = 0; I < BATCH_SIZE; I++) {
         int dfa_id = pkts[I].dfa_id;
@@ -77,6 +78,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
 __device__ void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state *state)
 {
     int i, j;
+    printf("in ids_func\n");
 
     struct aho_dfa *dfa_arr = cb->dfa_arr;
     struct aho_pkt *pkts = cb->pkts;
@@ -109,6 +111,7 @@ __device__ void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state *state)
 }
 
 __device__ void parse_pkt(char *pkt, struct ips_flow_state *state, struct aho_pkt *aho_pkt){
+	printf("in parse_pkt\n");
     uint32_t len = pkt_len(pkt);
 
     aho_pkt->content = (uint8_t *)malloc(len);
@@ -118,6 +121,7 @@ __device__ void parse_pkt(char *pkt, struct ips_flow_state *state, struct aho_pk
 }
 
 __device__ void ips_detect(char *rte_pkt, struct ips_flow_state *state, struct gpu_IPS *ips){
+	printf("in ips_detect\n");
 
     struct aho_pkt* pkts = (struct aho_pkt *)malloc(sizeof(struct aho_pkt));
     parse_pkt(rte_pkt, state, pkts);
