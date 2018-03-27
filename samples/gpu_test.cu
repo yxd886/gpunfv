@@ -120,7 +120,7 @@ __global__ void gpu_nf_logic(char **pkt_batch, char **state_batch, char *extra_i
 	printf("flowDim = %d\n", flowDim);
 	printf("pkt_batch = %x\n", pkt_batch);
 	
-	printf("id = %d, pkts = %x, pkts[0] = %x\n", id, pkts, pkts[0]);
+	printf("id = %d, pkts = %p, pkts[0] = %p\n", id, pkts, pkts[0]);
 	// For every packet for this flow in this batch
 	for(int i = 0; i < flowDim; i++) {
 	printf("i = %d, pkts[i] = %x\n", i, pkts[i]);	
