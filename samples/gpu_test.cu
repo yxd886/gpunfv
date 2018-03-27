@@ -110,9 +110,10 @@ void start_test() {
 		printf("cudaHostRegister(): ERROR\n");
 }
 
-__global__ void gpu_nf_logic(char **pkt_batch, char **state_batch, char *extra_info, int flowDim) {
+__global__ void gpu_nf_logic(char **pkt_batch, char **state_batch, char *extra_info, int flowDim, int nflows) {
 	//printf("in gpu_nf_logic\n");
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
+	if(id >= nflows) return ;
 
 	// Get start address
 	char **pkts = pkt_batch + id * flowDim;
@@ -122,11 +123,12 @@ __global__ void gpu_nf_logic(char **pkt_batch, char **state_batch, char *extra_i
 	printf("flowDim = %d, id = %d, pkts = %p, pkts[0] = %p\n", flowDim, id, pkts, pkts[0]);
 	// For every packet for this flow in this batch
 	for(int i = 0; i < flowDim; i++) {
-	printf("i = %d, pkts[i] = %p\n", i, pkts[i]);	
+	printf("id = %d, i = %d, pkts[i] = %p\n", id, i, pkts[i]);	
 		if(pkts[i] == NULL) break;
 
 		//gpu_nf_logic_impl(pkts[i], state_batch[id]);
 		ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);
+	printf("id = %d, end", id);	
 	}
 }
 
@@ -134,8 +136,8 @@ void gpu_launch(char **pkt_batch, char **state_batch, char *extra_info, int flow
 	// Calculate block amounts
 	assert(nflows > 0);
 	int nblocks = (nflows + THREADPERBLOCK - 1) / THREADPERBLOCK;
-
-	gpu_nf_logic<<<nblocks, THREADPERBLOCK>>>(pkt_batch, state_batch, extra_info, flowDim);
+printf("nblocks = %d, nthread = %d, nflows = %d\n", nblocks, THREADPERBLOCK, nflows);
+	gpu_nf_logic<<<nblocks, THREADPERBLOCK>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
 	//gpu_nf_logic<<<1, 1>>>(pkt_batch, state_batch, extra_info, flowDim);
 }
 
