@@ -38,36 +38,34 @@ struct gpu_IPS{
 __device__ void process_batch(const struct aho_dfa *dfa_arr,    
    const struct aho_pkt *pkts, struct mp_list_t *mp_list, struct ips_flow_state *ips_state) {
     int I, j;
-    printf("heheheheheheheh\n");
-    printf("batch_size:%d\n",BATCH_SIZE);
+    
+  
 
     for(I = 0; I < BATCH_SIZE; I++) {
-    		printf("00000000000000\n");
+    		
         int dfa_id = pkts[I].dfa_id;
-        printf("111111111111111\n");
-        printf("dfa_id:%d\n",dfa_id);
+       
+        
         int len = pkts[I].len;
-        printf("33333333333333\n");
+    
         struct aho_state *st_arr = NULL;
         st_arr=dfa_arr[dfa_id].root;
-        printf("st_arr = %p\n",st_arr);
-        printf("st_arr[0].output.count = %d\n",st_arr[0].output.count);
-        printf("4444444444444444\n");
+      
+      
         int state = ips_state->_state;
-        printf("length:%d\n",len);
-        printf("state:%d\n",state);
+  
 
         if(state >= dfa_arr[dfa_id].num_used_states){
             ips_state->_alert=false;
             ips_state->_state=state;
             return ;
         }
-        printf("555555555555555\n");
+       
 
        for(j = 0; j < len; j++) {
 
             int count = st_arr[state].output.count;
-            printf("count = %d\n",count);
+           
 
             if(count != 0) {
                 /* This state matches some patterns: copy the pattern IDs
@@ -82,9 +80,9 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
 		
             int inp = pkts[I].content[j];
             state = st_arr[state].G[inp];
-            printf("--state:%d\n",state);
+        
        }
-       printf("666666666666666\n");
+
 
        ips_state->_state = state;
    }
@@ -93,7 +91,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
 __device__ void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state *state)
 {
     int i, j;
-    printf("in ids_func\n");
+    
 
     struct aho_dfa *dfa_arr = cb->dfa_arr;
     struct aho_pkt *pkts = cb->pkts;
@@ -126,9 +124,9 @@ __device__ void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state *state)
 }
 
 __device__ void parse_pkt(char *pkt, struct ips_flow_state *state, struct aho_pkt *aho_pkt){
-	printf("in parse_pkt\n");
+	
     uint32_t len = pkt_len(pkt);
-    printf("len: %x\n",len);
+ 
 
     aho_pkt->content = (uint8_t *)malloc(len);
     memcpy(aho_pkt->content, pkt, len);
@@ -137,7 +135,7 @@ __device__ void parse_pkt(char *pkt, struct ips_flow_state *state, struct aho_pk
 }
 
 __device__ void ips_detect(char *rte_pkt, struct ips_flow_state *state, struct gpu_IPS *ips){
-	printf("in ips_detect\n");
+	
 
     struct aho_pkt* pkts = (struct aho_pkt *)malloc(sizeof(struct aho_pkt));
     parse_pkt(rte_pkt, state, pkts);
