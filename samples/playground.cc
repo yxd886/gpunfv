@@ -517,8 +517,9 @@ public:
                     post_process();
                     return make_ready_future<af_action>(af_action::close_forward);
                 }
+                uint64_t test_len=mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private);
 
-
+                printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %d, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<net::eth_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
 
                 if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==true){
 
@@ -1034,11 +1035,11 @@ int main(int ac, char** av) {
         })*/.then([]{
             return forwarders.invoke_on_all(&forwarder::configure, 1);
         }).then([]{
-                std::cout<<"size: "<<netstar_pools.size()<<std::endl;
-                for(unsigned int i = 0; i<netstar_pools.size();i++){
-                    std::cout<<"mem_map: "<<i<<std::endl;
-                    gpu_mem_map(netstar_pools[i],mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private));
-                }
+                //std::cout<<"size: "<<netstar_pools.size()<<std::endl;
+                //for(unsigned int i = 0; i<netstar_pools.size();i++){
+                //    std::cout<<"mem_map: "<<i<<std::endl;
+                //    gpu_mem_map(netstar_pools[i],mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private));
+                //}
                 return make_ready_future<>();
 
         }).then([]{
