@@ -78,7 +78,7 @@ CU_OBJS = $(CU_SRCS:.cu=.o)
 #SAMPLES_OBJS = $(SAMPLES_SRCS:.cc=.o)
 
 PLAYGROUND_EXEC = playground
-PLAYGROUND_OBJS = $(OBJS) $(CU_OBJS)
+PLAYGROUND_OBJS = $(OBJS) $(CU_OBJS) /home/net/gpunfv/seastar/build/release/net/dpdk.o
 
 
 .PHONY: all clean tests protobuf
