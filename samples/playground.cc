@@ -519,7 +519,7 @@ public:
                 }
                 uint64_t test_len=mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private);
                 struct rte_mbuf* rte_pkt=nullptr;
-                rte_mempool_get(netstar_pools[0],&rte_pkt);
+                rte_mempool_get(netstar_pools[0],(void**)&rte_pkt);
                 printf("rte_pkt:%p\n",rte_pkt);
                 printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %ld, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<net::eth_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
                 assert(((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[1]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[1])||((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[0]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[0]));
