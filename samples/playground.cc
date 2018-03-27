@@ -1000,6 +1000,7 @@ int main(int ac, char** av) {
     ports_env all_ports;
     per_core_objs<mica_client> mica_clients;
     vector<vector<port_pair>> queue_map;
+    std::cout<<"global_pools size: "<<netstar_pools.size()<<std::endl;
     std::vector<struct rte_mempool*> local_netstar_pools(netstar_pools);
 
     return app.run_deprecated(ac, av, [&app, &all_ports, &mica_clients, &queue_map, &local_netstar_pools] {
