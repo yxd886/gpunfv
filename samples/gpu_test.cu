@@ -111,14 +111,16 @@ void start_test() {
 }
 
 __global__ void gpu_nf_logic(char **pkt_batch, char **state_batch, char *extra_info, int flowDim) {
-	printf("in process_batch\n");
+	printf("in gpu_nf_logic\n");
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 
 	// Get start address
 	char **pkts = pkt_batch + id * flowDim;
 
+	printf("flowDim = %d\n", flowDim);
 	// For every packet for this flow in this batch
 	for(int i = 0; i < flowDim; i++) {
+	printf("i = %d, pkts[i] = %x\n", i, pkts[i]);	
 		if(pkts[i] == NULL) break;
 
 		//gpu_nf_logic_impl(pkts[i], state_batch[id]);
