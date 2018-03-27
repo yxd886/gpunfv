@@ -995,7 +995,13 @@ public:
 
 
 
+static void
+my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
+        void *obj, unsigned i)
+{
+    gpu_mem_map(obj,mp->elt_size);
 
+}
 
 int main(int ac, char** av) {
     app_template app;
@@ -1041,9 +1047,11 @@ int main(int ac, char** av) {
                 //    std::cout<<"mem_map: "<<i<<std::endl;
                 //    gpu_mem_map(netstar_pools[i],mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private));
                 //}
-                struct rte_mbuf* rte_pkt=nullptr;
-                assert(rte_mempool_get(netstar_pools[0],(void**)&rte_pkt)==0);
-                printf("rte_pkt:%p\n",rte_pkt);
+
+                uint32_t times=0;
+                times=rte_mempool_obj_iter(netstar_pools[1],my_obj_init,NULL);
+                printf("times:%d\n",times);
+                assert(1==0);
                 return make_ready_future<>();
 
         }).then([]{
