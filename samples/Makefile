@@ -26,7 +26,7 @@ endif
 RTE_SDK ?= $(abspath /home/net/jjwang/gpunfv/seastar/dpdk)
 RTE_TARGET ?= $(shell uname -m)-native-linuxapp-gcc
 DPDK_LIB ?= dpdk
-SEASTAR=/home/net/jjwang/gpunfv/seastar
+SEASTAR=/home/net/gpunfv/seastar
 
 ifneq ($(wildcard $(RTE_SDK)/$(RTE_TARGET)/*),)
     DPDK_INC_DIR = $(RTE_SDK)/$(RTE_TARGET)/include
@@ -78,7 +78,7 @@ CU_OBJS = $(CU_SRCS:.cu=.o)
 #SAMPLES_OBJS = $(SAMPLES_SRCS:.cc=.o)
 
 PLAYGROUND_EXEC = playground
-PLAYGROUND_OBJS = $(OBJS) $(CU_OBJS) /home/net/gpunfv/seastar/build/release/net/dpdk.o
+PLAYGROUND_OBJS = $(OBJS) $(CU_OBJS)
 
 
 .PHONY: all clean tests protobuf
