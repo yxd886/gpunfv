@@ -38,7 +38,7 @@ struct gpu_IPS{
 __device__ void process_batch(const struct aho_dfa *dfa_arr,    
    const struct aho_pkt *pkts, struct mp_list_t *mp_list, struct ips_flow_state *ips_state) {
     int I, j;
-    printf("in process_batch\n");
+    printf("heheheheheheheh\n");
     printf("batch_size:%d\n",BATCH_SIZE);
 
     for(I = 0; I < BATCH_SIZE; I++) {

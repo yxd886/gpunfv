@@ -62,6 +62,8 @@ ALL_SRCS = $(wildcard ./*.cc )
                       
 HEADERS =  $(wildcard ./*.h )
 
+CU_HEADERS =  $(wildcard ./*.cuh )
+
 CU_SRCS = $(wildcard ./*.cu)
 
 
@@ -119,7 +121,7 @@ $(eval $(call BUILD, \
 $(eval $(call BUILD, \
 	CUDACXX, \
 	%.o, \
-	%.cu $(PROTO_HEADERS) $(DEPDIR)/$$@.d, \
+	%.cu $(CU_HEADERS) $(DEPDIR)/$$@.d, \
 	$$(CUCXX) -o $$@ -c $$< $$(CUDAFLAGS) $$(CUDEPFLAGS)))
 	
 
