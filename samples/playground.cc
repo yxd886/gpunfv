@@ -762,9 +762,10 @@ public:
             sort(_flows[index].begin(),_flows[index].end(),CompLess);
             int partition=get_partition(index);
             assert(partition!=-1);
+            int max_pkt_num_per_flow=_flows[index][partition]->packets[index].size();
 
             if(partition>0){
-                int max_pkt_num_per_flow=_flows[index][partition]->packets[index].size();
+
 
                 int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char*);
                 int ngpu_states = partition * sizeof(char*);
