@@ -463,7 +463,7 @@ public:
 
         }
         future<>update_state(uint64_t index){
-            if(packets[index].size()==1){   //if it is the first packets[current_idx] of this flow in this batch
+            if(packets[index].empty()){   //if it is the first packets[current_idx] of this flow in this batch
                 if(_initialized){    //if it has already processed previous batch, then the state is newer than remote, so update to remote.
                     auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
                     return _f._mc.query(Operation::kSet, mica_key(key),
