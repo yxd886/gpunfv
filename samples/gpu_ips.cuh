@@ -65,7 +65,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
        for(j = 0; j < len; j++) {
 
             int count = st_arr[state].output.count;
-            printf("count = %d"\n",count);
+            printf("count = %d\n",count);
 
             if(count != 0) {
                 /* This state matches some patterns: copy the pattern IDs
