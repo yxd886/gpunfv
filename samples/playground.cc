@@ -1034,6 +1034,7 @@ int main(int ac, char** av) {
             return forwarders.invoke_on_all(&forwarder::configure, 1);
         }).then([&local_netstar_pools]{
                 for(unsigned int i = 0; i<local_netstar_pools.size();i++){
+                    std::cout<<"mem_map: "<<i<<std::endl;
                     gpu_mem_map(local_netstar_pools[i],mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private));
                 }
                 return make_ready_future<>();
