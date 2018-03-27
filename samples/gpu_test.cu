@@ -118,6 +118,9 @@ __global__ void gpu_nf_logic(char **pkt_batch, char **state_batch, char *extra_i
 	char **pkts = pkt_batch + id * flowDim;
 
 	printf("flowDim = %d\n", flowDim);
+	printf("pkt_batch = %x\n", pkt_batch);
+	
+	printf("id = %d, pkts = %x, pkts[0] = %x\n", id, pkts, pkts[0]);
 	// For every packet for this flow in this batch
 	for(int i = 0; i < flowDim; i++) {
 	printf("i = %d, pkts[i] = %x\n", i, pkts[i]);	
@@ -133,7 +136,8 @@ void gpu_launch(char **pkt_batch, char **state_batch, char *extra_info, int flow
 	//assert(nflows > 0);
 	int nblocks = (nflows + THREADPERBLOCK - 1) / THREADPERBLOCK;
 
-	gpu_nf_logic<<<nblocks, THREADPERBLOCK>>>(pkt_batch, state_batch, extra_info, flowDim);
+	//gpu_nf_logic<<<nblocks, THREADPERBLOCK>>>(pkt_batch, state_batch, extra_info, flowDim);
+	gpu_nf_logic<<<1, 1>>>(pkt_batch, state_batch, extra_info, flowDim);
 }
 
 void gpu_sync() {

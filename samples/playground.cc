@@ -766,6 +766,7 @@ public:
             // Clear and map gpu_pkts and gpu_states
             memset(gpu_pkts, 0, ngpu_pkts);
             memset(gpu_states, 0, ngpu_states);
+            printf("gpu_pkts = %x, ngpu_pkts = %d, gpu_pkts[0] = %d\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
             gpu_mem_map(gpu_pkts, ngpu_pkts);
             gpu_mem_map(gpu_states, ngpu_states);
 
@@ -784,7 +785,7 @@ public:
                 }
             }
 
-
+            printf("----gpu_pkts = %x, ngpu_pkts = %d, gpu_pkts[0] = %x\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
 
             /////////////////////////////////////////////
             // Launch kernel
