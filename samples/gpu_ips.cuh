@@ -45,12 +45,15 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
         int len = pkts[I].len;
         struct aho_state *st_arr = dfa_arr[dfa_id].root;
         int state = ips_state->_state;
+        printf("length:%d\n",len);
+        printf("state:%d\n",state);
 
         if(state >= dfa_arr[dfa_id].num_used_states){
             ips_state->_alert=false;
             ips_state->_state=state;
             return ;
         }
+        printf("11111111111111111111111\n");
 
        for(j = 0; j < len; j++) {
 
@@ -66,10 +69,11 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
                 ips_state->_state = state;
                 return ;
             }
-
+		
             int inp = pkts[I].content[j];
             state = st_arr[state].G[inp];
        }
+       printf("222222222222222222222222\n");
 
        ips_state->_state = state;
    }
