@@ -1000,8 +1000,9 @@ int main(int ac, char** av) {
     ports_env all_ports;
     per_core_objs<mica_client> mica_clients;
     vector<vector<port_pair>> queue_map;
+    std::vector<struct rte_mempool*> local_netstar_pools(netstar_pools);
 
-    return app.run_deprecated(ac, av, [&app, &all_ports, &mica_clients, &queue_map, &netstar_pools] {
+    return app.run_deprecated(ac, av, [&app, &all_ports, &mica_clients, &queue_map, &local_netstar_pools] {
         auto& opts = app.configuration();
         return all_ports.add_port(opts, 0, smp::count, port_type::netstar_dpdk).then([&opts, &all_ports]{
             return all_ports.add_port(opts, 1, smp::count, port_type::fdir);
@@ -1032,8 +1033,8 @@ int main(int ac, char** av) {
         })*/.then([]{
             return forwarders.invoke_on_all(&forwarder::configure, 1);
         }).then([&netstar_pools]{
-                for(unsigned int i = 0; i<netstar_pools.size();i++){
-                    gpu_mem_map(netstar_pools[i],mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private));
+                for(unsigned int i = 0; i<local_netstar_pools.size();i++){
+                    gpu_mem_map(local_netstar_pools[i],mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private));
                 }
                 return make_ready_future<>();
 
