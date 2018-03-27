@@ -122,7 +122,7 @@ __device__ void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state *state)
 __device__ void parse_pkt(char *pkt, struct ips_flow_state *state, struct aho_pkt *aho_pkt){
 	printf("in parse_pkt\n");
     uint32_t len = pkt_len(pkt);
-    printf("len: %d\n",len);
+    printf("len: %x\n",len);
 
     aho_pkt->content = (uint8_t *)malloc(len);
     memcpy(aho_pkt->content, pkt, len);
