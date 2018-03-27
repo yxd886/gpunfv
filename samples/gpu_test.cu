@@ -117,13 +117,12 @@ __global__ void gpu_nf_logic(char **pkt_batch, char **state_batch, char *extra_i
 	// Get start address
 	char **pkts = pkt_batch + id * flowDim;
 
-	//printf("flowDim = %d\n", flowDim);
 	//printf("pkt_batch = %x\n", pkt_batch);
 	
-	//printf("id = %d, pkts = %p, pkts[0] = %p\n", id, pkts, pkts[0]);
+	printf("flowDim = %d, id = %d, pkts = %p, pkts[0] = %p\n", flowDim, id, pkts, pkts[0]);
 	// For every packet for this flow in this batch
 	for(int i = 0; i < flowDim; i++) {
-	//printf("i = %d, pkts[i] = %x\n", i, pkts[i]);	
+	printf("i = %d, pkts[i] = %p\n", i, pkts[i]);	
 		if(pkts[i] == NULL) break;
 
 		//gpu_nf_logic_impl(pkts[i], state_batch[id]);
