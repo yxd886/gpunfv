@@ -51,6 +51,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
         struct aho_state *st_arr = NULL;
         st_arr=dfa_arr[dfa_id].root;
         printf("st_arr = %p\n",st_arr);
+        printf("st_arr[0].output.count = %d\n",st_arr[0].output.count);
         printf("4444444444444444\n");
         int state = ips_state->_state;
         printf("length:%d\n",len);
