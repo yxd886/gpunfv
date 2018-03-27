@@ -162,6 +162,7 @@ public:
         for(i = 0; i < AHO_MAX_DFA; i++) {
             printf("Initializing DFA %d\n", i);
             aho_init(&dfa_arr[i], i);
+            gpu_mem_map(dfa_arr[i].root,AHO_MAX_STATES * sizeof(struct aho_state));
         }
 
         red_printf("Adding patterns to DFAs\n");
@@ -184,6 +185,15 @@ public:
         gpu_mem_map(this, sizeof(IPS));
     }
     ~IPS(){
+
+        for(int i = 0; i < AHO_MAX_DFA; i++) {
+
+            gpu_mem_unmap(dfa_arr[i].root);
+            free(dfa_arr[i].root);
+        }
+
+
+
         gpu_mem_unmap(stats);
         gpu_mem_unmap(this);
         free(stats);
