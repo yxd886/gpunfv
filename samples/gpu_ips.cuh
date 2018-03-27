@@ -48,7 +48,8 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
         printf("dfa_id:%d\n",dfa_id);
         int len = pkts[I].len;
         printf("33333333333333\n");
-        struct aho_state *st_arr = dfa_arr[dfa_id].root;
+        struct aho_state *st_arr = NULL;
+        st_arr=dfa_arr[dfa_id].root;
         printf("4444444444444444\n");
         int state = ips_state->_state;
         printf("length:%d\n",len);
@@ -64,6 +65,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
        for(j = 0; j < len; j++) {
 
             int count = st_arr[state].output.count;
+            printf("count = %d"\n",count);
 
             if(count != 0) {
                 /* This state matches some patterns: copy the pattern IDs
