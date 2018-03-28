@@ -841,7 +841,6 @@ int main(int ac, char** av) {
                 times=rte_mempool_obj_iter(netstar_pools[1],my_obj_init,NULL);
                 times=rte_mempool_obj_iter(netstar_pools[0],my_obj_init,NULL);
                 printf("times:%d\n",times);
-                assert(1==0);
                 return make_ready_future<>();
 
         }).then([]{
