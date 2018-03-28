@@ -725,7 +725,7 @@ public:
             for(unsigned int i=0;i<_flows[index].size();i++){
                 float cpu_time=0;
                 float gpu_time=_flows[index][i]->packets[index].size();
-                for(unsigned int j=i+1;j<_flows[index].size();j++){
+                for(unsigned int j=i;j<_flows[index].size();j++){
                     cpu_time+=_flows[index][j]->packets[index].size();
                 }
                 processing_time.push_back(std::max(gpu_time,cpu_time/COMPUTE_RATIO));
