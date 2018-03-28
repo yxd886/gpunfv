@@ -312,7 +312,7 @@ public:
                 }
                 uint64_t test_len=mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private);
 
-                printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %ld, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<net::eth_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
+                //printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %ld, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<net::eth_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
                 //assert(((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[1]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[1])||((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[0]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[0]));
 
                 if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==true){
@@ -549,7 +549,7 @@ public:
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
             //std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
-            //std::cout<<"before sort packet num begin"<<std::endl;
+            std::cout<<"schedule task"<<std::endl;
             for(unsigned int i=0;i<_flows[index].size();i=i+1){
                 //std::cout<<_flows[index][i]->packets[index].size()<<" ";
             }
