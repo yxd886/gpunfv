@@ -56,6 +56,8 @@ using namespace seastar;
 using namespace netstar;
 using namespace std::chrono_literals;
 
+extern std::vector<struct rte_mempool*> netstar_pools;
+
 struct fake_val {
     uint64_t v[3];
 };
@@ -159,359 +161,362 @@ public:
             uint32_t _state;
             uint32_t _dfa_id;
             bool _alert;
-        };
-        struct mp_list_t {
-            int num_match;
-            uint16_t ptrn_id[MAX_MATCH];
-        };
+    };
+    struct mp_list_t {
+        int num_match;
+        uint16_t ptrn_id[MAX_MATCH];
+    };
 
-        struct query_key {
-            uint64_t v1;
-            uint64_t v2;
-        };
+    struct query_key {
+        uint64_t v1;
+        uint64_t v2;
+    };
 
-        class flow_operator {
-
-
-        public:
-            sd_async_flow<udp_ppr> _ac;
-            forwarder& _f;
-            ips_flow_state _fs;
-            std::vector<netstar::rte_packet> packets[2];
-            bool _initialized;
+    class flow_operator {
 
 
-            flow_operator(sd_async_flow<udp_ppr> ac, forwarder& f)
-                : _ac(std::move(ac))
-                , _f(f)
-                ,_initialized(false){}
-            //flow_operator(const flow_operator& other) = delete;
-            /*flow_operator(flow_operator&& other) noexcept
-                : _ac(std::move(other._ac)),_f(other._f),_fs(other._fs) ,_initialized(other._initialized){
+    public:
+        sd_async_flow<udp_ppr> _ac;
+        forwarder& _f;
+        ips_flow_state _fs;
+        std::vector<netstar::rte_packet> packets[2];
+        bool _initialized;
 
-                for(unsigned int i=0;i<other.packets[current_idx].size();i++){
-                    packets[current_idx].push_back(std::move(other.packets[current_idx][i]));
+
+        flow_operator(sd_async_flow<udp_ppr> ac, forwarder& f)
+            : _ac(std::move(ac))
+            , _f(f)
+            ,_initialized(false){}
+        //flow_operator(const flow_operator& other) = delete;
+        /*flow_operator(flow_operator&& other) noexcept
+            : _ac(std::move(other._ac)),_f(other._f),_fs(other._fs) ,_initialized(other._initialized){
+
+            for(unsigned int i=0;i<other.packets[current_idx].size();i++){
+                packets[current_idx].push_back(std::move(other.packets[current_idx][i]));
+            }
+        }
+        ~flow_operator(){
+            std::cout<<"packets[current_idx].size:"<<packets[current_idx].size()<<std::endl;
+            std::cout<<"deconstruction:"<<std::endl;
+
+            assert(packets[current_idx].size()<100);
+
+
+        }*/
+
+
+        void events_registration() {
+            _ac.register_events(udp_events::pkt_in);
+        }
+
+        void post_process(){
+
+            _f._pkt_counter-=packets[_f._batch.current_idx].size();
+            assert(_f._pkt_counter>=0);
+            process_pkts(_f._batch.current_idx);
+            std::vector<flow_operator*>::iterator it;
+            for(it=_f._batch._flows[_f._batch.current_idx].begin();it!=_f._batch._flows[_f._batch.current_idx].end();it++){
+                if(*it==this){
+                    _f._batch._flows[_f._batch.current_idx].erase(it);
+                    break;
                 }
             }
-            ~flow_operator(){
-                std::cout<<"packets[current_idx].size:"<<packets[current_idx].size()<<std::endl;
-                std::cout<<"deconstruction:"<<std::endl;
-
-                assert(packets[current_idx].size()<100);
 
 
-            }*/
+        }
+        void process_pkt(netstar::rte_packet* pkt, ips_flow_state* fs){
 
 
-            void events_registration() {
-                _ac.register_events(udp_events::pkt_in);
-            }
-
-            void post_process(){
-
-                _f._pkt_counter-=packets[_f._batch.current_idx].size();
-                assert(_f._pkt_counter>=0);
-                process_pkts(_f._batch.current_idx);
-                std::vector<flow_operator*>::iterator it;
-                for(it=_f._batch._flows[_f._batch.current_idx].begin();it!=_f._batch._flows[_f._batch.current_idx].end();it++){
-                    if(*it==this){
-                        _f._batch._flows[_f._batch.current_idx].erase(it);
-                        break;
-                    }
-                }
-
-
-            }
-            void process_pkt(netstar::rte_packet* pkt, ips_flow_state* fs){
-
-
-                ips_flow_state old;
-                old._alert=fs->_alert;
-                old._dfa_id=fs->_dfa_id;
-                old._state=fs->_state;
-                old.tag=fs->tag;
-                //std::cout<<"before ips_detect"<<std::endl;
-                ips_detect(pkt,fs);
-                //std::cout<<"after ips_detect"<<std::endl;
-                auto state_changed=state_updated(&old,fs);
-                if(state_changed) {
-                    auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
-                    _f._mc.query(Operation::kSet, mica_key(key),
-                            mica_value(*fs)).then([this](mica_response response){
-                        return make_ready_future<>();
-                    });
-                }
-
-            }
-
-            void forward_pkts(uint64_t index){
-                for(unsigned int i=0;i<packets[index].size();i++){
-
-                    //std::cout<<"begin to send pkt"<<std::endl;
-                    _ac.internal_send(std::move(packets[index][i]));
-                    //std::cout<<"finish sending pkt"<<std::endl;
-                }
-                packets[index].clear();
-                assert(packets[index].size()==0);
-            }
-            void process_pkts(uint64_t index){
-                //std::cout<<"packets[index].size:"<<packets[index].size()<<std::endl;
-                for(unsigned int i=0;i<packets[index].size();i++){
-                    //std::cout<<"packets[current_idx].size:"<<packets[index].size()<<std::endl;
-                    //std::cout<<"process "<<i<<" packets[index]"<<std::endl;
-                    //process_pkt(&packets[current_idx][i],&_fs);
-
-                }
-                forward_pkts(index);
-
-            }
-            future<>update_state(uint64_t index){
-                if(packets[index].empty()){   //if it is the first packets[current_idx] of this flow in this batch
-                    if(_initialized){    //if it has already processed previous batch, then the state is newer than remote, so update to remote.
-                        auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
-                        return _f._mc.query(Operation::kSet, mica_key(key),
-                                mica_value(_fs)).then([](mica_response response){
-                            return make_ready_future<>();
-                        });
-                    }else{              //if it is just initialized, it need get the flow state from the remote server.
-                        _initialized=true;
-                        auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
-                        return _f._mc.query(Operation::kGet, mica_key(key),
-                                mica_value(0, temporary_buffer<char>())).then([this](mica_response response){
-                            if(response.get_result() == Result::kNotFound) {
-                                init_automataState(_fs);
-                                auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
-                                return _f._mc.query(Operation::kSet, mica_key(key),
-                                        mica_value(_fs)).then([this](mica_response response){
-                                    return make_ready_future<>();
-                                });
-                            }
-                            else {
-                                _fs = response.get_value<ips_flow_state>();
-                                return make_ready_future<>();
-
-                            }
-
-                        });
-
-                    }
-                }else{
+            ips_flow_state old;
+            old._alert=fs->_alert;
+            old._dfa_id=fs->_dfa_id;
+            old._state=fs->_state;
+            old.tag=fs->tag;
+            //std::cout<<"before ips_detect"<<std::endl;
+            ips_detect(pkt,fs);
+            //std::cout<<"after ips_detect"<<std::endl;
+            auto state_changed=state_updated(&old,fs);
+            if(state_changed) {
+                auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
+                _f._mc.query(Operation::kSet, mica_key(key),
+                        mica_value(*fs)).then([this](mica_response response){
                     return make_ready_future<>();
-                }
-
-                //return make_ready_future<>();
-            }
-
-            future<> run_ips() {
-                return _ac.run_async_loop([this](){
-                    if(_ac.cur_event().on_close_event()) {
-                        post_process();
-                        return make_ready_future<af_action>(af_action::close_forward);
-                    }
-                    uint64_t test_len=mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private);
-
-                    printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %ld, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<net::eth_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
-                    assert(((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[1]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[1])||((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[0]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[0]));
-
-                    if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==true){
-
-                        return make_ready_future<af_action>(af_action::drop);
-
-                     }
-
-                    //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
-
-                    return update_state(_f._batch.current_idx)                       //update the flow state when receive the first pkt of this flow in this batch.
-                            .then([this](){
-                        if(packets[_f._batch.current_idx].empty()){
-                            _f._batch._flows[_f._batch.current_idx].push_back(this);
-                        }
-
-                        _f._pkt_counter++;
-                        packets[_f._batch.current_idx].push_back(std::move(_ac.cur_packet()));
-
-                        if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
-                             _f._batch.need_process=true;
-                             _f._pkt_counter=0;
-                             _f._batch.current_idx=!_f._batch.current_idx;
-
-
-                         }
-                        if(_f._batch.need_process==true&&_f._batch.processing==false){
-                            //reach batch size schedule
-                            _f._batch.processing=true;
-                            //std::cout<<"schedule_task"<<std::endl;
-                            return  _f._batch.schedule_task(!_f._batch.current_idx)
-                                    .then([this](){
-                                _f._batch.need_process=false;
-                                _f._batch.processing=false;
-                                return make_ready_future<af_action>(af_action::hold);
-                            });
-
-
-                        }else{
-                            return make_ready_future<af_action>(af_action::hold);
-                        }
-                        //return make_ready_future<af_action>(af_action::forward);
-
-
-                    });
-
                 });
             }
 
-           void init_automataState(struct ips_flow_state& state){
-                 srand((unsigned)time(NULL));
-                 state._state=0;
-                 state._alert=false;
-                 state._dfa_id=rand()%AHO_MAX_DFA;
-                 //std::cout<<"init_automataState_dfa_id:"<<state._dfa_id<<std::endl;
-             }
-           void parse_pkt(netstar::rte_packet *rte_pkt, struct ips_flow_state* state,struct aho_pkt*  aho_pkt){
+        }
 
-               aho_pkt->content=(uint8_t*)malloc(rte_pkt->len());
-               //std::cout<<"    rte_pkt->len():"<<rte_pkt->len()<<std::endl;
-               memcpy(aho_pkt->content,reinterpret_cast<uint8_t*>(rte_pkt->get_header(0,sizeof(char))),rte_pkt->len()-1);
-               aho_pkt->dfa_id=state->_dfa_id;
-               aho_pkt->len=rte_pkt->len();
-               //std::cout<<"    aho_pkt->len:"<<rte_pkt->len()<<std::endl;
-           }
-           bool state_updated(struct ips_flow_state* old_,struct ips_flow_state* new_){
-               if(old_->_alert==new_->_alert&&old_->_dfa_id==new_->_dfa_id&&old_->_state==new_->_state){
-                   return false;
-               }
-               return true;
-           }
+        void forward_pkts(uint64_t index){
+            for(unsigned int i=0;i<packets[index].size();i++){
 
-           void process_batch(const struct aho_dfa *dfa_arr,
-               const struct aho_pkt *pkts, struct mp_list_t *mp_list, struct ips_flow_state* ips_state)
-           {
-               int I, j;
-
-               for(I = 0; I < BATCH_SIZE; I++) {
-                   int dfa_id = pkts[I].dfa_id;
-                   //std::cout<<"      dfa_id:"<<dfa_id<<std::endl;
-                   int len = pkts[I].len;
-                   //std::cout<<"      len:"<<len<<std::endl;
-                   struct aho_state *st_arr = dfa_arr[dfa_id].root;
-
-                   int state = ips_state->_state;
-                 if(state>=dfa_arr[dfa_id].num_used_states){
-                     ips_state->_alert=false;
-                     ips_state->_state=state;
-                     return;
-                 }
-                   //std::cout<<"      state:"<<state<<std::endl;
-                   //std::cout<<"      before for loop"<<std::endl;
-                   for(j = 0; j < len; j++) {
-
-                       int count = st_arr[state].output.count;
-
-                       if(count != 0) {
-                           /* This state matches some patterns: copy the pattern IDs
-                             *  to the output */
-                           int offset = mp_list[I].num_match;
-                           memcpy(&mp_list[I].ptrn_id[offset],
-                               st_arr[state].out_arr, count * sizeof(uint16_t));
-                           mp_list[I].num_match += count;
-                           ips_state->_alert=true;
-                           ips_state->_state=state;
-                           return;
-
-                       }
-                       int inp = pkts[I].content[j];
-                       state = st_arr[state].G[inp];
-                   }
-                   //std::cout<<"      after for loop"<<std::endl;
-                   ips_state->_state=state;
-               }
-
-
-           }
-           void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state* state)
-           {
-               int i, j;
-
-
-
-               struct aho_dfa *dfa_arr = cb->dfa_arr;
-               struct aho_pkt *pkts = cb->pkts;
-               int num_pkts = cb->num_pkts;
-
-               /* Per-batch matched patterns */
-               struct mp_list_t mp_list[BATCH_SIZE];
-               for(i = 0; i < BATCH_SIZE; i++) {
-                   mp_list[i].num_match = 0;
-               }
-
-               /* Being paranoid about GCC optimization: ensure that the memcpys in
-                 *  process_batch functions don't get optimized out */
-
-
-               //int tot_proc = 0;     /* How many packets[_f._batch.current_idx] did we actually match ? */
-               //int tot_success = 0;  /* packets[_f._batch.current_idx] that matched a DFA state */
-               // tot_bytes = 0;       /* Total bytes matched through DFAs */
-
-               for(i = 0; i < num_pkts; i += BATCH_SIZE) {
-                   //std::cout<<"    before process_batch"<<std::endl;
-                   process_batch(dfa_arr, &pkts[i], mp_list,state);
-                   //std::cout<<"    after process_batch"<<std::endl;
-
-                   for(j = 0; j < BATCH_SIZE; j++) {
-                       int num_match = mp_list[j].num_match;
-                       assert(num_match < MAX_MATCH);
-
-
-                       mp_list[j].num_match = 0;
-                   }
-               }
-
-
-
-           }
-           void ips_detect(netstar::rte_packet *rte_pkt, struct ips_flow_state* state){
-
-               //cudaError_t err=cudaSuccess;
-               struct aho_pkt* pkts=(struct aho_pkt* )malloc(sizeof(struct aho_pkt));
-               //err=cudaHostRegister(rte_pkt,sizeof(netstar::rte_packet),cudaHostRegisterPortable);
-               //if(err==cudaSuccess){
-               //    printf("cudaHostRegister success!\n");
-               //}else if(err==cudaErrorHostMemoryAlreadyRegistered){
-                  // printf("cudaErrorHostMemoryAlreadyRegistered!\n");
-               //}else{
-                //   printf("cudaHostRegister fail!\n");
-               //}
-               //std::cout<<"  before parse_pkt"<<std::endl;
-               parse_pkt(rte_pkt, state,pkts);
-               //std::cout<<"  after parse_pkt"<<std::endl;
-               struct aho_ctrl_blk worker_cb;
-               worker_cb.stats = _f.ips.stats;
-               worker_cb.tot_threads = 1;
-               worker_cb.tid = 0;
-               worker_cb.dfa_arr = _f.ips.dfa_arr;
-               worker_cb.pkts = pkts;
-               worker_cb.num_pkts = 1;
-               //std::cout<<"  before ids_func"<<std::endl;
-               ids_func(&worker_cb,state);
-               //std::cout<<"  after ids_func"<<std::endl;
-               free(pkts->content);
-               free(pkts);
-
-           }
-
-
-            af_action forward_packet(ips_flow_state& fs) {
-                if(!fs._alert) {
-                    return af_action::forward;
-                }
-                else {
-                    return af_action::drop;
-                }
+                //std::cout<<"begin to send pkt"<<std::endl;
+                _ac.internal_send(std::move(packets[index][i]));
+                //std::cout<<"finish sending pkt"<<std::endl;
             }
-        };
+            packets[index].clear();
+            assert(packets[index].size()==0);
+        }
+        void process_pkts(uint64_t index){
+            //std::cout<<"packets[index].size:"<<packets[index].size()<<std::endl;
+            for(unsigned int i=0;i<packets[index].size();i++){
+                //std::cout<<"packets[current_idx].size:"<<packets[index].size()<<std::endl;
+                //std::cout<<"process "<<i<<" packets[index]"<<std::endl;
+                //process_pkt(&packets[current_idx][i],&_fs);
+
+            }
+            forward_pkts(index);
+
+        }
+        future<>update_state(uint64_t index){
+            if(packets[index].empty()){   //if it is the first packets[current_idx] of this flow in this batch
+                if(_initialized){    //if it has already processed previous batch, then the state is newer than remote, so update to remote.
+                    auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
+                    return _f._mc.query(Operation::kSet, mica_key(key),
+                            mica_value(_fs)).then([](mica_response response){
+                        return make_ready_future<>();
+                    });
+                }else{              //if it is just initialized, it need get the flow state from the remote server.
+                    _initialized=true;
+                    auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
+                    return _f._mc.query(Operation::kGet, mica_key(key),
+                            mica_value(0, temporary_buffer<char>())).then([this](mica_response response){
+                        if(response.get_result() == Result::kNotFound) {
+                            init_automataState(_fs);
+                            auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
+                            return _f._mc.query(Operation::kSet, mica_key(key),
+                                    mica_value(_fs)).then([this](mica_response response){
+                                return make_ready_future<>();
+                            });
+                        }
+                        else {
+                            _fs = response.get_value<ips_flow_state>();
+                            return make_ready_future<>();
+
+                        }
+
+                    });
+
+                }
+            }else{
+                return make_ready_future<>();
+            }
+
+            //return make_ready_future<>();
+        }
+
+        future<> run_ips() {
+            return _ac.run_async_loop([this](){
+                if(_ac.cur_event().on_close_event()) {
+                    post_process();
+                    return make_ready_future<af_action>(af_action::close_forward);
+                }
+                uint64_t test_len=mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private);
+
+                printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %ld, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<net::eth_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
+                assert(((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[1]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[1])||((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[0]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[0]));
+
+                if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==true){
+
+                    return make_ready_future<af_action>(af_action::drop);
+
+                 }
+
+                //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
+
+                return update_state(_f._batch.current_idx)                       //update the flow state when receive the first pkt of this flow in this batch.
+                        .then([this](){
+                    if(packets[_f._batch.current_idx].empty()){
+                        _f._batch._flows[_f._batch.current_idx].push_back(this);
+                    }
+
+                    _f._pkt_counter++;
+                    packets[_f._batch.current_idx].push_back(std::move(_ac.cur_packet()));
+
+                    if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
+                         _f._batch.need_process=true;
+                         _f._pkt_counter=0;
+                         _f._batch.current_idx=!_f._batch.current_idx;
+
+
+                     }
+                    if(_f._batch.need_process==true&&_f._batch.processing==false){
+                        //reach batch size schedule
+                        _f._batch.processing=true;
+                        //std::cout<<"schedule_task"<<std::endl;
+                        return  _f._batch.schedule_task(!_f._batch.current_idx)
+                                .then([this](){
+                            _f._batch.need_process=false;
+                            _f._batch.processing=false;
+                            return make_ready_future<af_action>(af_action::hold);
+                        });
+
+
+                    }else{
+                        return make_ready_future<af_action>(af_action::hold);
+                    }
+                    //return make_ready_future<af_action>(af_action::forward);
+
+
+                });
+
+            });
+        }
+
+       void init_automataState(struct ips_flow_state& state){
+             srand((unsigned)time(NULL));
+             state._state=0;
+             state._alert=false;
+             state._dfa_id=rand()%AHO_MAX_DFA;
+             //std::cout<<"init_automataState_dfa_id:"<<state._dfa_id<<std::endl;
+         }
+       void parse_pkt(netstar::rte_packet *rte_pkt, struct ips_flow_state* state,struct aho_pkt*  aho_pkt){
+
+           aho_pkt->content=(uint8_t*)malloc(rte_pkt->len());
+           //std::cout<<"    rte_pkt->len():"<<rte_pkt->len()<<std::endl;
+           memcpy(aho_pkt->content,reinterpret_cast<uint8_t*>(rte_pkt->get_header(0,sizeof(char))),rte_pkt->len()-1);
+           aho_pkt->dfa_id=state->_dfa_id;
+           aho_pkt->len=rte_pkt->len();
+           //std::cout<<"    aho_pkt->len:"<<rte_pkt->len()<<std::endl;
+       }
+       bool state_updated(struct ips_flow_state* old_,struct ips_flow_state* new_){
+           if(old_->_alert==new_->_alert&&old_->_dfa_id==new_->_dfa_id&&old_->_state==new_->_state){
+               return false;
+           }
+           return true;
+       }
+
+       void process_batch(const struct aho_dfa *dfa_arr,
+           const struct aho_pkt *pkts, struct mp_list_t *mp_list, struct ips_flow_state* ips_state)
+       {
+           int I, j;
+
+           for(I = 0; I < BATCH_SIZE; I++) {
+               int dfa_id = pkts[I].dfa_id;
+               //std::cout<<"      dfa_id:"<<dfa_id<<std::endl;
+               int len = pkts[I].len;
+               //std::cout<<"      len:"<<len<<std::endl;
+               struct aho_state *st_arr = dfa_arr[dfa_id].root;
+
+               int state = ips_state->_state;
+             if(state>=dfa_arr[dfa_id].num_used_states){
+                 ips_state->_alert=false;
+                 ips_state->_state=state;
+                 return;
+             }
+               //std::cout<<"      state:"<<state<<std::endl;
+               //std::cout<<"      before for loop"<<std::endl;
+               for(j = 0; j < len; j++) {
+
+                   int count = st_arr[state].output.count;
+
+                   if(count != 0) {
+                       /* This state matches some patterns: copy the pattern IDs
+                         *  to the output */
+                       int offset = mp_list[I].num_match;
+                       memcpy(&mp_list[I].ptrn_id[offset],
+                           st_arr[state].out_arr, count * sizeof(uint16_t));
+                       mp_list[I].num_match += count;
+                       ips_state->_alert=true;
+                       ips_state->_state=state;
+                       return;
+
+                   }
+                   int inp = pkts[I].content[j];
+                   state = st_arr[state].G[inp];
+               }
+               //std::cout<<"      after for loop"<<std::endl;
+               ips_state->_state=state;
+           }
+
+
+       }
+       void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state* state)
+       {
+           int i, j;
 
 
 
+           struct aho_dfa *dfa_arr = cb->dfa_arr;
+           struct aho_pkt *pkts = cb->pkts;
+           int num_pkts = cb->num_pkts;
+
+           /* Per-batch matched patterns */
+           struct mp_list_t mp_list[BATCH_SIZE];
+           for(i = 0; i < BATCH_SIZE; i++) {
+               mp_list[i].num_match = 0;
+           }
+
+           /* Being paranoid about GCC optimization: ensure that the memcpys in
+             *  process_batch functions don't get optimized out */
+
+
+           //int tot_proc = 0;     /* How many packets[_f._batch.current_idx] did we actually match ? */
+           //int tot_success = 0;  /* packets[_f._batch.current_idx] that matched a DFA state */
+           // tot_bytes = 0;       /* Total bytes matched through DFAs */
+
+           for(i = 0; i < num_pkts; i += BATCH_SIZE) {
+               //std::cout<<"    before process_batch"<<std::endl;
+               process_batch(dfa_arr, &pkts[i], mp_list,state);
+               //std::cout<<"    after process_batch"<<std::endl;
+
+               for(j = 0; j < BATCH_SIZE; j++) {
+                   int num_match = mp_list[j].num_match;
+                   assert(num_match < MAX_MATCH);
+
+
+                   mp_list[j].num_match = 0;
+               }
+           }
+
+
+
+       }
+       void ips_detect(netstar::rte_packet *rte_pkt, struct ips_flow_state* state){
+
+           //cudaError_t err=cudaSuccess;
+           struct aho_pkt* pkts=(struct aho_pkt* )malloc(sizeof(struct aho_pkt));
+           //err=cudaHostRegister(rte_pkt,sizeof(netstar::rte_packet),cudaHostRegisterPortable);
+           //if(err==cudaSuccess){
+           //    printf("cudaHostRegister success!\n");
+           //}else if(err==cudaErrorHostMemoryAlreadyRegistered){
+              // printf("cudaErrorHostMemoryAlreadyRegistered!\n");
+           //}else{
+            //   printf("cudaHostRegister fail!\n");
+           //}
+           //std::cout<<"  before parse_pkt"<<std::endl;
+           parse_pkt(rte_pkt, state,pkts);
+           //std::cout<<"  after parse_pkt"<<std::endl;
+           struct aho_ctrl_blk worker_cb;
+           worker_cb.stats = _f.ips.stats;
+           worker_cb.tot_threads = 1;
+           worker_cb.tid = 0;
+           worker_cb.dfa_arr = _f.ips.dfa_arr;
+           worker_cb.pkts = pkts;
+           worker_cb.num_pkts = 1;
+           //std::cout<<"  before ids_func"<<std::endl;
+           ids_func(&worker_cb,state);
+           //std::cout<<"  after ids_func"<<std::endl;
+           free(pkts->content);
+           free(pkts);
+
+       }
+
+
+        af_action forward_packet(ips_flow_state& fs) {
+            if(!fs._alert) {
+                return af_action::forward;
+            }
+            else {
+                return af_action::drop;
+            }
+        }
+    };
+
+
+    static bool CompLess(const flow_operator* lhs, const flow_operator* rhs)
+    {
+        return lhs->packets[!lhs->_f._batch.current_idx].size() < rhs->packets[!lhs->_f._batch.current_idx].size();
+    }
     class batch {
     public:
         //uint64_t active_flow_num;
