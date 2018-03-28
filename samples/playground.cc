@@ -48,9 +48,9 @@
 #include <time.h>
 
 #include <unordered_map>
-#define GPU_BATCH_SIZE 3000
+#define GPU_BATCH_SIZE 4000
 
-#define COMPUTE_RATIO 100000
+#define COMPUTE_RATIO 1
 
 using namespace seastar;
 using namespace netstar;
