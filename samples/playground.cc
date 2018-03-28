@@ -273,16 +273,16 @@ public:
 
         }
         future<>update_state(uint64_t index){
-           /* if(packets[index].empty()){   //if it is the first packets[current_idx] of this flow in this batch
+            if(packets[index].empty()){   //if it is the first packets[current_idx] of this flow in this batch
                 if(_initialized){    //if it has already processed previous batch, then the state is newer than remote, so update to remote.
-                    auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
+                   /* auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
                     return _f._mc.query(Operation::kSet, mica_key(key),
                             mica_value(_fs)).then([](mica_response response){
                         return make_ready_future<>();
-                    });
+                    });*/
                 }else{              //if it is just initialized, it need get the flow state from the remote server.
                     _initialized=true;
-                    auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
+                    /*auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
                     return _f._mc.query(Operation::kGet, mica_key(key),
                             mica_value(0, temporary_buffer<char>())).then([this](mica_response response){
                         if(response.get_result() == Result::kNotFound) {
@@ -299,12 +299,13 @@ public:
 
                         }
 
-                    });
+                    });*/
+                    init_automataState(_fs);
 
                 }
             }else{
                 return make_ready_future<>();
-            }*/
+            }
 
             return make_ready_future<>();
         }
@@ -598,7 +599,7 @@ public:
                 //std::cout<<"memory alloc finished"<<std::endl;
                 for(int i = 0; i < partition; i++){
                     gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
-  printf("cpu(): state[%d]->_dfa_id = %d\n", i, ((struct ips_flow_state *)gpu_states[i])->_dfa_id);
+  //printf("cpu(): state[%d]->_dfa_id = %d\n", i, ((struct ips_flow_state *)gpu_states[i])->_dfa_id);
                     //gpu_mem_map(gpu_states[i], sizeof(struct ips_flow_state));
                     //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
