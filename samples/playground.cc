@@ -35,6 +35,9 @@
 
 #include "netstar/preprocessor/udp_ppr.hh"
 
+#include <helper_functions.h>
+#include <helper_cuda.h>
+#include <cuda_runtime.h>
 
 #include "playground.hh"
 
