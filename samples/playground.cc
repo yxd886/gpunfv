@@ -277,7 +277,7 @@ public:
             forward_pkts(index);
 
         }
-        future<>update_state(uint64_t index){
+        void update_state(uint64_t index){
             if(packets[index].empty()){   //if it is the first packets[current_idx] of this flow in this batch
                 if(_initialized){    //if it has already processed previous batch, then the state is newer than remote, so update to remote.
                    /* auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
@@ -309,10 +309,10 @@ public:
 
                 }
             }else{
-                return make_ready_future<>();
+                //return make_ready_future<>();
             }
 
-            return make_ready_future<>();
+            //return make_ready_future<>();
         }
 
         future<> run_ips() {
@@ -333,9 +333,9 @@ public:
                  }
 
                 //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
-
-                return update_state(_f._batch.current_idx)                       //update the flow state when receive the first pkt of this flow in this batch.
-                        .then([this](){
+                update_state(_f._batch.current_idx);
+                                       //update the flow state when receive the first pkt of this flow in this batch.
+                return([this](){
                     if(packets[_f._batch.current_idx].empty()){
                         _f._batch._flows[_f._batch.current_idx].push_back(this);
                     }
@@ -355,12 +355,11 @@ public:
                         _f._batch.processing=true;
                         //std::cout<<"schedule_task"<<std::endl;
 
-                        return  _f._batch.schedule_task(!_f._batch.current_idx)
-                                .then([this](){
-                            _f._batch.need_process=false;
-                            _f._batch.processing=false;
-                            return make_ready_future<af_action>(af_action::hold);
-                        });
+                        _f._batch.schedule_task(!_f._batch.current_idx);
+                        _f._batch.need_process=false;
+                        _f._batch.processing=false;
+                        return make_ready_future<af_action>(af_action::hold);
+
 
 
                     }else{
@@ -557,7 +556,7 @@ public:
 
 
 
-        future<> schedule_task(uint64_t index){
+        void schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
             //std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
@@ -726,7 +725,7 @@ public:
             _flows[index].clear();
             */
 
-            return make_ready_future<>();
+            //return make_ready_future<>();
 
             //std::cout<<"gpu_process_pkts finished"<<std::endl;
 
