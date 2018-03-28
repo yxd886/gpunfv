@@ -190,21 +190,21 @@ public:
 
         }
         //flow_operator(const flow_operator& other) = delete;
-        /*flow_operator(flow_operator&& other) noexcept
+       /* flow_operator(flow_operator&& other) noexcept
             : _ac(std::move(other._ac)),_f(other._f),_fs(other._fs) ,_initialized(other._initialized){
 
             for(unsigned int i=0;i<other.packets[current_idx].size();i++){
                 packets[current_idx].push_back(std::move(other.packets[current_idx][i]));
             }
-        }
-        ~flow_operator(){
-            std::cout<<"packets[current_idx].size:"<<packets[current_idx].size()<<std::endl;
-            std::cout<<"deconstruction:"<<std::endl;
-
-            assert(packets[current_idx].size()<100);
-
-
         }*/
+        ~flow_operator(){
+
+            gpu_mem_unmap(&_fs);
+
+
+
+
+        }
 
 
         void events_registration() {
@@ -216,7 +216,7 @@ public:
             _f._pkt_counter-=packets[_f._batch.current_idx].size();
             assert(_f._pkt_counter>=0);
             process_pkts(_f._batch.current_idx);
-            gpu_mem_unmap(&_fs);
+
             std::vector<flow_operator*>::iterator it;
             for(it=_f._batch._flows[_f._batch.current_idx].begin();it!=_f._batch._flows[_f._batch.current_idx].end();it++){
                 if(*it==this){
