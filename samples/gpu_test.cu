@@ -125,7 +125,7 @@ __global__ void gpu_nf_logic(char **pkt_batch, char **state_batch, char *extra_i
 	for(int i = 0; i < flowDim; i++) {
 	printf("id = %d, i = %d, pkts[i] = %p\n", id, i, pkts[i]);	
 		if(pkts[i] == NULL) break;
-
+ printf("gpu_nf_logic(): state->_dfa_id = %d\n" ((struct ips_flow_state *)state_batch[id])->_dfa_id);
 		//gpu_nf_logic_impl(pkts[i], state_batch[id]);
 		ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);
 	printf("id = %d, end", id);	
