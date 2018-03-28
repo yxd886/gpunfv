@@ -756,7 +756,7 @@ public:
             if(distance==0){
                 std::cout<<"GPU_max_pkt: "<<0<<std::endl;
             }else{
-                std::cout<<"GPU_max_pkt: "<<processing_time[distance-1]<<std::endl;
+                std::cout<<"GPU_max_pkt: "<<_flows[index][distance-1]->packets[index].size()<<std::endl;
             }
             //std::cout<<"    min_processing_time:"<<*result<<std::endl;
             return distance;
