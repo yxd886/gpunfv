@@ -726,7 +726,7 @@ public:
                 float cpu_time=0;
                 float gpu_time=0;
                 if(i>0)
-                    _flows[index][i-1]->packets[index].size();
+                    gpu_time=_flows[index][i-1]->packets[index].size();
                 for(unsigned int j=i;j<_flows[index].size();j++){
                     cpu_time+=_flows[index][j]->packets[index].size();
                 }
