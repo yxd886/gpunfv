@@ -624,9 +624,22 @@ public:
 
                 /////////////////////////////////////////////
                 // Launch kernel
+                float elapsedTime = 0.0;
+                cudaEvent_t event_start, event_stop;
+                cudaEventCreate(&event_start);
+                cudaEventCreate(&event_stop);
+                cudaEventRecord(event_start, 0);
 
 
                 gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)&(_flows[0][index]->_f.ips), max_pkt_num_per_flow, partition);
+
+
+                cudaEventRecord(event_stop, 0);
+                cudaEventSynchronize(event_stop);
+                cudaEventElapsedTime(&elapsedTime, event_start, event_stop);
+                printf("CUDA_GPU processing time: %f\n", static_cast<double>(elapsedTime / 1.0));
+                cudaEventDestroy(event_start);
+                cudaEventDestroy(event_stop);
 
             }
             //std::cout<<"   partition:"<<partition<<std::endl;
