@@ -35,9 +35,7 @@
 
 #include "netstar/preprocessor/udp_ppr.hh"
 
-#include <helper_functions.h>
-#include <helper_cuda.h>
-#include <cuda_runtime.h>
+
 
 #include "playground.hh"
 
@@ -46,6 +44,10 @@
 #include <algorithm>
 #include "nf/aho-corasick/fpp.h"
 #include "nf/aho-corasick/aho.h"
+
+#include <helper_functions.h>
+#include <helper_cuda.h>
+#include <cuda_runtime.h>
 #define MAX_MATCH 8192
 #include <stdlib.h>
 #include <time.h>
