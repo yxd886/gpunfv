@@ -187,7 +187,7 @@ public:
             : _ac(std::move(ac))
             , _f(f)
             ,_initialized(false){
-            gpu_mem_map(&_fs, sizeof(struct ips_flow_state));
+
         }
         //flow_operator(const flow_operator& other) = delete;
         /*flow_operator(flow_operator&& other) noexcept
@@ -722,6 +722,7 @@ public:
 
                 do_with(flow_operator(ic.get_sd_async_flow(),(*this)), [this](flow_operator& r){
                     r.events_registration();
+                    gpu_mem_map(&(r._fs), sizeof(struct ips_flow_state));
                     return r.run_ips();
                 });
 
