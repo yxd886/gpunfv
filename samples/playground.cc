@@ -550,7 +550,7 @@ public:
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
             //std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
-            std::cout<<"schedule task"<<std::endl;
+            //std::cout<<"schedule task"<<std::endl;
             for(unsigned int i=0;i<_flows[index].size();i=i+1){
                 //std::cout<<_flows[index][i]->packets[index].size()<<" ";
             }
