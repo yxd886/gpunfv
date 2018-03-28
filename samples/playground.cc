@@ -57,6 +57,10 @@ using namespace netstar;
 using namespace std::chrono_literals;
 
 extern std::vector<struct rte_mempool*> netstar_pools;
+std::chrono::time_point<std::chrono::steady_clock> started;
+std::chrono::time_point<std::chrono::steady_clock> stoped;
+std::chrono::time_point<std::chrono::steady_clock> gpu_started;
+std::chrono::time_point<std::chrono::steady_clock> gpu_stoped;
 
 struct fake_val {
     uint64_t v[3];
@@ -269,7 +273,7 @@ public:
 
         }
         future<>update_state(uint64_t index){
-            if(packets[index].empty()){   //if it is the first packets[current_idx] of this flow in this batch
+           /* if(packets[index].empty()){   //if it is the first packets[current_idx] of this flow in this batch
                 if(_initialized){    //if it has already processed previous batch, then the state is newer than remote, so update to remote.
                     auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
                     return _f._mc.query(Operation::kSet, mica_key(key),
@@ -300,9 +304,9 @@ public:
                 }
             }else{
                 return make_ready_future<>();
-            }
+            }*/
 
-            //return make_ready_future<>();
+            return make_ready_future<>();
         }
 
         future<> run_ips() {
@@ -344,6 +348,7 @@ public:
                         //reach batch size schedule
                         _f._batch.processing=true;
                         //std::cout<<"schedule_task"<<std::endl;
+
                         return  _f._batch.schedule_task(!_f._batch.current_idx)
                                 .then([this](){
                             _f._batch.need_process=false;
@@ -551,13 +556,25 @@ public:
             //schedule the task, following is the strategy offload all to GPU
             //std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
             //std::cout<<"schedule task"<<std::endl;
-            for(unsigned int i=0;i<_flows[index].size();i=i+1){
+
+            stoped = steady_clock_type::now();
+            auto elapsed = stoped - started;
+            printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            started = steady_clock_type::now();
+
+            //for(unsigned int i=0;i<_flows[index].size();i=i+1){
                 //std::cout<<_flows[index][i]->packets[index].size()<<" ";
-            }
+            //}
             //std::cout<<"end before sort"<<std::endl;
             sort(_flows[index].begin(),_flows[index].end(),CompLess);
             int partition=get_partition(index);
             assert(partition!=-1);
+
+            stoped = steady_clock_type::now();
+            elapsed = stoped - started;
+            printf("Scheduling time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            started = steady_clock_type::now();
+
             int max_pkt_num_per_flow=_flows[index][partition]->packets[index].size();
 
             if(partition>0){
@@ -593,6 +610,16 @@ public:
                     }
                 }
 
+
+
+                stoped = steady_clock_type::now();
+                elapsed = stoped - started;
+                printf("Batching time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                started = steady_clock_type::now();
+
+
+
+                gpu_started = steady_clock_type::now();
                 //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
 
                 /////////////////////////////////////////////
@@ -613,10 +640,20 @@ public:
                 _flows[index][i]->process_pkts(index);
             }
 
+
+            stoped = steady_clock_type::now();
+            elapsed = stoped - started;
+            printf("CPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            started = steady_clock_type::now();
+
             // Wait for GPU process
             if(partition>0){
                 gpu_sync();
+                gpu_stoped = steady_clock_type::now();
+                elapsed = gpu_stoped - gpu_started;
+                printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
 
+                started = steady_clock_type::now();
 
                 // Unmap every packet
                /* for(int i = 0; i < partition; i++){
