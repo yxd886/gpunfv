@@ -64,9 +64,9 @@ printf("------------------4-----------------\n");
 printf("------------------5-----------------\n");
 
        for(j = 0; j < len; j++) {
-printf("------------------6-----------------\n");
+//printf("------------------6-----------------\n");
             int count = st_arr[state].output.count;
-printf("------------------7-----------------\n");
+//printf("------------------7-----------------\n");
 
             if(count != 0) {
                 /* This state matches some patterns: copy the pattern IDs
@@ -78,7 +78,7 @@ printf("------------------7-----------------\n");
                 ips_state->_state = state;
                 return ;
             }
-printf("------------------8-----------------\n");	
+//printf("------------------8-----------------\n");	
            int inp = pkts[I].content[j];
             state = st_arr[state].G[inp];
         
