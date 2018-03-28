@@ -721,6 +721,7 @@ public:
         uint64_t get_partition(uint64_t index){
 
             std::vector<float> processing_time;
+            std::vector<float> cpu_processing_num;
             for(unsigned int i=0;i<_flows[index].size();i++){
                 float cpu_time=0;
                 float gpu_time=_flows[index][i]->packets[index].size();
@@ -728,6 +729,7 @@ public:
                     cpu_time+=_flows[index][j]->packets[index].size();
                 }
                 processing_time.push_back(std::max(gpu_time,cpu_time/COMPUTE_RATIO));
+                cpu_processing_num.push_back(cpu_time);
             }
 
 
@@ -747,8 +749,15 @@ public:
 
 
             std::vector<float>::iterator result = std::min_element(std::begin(processing_time), std::end(processing_time));
+            uint64_t distance=std::distance(std::begin(processing_time), result);
+            std::cout<<"cpu_pkts_processed: "<<cpu_processing_num[distance]<<std::endl;
+            if(distance==0){
+                std::cout<<"GPU_max_pkt: "<<0<<std::endl;
+            }else{
+                std::cout<<"GPU_max_pkt: "<<processing_time[distance-1]<<std::endl;
+            }
             //std::cout<<"    min_processing_time:"<<*result<<std::endl;
-            return std::distance(std::begin(processing_time), result);
+            return distance;
         }
 
     };
