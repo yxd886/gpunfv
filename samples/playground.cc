@@ -335,40 +335,40 @@ public:
                 //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
                 update_state(_f._batch.current_idx);
                                        //update the flow state when receive the first pkt of this flow in this batch.
-                return([this](){
-                    if(packets[_f._batch.current_idx].empty()){
-                        _f._batch._flows[_f._batch.current_idx].push_back(this);
-                    }
 
-                    _f._pkt_counter++;
-                    packets[_f._batch.current_idx].push_back(std::move(_ac.cur_packet()));
+                if(packets[_f._batch.current_idx].empty()){
+                    _f._batch._flows[_f._batch.current_idx].push_back(this);
+                }
 
-                    if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
-                         _f._batch.need_process=true;
-                         _f._pkt_counter=0;
-                         _f._batch.current_idx=!_f._batch.current_idx;
+                _f._pkt_counter++;
+                packets[_f._batch.current_idx].push_back(std::move(_ac.cur_packet()));
 
-
-                     }
-                    if(_f._batch.need_process==true&&_f._batch.processing==false){
-                        //reach batch size schedule
-                        _f._batch.processing=true;
-                        //std::cout<<"schedule_task"<<std::endl;
-
-                        _f._batch.schedule_task(!_f._batch.current_idx);
-                        _f._batch.need_process=false;
-                        _f._batch.processing=false;
-                        return make_ready_future<af_action>(af_action::hold);
+                if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
+                     _f._batch.need_process=true;
+                     _f._pkt_counter=0;
+                     _f._batch.current_idx=!_f._batch.current_idx;
 
 
+                 }
+                if(_f._batch.need_process==true&&_f._batch.processing==false){
+                    //reach batch size schedule
+                    _f._batch.processing=true;
+                    //std::cout<<"schedule_task"<<std::endl;
 
-                    }else{
-                        return make_ready_future<af_action>(af_action::hold);
-                    }
-                    //return make_ready_future<af_action>(af_action::forward);
+                    _f._batch.schedule_task(!_f._batch.current_idx);
+                    _f._batch.need_process=false;
+                    _f._batch.processing=false;
+                    return make_ready_future<af_action>(af_action::hold);
 
 
-                });
+
+                }else{
+                    return make_ready_future<af_action>(af_action::hold);
+                }
+                //return make_ready_future<af_action>(af_action::forward);
+
+
+
 
             });
         }
