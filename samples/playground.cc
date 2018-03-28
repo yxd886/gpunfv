@@ -189,21 +189,18 @@ public:
             ,_initialized(false){
 
         }
-        //flow_operator(const flow_operator& other) = delete;
-       /* flow_operator(flow_operator&& other) noexcept
+        flow_operator(const flow_operator& other) = delete;
+        flow_operator(flow_operator&& other) noexcept
             : _ac(std::move(other._ac)),_f(other._f),_fs(other._fs) ,_initialized(other._initialized){
 
-            for(unsigned int i=0;i<other.packets[current_idx].size();i++){
-                packets[current_idx].push_back(std::move(other.packets[current_idx][i]));
-            }
-        }*/
+            //for(unsigned int i=0;i<other.packets[current_idx].size();i++){
+            //    packets[current_idx].push_back(std::move(other.packets[current_idx][i]));
+            //}
+            packets[0] = std::move(other.packets[0]);
+            packets[1] = std::move(other.packets[1]);
+        }
         ~flow_operator(){
-
             gpu_mem_unmap(&_fs);
-
-
-
-
         }
 
 
