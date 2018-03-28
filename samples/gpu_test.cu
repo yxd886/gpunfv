@@ -40,7 +40,7 @@ bool test_cudaHostAlloc() {
 
 	// Check result
 	for(int i = 0; i < 10; i++){
-		//printf("s[%d]: %d\n", i, hptr1[i]);
+		printf("s[%d]: %d\n", i, hptr1[i]);
 		res = (hptr1[i] == i % 5) ? res : false;
 	}
 
@@ -73,18 +73,18 @@ bool test_cudaHostRegister() {
 
 	// Test kernel
 	if(cudaDevAttrCanUseHostPointerForRegisteredMem != 0){
-		//printf("Can directly use host pointer to substitute device pointer on this machine.\n");
+		printf("Can directly use host pointer to substitute device pointer on this machine.\n");
 		testKernel<<<1, 5>>>(hptr1);
 	}
 	else{
-		//printf("This machine does not support substituting host pointer for device pointer.\n");
+		printf("This machine does not support substituting host pointer for device pointer.\n");
 		testKernel<<<1, 5>>>(dptr1);
 	}
 	cudaDeviceSynchronize();
 
 	// Check result
 	for(int i = 0; i < 10; i++){
-		//printf("s[%d]: %d\n", i, hptr1[i]);
+		printf("s[%d]: %d\n", i, hptr1[i]);
 		res = (hptr1[i] == i % 5) ? res : false;
 	}
 
@@ -111,24 +111,24 @@ void start_test() {
 }
 
 __global__ void gpu_nf_logic(char **pkt_batch, char **state_batch, char *extra_info, int flowDim, int nflows) {
-	//printf("in gpu_nf_logic\n");
+	printf("in gpu_nf_logic\n");
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 	if(id >= nflows) return ;
 
 	// Get start address
 	char **pkts = pkt_batch + id * flowDim;
 
-	//printf("pkt_batch = %x\n", pkt_batch);
+	printf("pkt_batch = %x\n", pkt_batch);
 	
-	//printf("flowDim = %d, id = %d, pkts = %p, pkts[0] = %p\n", flowDim, id, pkts, pkts[0]);
+	printf("flowDim = %d, id = %d, pkts = %p, pkts[0] = %p\n", flowDim, id, pkts, pkts[0]);
 	// For every packet for this flow in this batch
 	for(int i = 0; i < flowDim; i++) {
-	//printf("id = %d, i = %d, pkts[i] = %p\n", id, i, pkts[i]);	
+	printf("id = %d, i = %d, pkts[i] = %p\n", id, i, pkts[i]);	
 		if(pkts[i] == NULL) break;
 
 		//gpu_nf_logic_impl(pkts[i], state_batch[id]);
 		ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);
-	//printf("id = %d, end", id);	
+	printf("id = %d, end", id);	
 	}
 }
 
@@ -136,7 +136,7 @@ void gpu_launch(char **pkt_batch, char **state_batch, char *extra_info, int flow
 	// Calculate block amounts
 	assert(nflows > 0);
 	int nblocks = (nflows + THREADPERBLOCK - 1) / THREADPERBLOCK;
-//printf("nblocks = %d, nthread = %d, nflows = %d\n", nblocks, THREADPERBLOCK, nflows);
+printf("nblocks = %d, nthread = %d, nflows = %d\n", nblocks, THREADPERBLOCK, nflows);
 	gpu_nf_logic<<<nblocks, THREADPERBLOCK>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
 	//gpu_nf_logic<<<1, 1>>>(pkt_batch, state_batch, extra_info, flowDim);
 }
