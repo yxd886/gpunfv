@@ -50,7 +50,7 @@
 #include <unordered_map>
 #define GPU_BATCH_SIZE 4000
 
-#define COMPUTE_RATIO 1
+#define COMPUTE_RATIO 100
 
 using namespace seastar;
 using namespace netstar;
