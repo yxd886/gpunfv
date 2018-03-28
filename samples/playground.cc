@@ -720,9 +720,12 @@ public:
         }
         uint64_t get_partition(uint64_t index){
 
-            std::vector<float> processing_time;
-            std::vector<float> cpu_processing_num;
-            for(unsigned int i=0;i<_flows[index].size();i++){
+            //std::vector<float> processing_time;
+            float processing_time=0;
+            float min_processing_time=10000000;
+            uint64_t distance;
+            float cpu_processing_num;
+           /* for(unsigned int i=0;i<_flows[index].size();i++){
                 float cpu_time=0;
                 float gpu_time=0;
                 if(i>0)
@@ -732,7 +735,35 @@ public:
                 }
                 processing_time.push_back(std::max(gpu_time,cpu_time/COMPUTE_RATIO));
                 cpu_processing_num.push_back(cpu_time);
+            }*/
+
+
+            for(unsigned int i=_flows[index].size();i>=0;i--){
+                float cpu_time=0;
+                float gpu_time=0;
+                if(i>0)
+                    gpu_time=_flows[index][i-1]->packets[index].size();
+                for(unsigned int j=i;j<_flows[index].size();j++){
+                    cpu_time+=_flows[index][j]->packets[index].size();
+                }
+                processing_time=std::max(gpu_time,cpu_time/COMPUTE_RATIO);
+                cpu_processing_num=cpu_time;
+                if(processing_time>=min_processing_time){
+                    std::cout<<"cpu_pkts_processed: "<<cpu_processing_num<<std::endl;
+                    if(distance==0){
+                        std::cout<<"GPU_max_pkt: "<<0<<std::endl;
+                    }else{
+                        std::cout<<"GPU_max_pkt: "<<_flows[index][distance-1]->packets[index].size()<<std::endl;
+                    }
+                    //std::cout<<"    min_processing_time:"<<*result<<std::endl;
+                    return distance;
+
+                }else{
+                    min_processing_time=processing_time;
+                }
+
             }
+            return 0;
 
 
            // std::cout<<"packet num begin"<<std::endl;
@@ -750,16 +781,7 @@ public:
           //  std::cout<<"processing time end"<<std::endl;
 
 
-            std::vector<float>::iterator result = std::min_element(std::begin(processing_time), std::end(processing_time));
-            uint64_t distance=std::distance(std::begin(processing_time), result);
-            std::cout<<"cpu_pkts_processed: "<<cpu_processing_num[distance]<<std::endl;
-            if(distance==0){
-                std::cout<<"GPU_max_pkt: "<<0<<std::endl;
-            }else{
-                std::cout<<"GPU_max_pkt: "<<_flows[index][distance-1]->packets[index].size()<<std::endl;
-            }
-            //std::cout<<"    min_processing_time:"<<*result<<std::endl;
-            return distance;
+
         }
 
     };
