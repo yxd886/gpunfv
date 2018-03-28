@@ -576,11 +576,9 @@ public:
             printf("Scheduling time: %f\n", static_cast<double>(elapsed.count() / 1.0));
             started = steady_clock_type::now();
 
-            int max_pkt_num_per_flow=_flows[index][partition]->packets[index].size();
-
             if(partition>0){
 
-
+                int max_pkt_num_per_flow=_flows[index][partition-1]->packets[index].size();
                 int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char*);
                 int ngpu_states = partition * sizeof(char*);
                 gpu_pkts = (char **)malloc(ngpu_pkts);
