@@ -42,30 +42,30 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
     printf("in process_batch\n");
 
     for(I = 0; I < BATCH_SIZE; I++) {
-    		
+    		printf("------------------0-----------------\n");
         int dfa_id = pkts[I].dfa_id;
-       
+       printf("------------------1-----------------\n");
         
         int len = pkts[I].len;
-    
+    printf("------------------2-----------------\n");
         struct aho_state *st_arr = NULL;
         st_arr=dfa_arr[dfa_id].root;
-      
+      printf("------------------3-----------------\n");
       
         int state = ips_state->_state;
-  
+  printf("------------------4-----------------\n");
 
         if(state >= dfa_arr[dfa_id].num_used_states){
             ips_state->_alert=false;
             ips_state->_state=state;
             return ;
         }
-       
+       printf("------------------5-----------------\n");
 
        for(j = 0; j < len; j++) {
-
+printf("------------------6-----------------\n");
             int count = st_arr[state].output.count;
-           
+           printf("------------------7-----------------\n");
 
             if(count != 0) {
                 /* This state matches some patterns: copy the pattern IDs
@@ -77,12 +77,12 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
                 ips_state->_state = state;
                 return ;
             }
-		
+	printf("------------------8-----------------\n");	
             int inp = pkts[I].content[j];
             state = st_arr[state].G[inp];
         
        }
-
+printf("------------------9----------------\n");
 
        ips_state->_state = state;
    }
