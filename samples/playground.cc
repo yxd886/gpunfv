@@ -723,7 +723,6 @@ public:
             //std::vector<float> processing_time;
             float processing_time=0;
             float min_processing_time=10000000;
-            uint64_t distance;
             float cpu_processing_num;
            /* for(unsigned int i=0;i<_flows[index].size();i++){
                 float cpu_time=0;
@@ -750,13 +749,13 @@ public:
                 cpu_processing_num=cpu_time;
                 if(processing_time>=min_processing_time){
                     std::cout<<"cpu_pkts_processed: "<<cpu_processing_num<<std::endl;
-                    if(distance==0){
+                    if(i==0){
                         std::cout<<"GPU_max_pkt: "<<0<<std::endl;
                     }else{
-                        std::cout<<"GPU_max_pkt: "<<_flows[index][distance-1]->packets[index].size()<<std::endl;
+                        std::cout<<"GPU_max_pkt: "<<_flows[index][i-1]->packets[index].size()<<std::endl;
                     }
                     //std::cout<<"    min_processing_time:"<<*result<<std::endl;
-                    return distance;
+                    return i;
 
                 }else{
                     min_processing_time=processing_time;
