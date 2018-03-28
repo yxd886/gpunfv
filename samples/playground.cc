@@ -53,7 +53,7 @@
 #include <time.h>
 
 #include <unordered_map>
-#define GPU_BATCH_SIZE 4000
+#define GPU_BATCH_SIZE 200
 
 #define COMPUTE_RATIO 100
 
