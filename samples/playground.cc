@@ -588,7 +588,7 @@ public:
                         //std::cout<<"assign gpu_pkts["<<i<<"]"<<"["<<j<<"]"<<std::endl;
 
                         // Map every packet
-                        gpu_mem_map(gpu_pkts[i*max_pkt_num_per_flow+j], _flows[index][i]->packets[index][j].len());
+                        //gpu_mem_map(gpu_pkts[i*max_pkt_num_per_flow+j], _flows[index][i]->packets[index][j].len());
                     }
                 }
 
@@ -618,13 +618,13 @@ public:
 
 
                 // Unmap every packet
-                for(int i = 0; i < partition; i++){
+               /* for(int i = 0; i < partition; i++){
                     gpu_mem_unmap(gpu_states[i]);
 
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
                         gpu_mem_unmap(gpu_pkts[i * max_pkt_num_per_flow + j]);
                     }
-                }
+                }*/
                 // Unmap gpu_pkts and gpu_states
                 gpu_mem_unmap(gpu_pkts);
                 gpu_mem_unmap(gpu_states);
