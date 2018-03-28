@@ -313,7 +313,7 @@ public:
                 uint64_t test_len=mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private);
 
                 printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %ld, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<net::eth_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
-                assert(((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[1]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[1])||((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[0]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[0]));
+                //assert(((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[1]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[1])||((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[0]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[0]));
 
                 if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==true){
 
@@ -794,7 +794,18 @@ public:
     uint64_t _pkt_counter;
 };
 
+static void
+my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
+        void *obj, unsigned i)
+{
+    gpu_mem_map(obj,mp->elt_size);
+    //struct rte_mbuf* rte_pkt=(struct rte_mbuf*)obj;
+    //unsigned char *t =rte_pktmbuf_mtod(rte_pkt, unsigned char*);
+    //char* raw_packet = (char*)t;
+    printf("obj_addr:%p\n",obj);
+   // printf("raw_packet_addr:%p\n",raw_packet);
 
+}
 
 int main(int ac, char** av) {
     app_template app;
@@ -819,13 +830,21 @@ int main(int ac, char** av) {
             return forwarders.start();
         }).then([]{
             return hook_manager::get().invoke_on_all(0, &hook::check_and_start);
-        })/*.then([]{
-            return forwarders.invoke_on_all(&forwarder::mica_test, 1);
         }).then([]{
-            return forwarders.invoke_on_all(&forwarder::mica_test, 1);
+                //std::cout<<"size: "<<netstar_pools.size()<<std::endl;
+                //for(unsigned int i = 0; i<netstar_pools.size();i++){
+                //    std::cout<<"mem_map: "<<i<<std::endl;
+                //    gpu_mem_map(netstar_pools[i],mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private));
+                //}
+
+                uint32_t times=0;
+                times=rte_mempool_obj_iter(netstar_pools[1],my_obj_init,NULL);
+                times=rte_mempool_obj_iter(netstar_pools[0],my_obj_init,NULL);
+                printf("times:%d\n",times);
+                assert(1==0);
+                return make_ready_future<>();
+
         }).then([]{
-            return forwarders.invoke_on_all(&forwarder::mica_test, 1);
-        })*/.then([]{
             return forwarders.invoke_on_all(&forwarder::run_udp_manager, 1);
         }).then([]{
             return forwarders.invoke_on(0, &forwarder::collect_stats, 1);
