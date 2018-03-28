@@ -562,11 +562,40 @@ public:
             //schedule the task, following is the strategy offload all to GPU
             //std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
             //std::cout<<"schedule task"<<std::endl;
-
             stoped = steady_clock_type::now();
             auto elapsed = stoped - started;
             printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
             started = steady_clock_type::now();
+
+            if(_flows[!index].empty()==false){
+                gpu_sync();
+                gpu_stoped = steady_clock_type::now();
+                elapsed = gpu_stoped - gpu_started;
+                printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+
+                started = steady_clock_type::now();
+
+                // Unmap gpu_pkts and gpu_states
+                gpu_mem_unmap(gpu_pkts);
+                gpu_mem_unmap(gpu_states);
+
+                // Forward GPU packets[current_idx]
+                for(int i = 0; i < partition; i++){
+                    _flows[!index][i]->forward_pkts(!index);
+                }
+
+
+
+                if(gpu_pkts){
+                    free(gpu_pkts);
+                }
+                if(gpu_states){
+                    free(gpu_states);
+                }
+                _flows[!index].clear();
+            }
+
+
 
             //for(unsigned int i=0;i<_flows[index].size();i=i+1){
                 //std::cout<<_flows[index][i]->packets[index].size()<<" ";
@@ -629,22 +658,22 @@ public:
 
                 /////////////////////////////////////////////
                 // Launch kernel
-                float elapsedTime = 0.0;
-                cudaEvent_t event_start, event_stop;
-                cudaEventCreate(&event_start);
-                cudaEventCreate(&event_stop);
-                cudaEventRecord(event_start, 0);
+                //float elapsedTime = 0.0;
+                //// event_start, event_stop;
+                //cudaEventCreate(&event_start);
+                //cudaEventCreate(&event_stop);
+                //cudaEventRecord(event_start, 0);
 
 
                 gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)&(_flows[0][index]->_f.ips), max_pkt_num_per_flow, partition);
 
 
-                cudaEventRecord(event_stop, 0);
-                cudaEventSynchronize(event_stop);
-                cudaEventElapsedTime(&elapsedTime, event_start, event_stop);
-                printf("CUDA_GPU processing time: %f\n", static_cast<double>(elapsedTime / 1.0));
-                cudaEventDestroy(event_start);
-                cudaEventDestroy(event_stop);
+                //cudaEventRecord(event_stop, 0);
+                //cudaEventSynchronize(event_stop);
+               // cudaEventElapsedTime(&elapsedTime, event_start, event_stop);
+               // printf("CUDA_GPU processing time: %f\n", static_cast<double>(elapsedTime / 1.0));
+                //cudaEventDestroy(event_start);
+                //cudaEventDestroy(event_stop);
 
             }
             //std::cout<<"   partition:"<<partition<<std::endl;
@@ -657,6 +686,9 @@ public:
             for(unsigned int i = partition; i < _flows[index].size(); i++){
                 _flows[index][i]->process_pkts(index);
             }
+            if(partition==0){
+                _flows[index].clear();
+            }
 
 
             stoped = steady_clock_type::now();
@@ -665,7 +697,7 @@ public:
             started = steady_clock_type::now();
 
             // Wait for GPU process
-            if(partition>0){
+           /* if(partition>0){
                 gpu_sync();
                 gpu_stoped = steady_clock_type::now();
                 elapsed = gpu_stoped - gpu_started;
@@ -673,14 +705,6 @@ public:
 
                 started = steady_clock_type::now();
 
-                // Unmap every packet
-               /* for(int i = 0; i < partition; i++){
-                    gpu_mem_unmap(gpu_states[i]);
-
-                    for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
-                        gpu_mem_unmap(gpu_pkts[i * max_pkt_num_per_flow + j]);
-                    }
-                }*/
                 // Unmap gpu_pkts and gpu_states
                 gpu_mem_unmap(gpu_pkts);
                 gpu_mem_unmap(gpu_states);
@@ -700,6 +724,7 @@ public:
                 }
             }
             _flows[index].clear();
+            */
 
             return make_ready_future<>();
 
