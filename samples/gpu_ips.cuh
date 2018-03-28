@@ -45,6 +45,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
     		printf("------------------0-----------------\n");
         int dfa_id = pkts[I].dfa_id;
        printf("------------------1-----------------\n");
+       printf("dfa_id:%d\n",dfa_id);
         
         int len = pkts[I].len;
     printf("------------------2-----------------\n");
