@@ -237,7 +237,7 @@ l2fwd_simple_forward(struct rte_mbuf *m, unsigned portid)
     int sent;
     struct rte_eth_dev_tx_buffer *buffer;
 
-    dst_port = 0;
+    dst_port = portid;
 
     if (mac_updating)
         l2fwd_mac_updating(m, dst_port);
@@ -361,7 +361,7 @@ l2fwd_init_core_queue_map(__attribute__((unused)) void *dummy)
 	lcore_id = rte_lcore_id();
 	struct lcore_queue_conf* qconf = &lcore_queue_conf[lcore_id];
 	qconf->n_rx_queue = l2fwd_rx_queue_per_lcore;
-	for(int i=0 ; i<l2fwd_rx_queue_per_lcore; i++){
+	for(unsigned i=0 ; i<l2fwd_rx_queue_per_lcore; i++){
 		/* get the lcore_id for this port */
 
 		qconf->rx_queue_list[i] = 0;
@@ -378,15 +378,15 @@ l2fwd_init_queue_set_up(__attribute__((unused)) void *dummy){
 	lcore_id = rte_lcore_id();
 	struct lcore_queue_conf* qconf = &lcore_queue_conf[lcore_id];
 	unsigned port_id = *((unsigned*)dummy);
-	for(int i=0; i<l2fwd_rx_queue_per_lcore; i++){
+	for(unsigned i=0; i<l2fwd_rx_queue_per_lcore; i++){
 
-        ret = rte_eth_rx_queue_setup(port_id, qconf->rx_queue_list[i], nb_rxd,
+		int ret = rte_eth_rx_queue_setup(port_id, qconf->rx_queue_list[i], nb_rxd,
                          rte_eth_dev_socket_id(port_id),
                          NULL,
                          l2fwd_pktmbuf_pool);
         if (ret < 0)
             rte_exit(EXIT_FAILURE, "rte_eth_rx_queue_setup:err=%d, port=%u\n",
-                  ret, (unsigned) portid);
+                  ret, (unsigned) port_id);
     printf("Set up RX queue %u on lcore success! %u\n",(unsigned)qconf->rx_queue_list[i],lcore_id);
 	}
     return 0;
@@ -635,13 +635,13 @@ signal_handler(int signum)
 int
 main(int argc, char **argv)
 {
-    struct lcore_queue_conf *qconf;
+    //struct lcore_queue_conf *qconf;
     struct rte_eth_dev_info dev_info;
     int ret;
     uint8_t nb_ports;
     uint8_t nb_ports_available;
     uint8_t portid, last_port;
-    unsigned lcore_id, rx_lcore_id;
+    //unsigned lcore_id, rx_lcore_id;
     unsigned nb_ports_in_mask = 0;
 
     /* init EAL */
