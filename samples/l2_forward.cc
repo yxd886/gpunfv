@@ -476,7 +476,9 @@ l2fwd_parse_timer_period(const char *q_arg)
 static const char short_options[] =
     "p:"  /* portmask */
     "q:"  /* number of queues */
+	"n:"
     "T:"  /* timer period */
+
     ;
 
 #define CMD_LINE_OPT_MAC_UPDATING "mac-updating"
