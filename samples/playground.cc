@@ -916,10 +916,10 @@ public:
                                             });
     }
     void collect_stats(int) {
-        time=0;
+        record_time=0;
         repeat([this]{
-            time ++;
-            if(time==60){
+            record_time ++;
+            if(record_time==60){
                 cudaProfilerStop();
                 exit(-1);
 
@@ -946,7 +946,7 @@ public:
     IPS ips;
     batch _batch;
     uint64_t _pkt_counter;
-    uint64_t time;
+    uint64_t record_time;
 };
 
 static void
