@@ -56,6 +56,8 @@
 #include <unordered_map>
 #define GPU_BATCH_SIZE 2000
 
+#define PRINT_TIME 0
+
 #define COMPUTE_RATIO 100
 
 using namespace seastar;
@@ -138,7 +140,7 @@ public:
             struct aho_state* gpu_root;
             int offset = (char *)&dfa_arr[i].root - (char *)this;
             char *des_addr = (char *)gpu_ips + offset;
-            printf("i = :%d, max = %d\n",i,AHO_MAX_DFA);
+            //printf("i = :%d, max = %d\n",i,AHO_MAX_DFA);
             gpu_malloc((void**)(&gpu_root), AHO_MAX_STATES * sizeof(struct aho_state));
 
             gpu_memcpy_async_h2d(gpu_root, dfa_arr[i].root, AHO_MAX_STATES * sizeof(struct aho_state));
@@ -591,14 +593,14 @@ public:
             //std::cout<<"schedule task"<<std::endl;
             stoped = steady_clock_type::now();
             auto elapsed = stoped - started;
-            printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+          if(PRINT_TIME)  printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
             started = steady_clock_type::now();
 
             if(_flows[!index].empty()==false){
                 gpu_sync();
                 gpu_stoped = steady_clock_type::now();
                 elapsed = gpu_stoped - gpu_started;
-                printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+         if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
 
                 started = steady_clock_type::now();
 
@@ -634,7 +636,7 @@ public:
 
             stoped = steady_clock_type::now();
             elapsed = stoped - started;
-            printf("Scheduling time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            if(PRINT_TIME)printf("Scheduling time: %f\n", static_cast<double>(elapsed.count() / 1.0));
             started = steady_clock_type::now();
 
             if(partition>0){
@@ -675,7 +677,7 @@ public:
 
                 stoped = steady_clock_type::now();
                 elapsed = stoped - started;
-                printf("Batching time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                if(PRINT_TIME)printf("Batching time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started = steady_clock_type::now();
 
 
@@ -720,7 +722,7 @@ public:
 
             stoped = steady_clock_type::now();
             elapsed = stoped - started;
-            printf("CPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            if(PRINT_TIME)printf("CPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
             started = steady_clock_type::now();
 
             // Wait for GPU process
