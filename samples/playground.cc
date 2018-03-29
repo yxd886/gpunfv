@@ -916,7 +916,15 @@ public:
                                             });
     }
     void collect_stats(int) {
+        time=0;
         repeat([this]{
+            time ++;
+            if(time==60){
+                cudaProfilerStop();
+                exit(-1);
+
+
+            }
             return forwarders.map_reduce(adder<info>(), &forwarder::get_info).then([this](info i){
                 fprint(std::cout, "ingress_received=%d, egress_send=%d, active_flow_num=%d, mica_timeout_error=%d, insufficient_mica_rd_erorr=%d, mica_send=%d, mica_recv=%d.\n",
                         i.ingress_received-_old.ingress_received,
@@ -938,6 +946,7 @@ public:
     IPS ips;
     batch _batch;
     uint64_t _pkt_counter;
+    uint64_t time;
 };
 
 static void
