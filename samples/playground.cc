@@ -37,7 +37,7 @@
 
 
 
-#include "playground.hh"
+
 
 #include <vector>
 #include <iostream>
@@ -48,6 +48,7 @@
 #include <helper_functions.h>
 #include <helper_cuda.h>
 #include <cuda_runtime.h>
+#include "playground.hh"
 #define MAX_MATCH 8192
 #include <stdlib.h>
 #include <time.h>
