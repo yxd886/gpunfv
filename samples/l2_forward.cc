@@ -83,10 +83,10 @@ static const rss_key_type default_rsskey_40bytes = {
     0xd9, 0x38, 0x9e, 0x6b, 0xd1, 0x03, 0x9c, 0x2c,
     0xa7, 0x44, 0x99, 0xad, 0x59, 0x3d, 0x56, 0xd9,
     0xf3, 0x25, 0x3c, 0x06, 0x2a, 0xdc, 0x1f, 0xfc
-};
+};*/
 
 // Intel's i40e PMD default RSS key
-static const rss_key_type default_rsskey_52bytes = {
+const uint8_t default_rsskey_52bytes[52] = {
     0x44, 0x39, 0x79, 0x6b, 0xb5, 0x4c, 0x50, 0x23,
     0xb6, 0x75, 0xea, 0x5b, 0x12, 0x4f, 0x9f, 0x30,
     0xb8, 0xa2, 0xc0, 0x3d, 0xdf, 0xdc, 0x4d, 0x02,
@@ -95,7 +95,7 @@ static const rss_key_type default_rsskey_52bytes = {
     0x7d, 0x99, 0x58, 0x3a, 0xe1, 0x38, 0xc9, 0x2e,
     0x81, 0x15, 0x03, 0x66
 };
-*/
+
 
 static volatile bool force_quit;
 
@@ -142,6 +142,7 @@ static struct rte_eth_dev_tx_buffer *tx_buffer[RTE_MAX_ETHPORTS];
 
 static const struct rte_eth_conf port_conf = {
     .rxmode = {
+    	.mq_mode = ETH_MQ_RX_RSS,
         .split_hdr_size = 0,
         .header_split   = 0, /**< Header Split disabled */
         .hw_ip_checksum = 0, /**< IP checksum offload disabled */
@@ -152,6 +153,11 @@ static const struct rte_eth_conf port_conf = {
     .txmode = {
         .mq_mode = ETH_MQ_TX_NONE,
     },
+	.rx_adv_conf ={
+			.rss_conf.rss_hf = ETH_RSS_PROTO_MASK,
+			.rss_conf.rss_key = default_rsskey_52bytes,
+			.rss_conf.rss_key_len = 52,
+	},
 };
 
 struct rte_mempool * l2fwd_pktmbuf_pool = NULL;
