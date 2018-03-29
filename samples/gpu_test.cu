@@ -152,3 +152,19 @@ void gpu_mem_map(void *ptr, size_t size) {
 void gpu_mem_unmap(void *ptr) {
 	checkCudaErrors(cudaHostUnregister(ptr));
 }
+
+void gpu_malloc(void** devPtr, size_t size){
+	checkCudaErrors(cudaMalloc(devPtr, size));
+}
+void gpu_memcpy_async_h2d(void* dst, const void*src, size_t count ,int stream=0){
+	checkCudaErrors(cudaMemcpyAsync(dst,src,count,cudaMemcpyHostToDevice,stream));
+}
+
+void gpu_memcpy_async_d2h(void* dst, const void*src, size_t count, int stream=0 ){
+	checkCudaErrors(cudaMemcpyAsync(dst,src,count,cudaMemcpyDeviceToHost,stream));
+	
+}
+
+void gpu_free(void* devPtr){
+	checkCudaErrors(cudaFree(devPtr));
+}

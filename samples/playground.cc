@@ -81,14 +81,23 @@ public:
         int num_threads = 1;
         assert(num_threads >= 1 && num_threads <= AHO_MAX_THREADS);
 
-        stats =(struct stat_t*)malloc(num_threads * sizeof(struct stat_t));
+        // Map ips object
+        //gpu_mem_map(this, sizeof(IPS));
+        gpu_malloc((void**)(&gpu_ips), sizeof(IPS));
 
         //gpu map
-        gpu_mem_map(stats,num_threads * sizeof(struct stat_t));
+        //gpu_mem_map(stats,num_threads * sizeof(struct stat_t));
+        struct stat_t *gpu_stats;
+        stats =(struct stat_t *)malloc(num_threads * sizeof(struct stat_t));
+        gpu_malloc((void**)(&gpu_stats), num_threads * sizeof(struct stat_t));
 
         for(i = 0; i < num_threads; i++) {
             stats[i].tput = 0;
         }
+
+
+
+
         struct aho_pattern *patterns;
         /* Thread structures */
         //pthread_t worker_threads[AHO_MAX_THREADS];
@@ -100,7 +109,9 @@ public:
         for(i = 0; i < AHO_MAX_DFA; i++) {
             //printf("Initializing DFA %d\n", i);
             aho_init(&dfa_arr[i], i);
-            gpu_mem_map(dfa_arr[i].root,AHO_MAX_STATES * sizeof(struct aho_state));
+           // gpu_mem_map(dfa_arr[i].root,AHO_MAX_STATES * sizeof(struct aho_state));
+           // gpu_malloc((void**)(&dev_stats),num_threads * sizeof(struct stat_t));
+           // gpu_memcpy_async_h2d(dev_stats,stats,num_threads * sizeof(struct stat_t));
         }
 
         red_printf("Adding patterns to DFAs\n");
@@ -118,26 +129,41 @@ public:
             aho_preprocess_dfa(&dfa_arr[i]);
         }
 
-        // Map ips object
 
-        gpu_mem_map(this, sizeof(IPS));
+        gpu_memcpy_async_h2d(gpu_ips, this, sizeof(IPS));
+
+        for(i = 0; i < AHO_MAX_DFA; i++) {
+
+            struct aho_state* gpu_root;
+            int offset = (char *)&dfa_arr[i].root - (char *)this;
+            char *des_addr = (char *)gpu_ips + offset;
+
+            gpu_malloc((void**)(&gpu_root), AHO_MAX_STATES * sizeof(struct aho_state));
+            gpu_memcpy_async_h2d(gpu_root, dfa_arr[i].root, AHO_MAX_STATES * sizeof(struct aho_state));
+            gpu_memcpy_async_h2d(des_addr, &gpu_root, sizeof(struct aho_state *));
+        }
+
+
+        gpu_memcpy_async_h2d(gpu_stats, stats, num_threads * sizeof(struct stat_t));
+
     }
     ~IPS(){
 
         for(int i = 0; i < AHO_MAX_DFA; i++) {
 
-            gpu_mem_unmap(dfa_arr[i].root);
+            //gpu_mem_unmap(dfa_arr[i].root);
             free(dfa_arr[i].root);
         }
 
 
 
-        gpu_mem_unmap(stats);
-        gpu_mem_unmap(this);
+        //gpu_mem_unmap(stats);
+       // gpu_mem_unmap(this);
         free(stats);
     }
     struct aho_dfa dfa_arr[AHO_MAX_DFA];
     struct stat_t *stats;
+    IPS *gpu_ips;
 
 };
 
@@ -664,7 +690,7 @@ public:
                 //cudaEventRecord(event_start, 0);
 
 
-                gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)&(_flows[0][index]->_f.ips), max_pkt_num_per_flow, partition);
+                gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition);
 
 
                 //cudaEventRecord(event_stop, 0);

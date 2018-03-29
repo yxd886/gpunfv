@@ -36,5 +36,11 @@ void gpu_launch(char **pkt_batch, char **state_batch, char *extra_info, int flow
 void gpu_sync();
 void gpu_mem_map(void *ptr, size_t size);
 void gpu_mem_unmap(void *ptr);
+void gpu_malloc(void** devPtr, size_t size);
+void gpu_memcpy_async_h2d(void* dst, const void*src, size_t count, int stream=0  );
+
+void gpu_memcpy_async_d2h(void* dst, const void*src, size_t count, int stream=0 );
+
+void gpu_free(void* devPtr);
 
 #endif
