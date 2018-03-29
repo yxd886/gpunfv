@@ -794,7 +794,7 @@ public:
             float processing_time=0;
             float min_processing_time=10000000;
             float cpu_processing_num=0;
-            float pre_cpu_processing_num=0;
+           // float pre_cpu_processing_num=0;
            /* for(unsigned int i=0;i<_flows[index].size();i++){
                 float cpu_time=0;
                 float gpu_time=0;
@@ -817,7 +817,7 @@ public:
                     cpu_time+=_flows[index][j]->packets[index].size();
                 }
                 processing_time=std::max(gpu_time,cpu_time/COMPUTE_RATIO);
-                pre_cpu_processing_num=cpu_processing_num;
+                //pre_cpu_processing_num=cpu_processing_num;
                 cpu_processing_num=cpu_time;
                 if(processing_time>=min_processing_time){
                     //std::cout<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
