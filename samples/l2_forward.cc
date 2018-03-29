@@ -71,6 +71,32 @@
 #include <rte_mempool.h>
 #include <rte_mbuf.h>
 
+
+/*
+
+using rss_key_type = std::vector<uint8_t>;
+
+// Mellanox Linux's driver key
+static const rss_key_type default_rsskey_40bytes = {
+    0xd1, 0x81, 0xc6, 0x2c, 0xf7, 0xf4, 0xdb, 0x5b,
+    0x19, 0x83, 0xa2, 0xfc, 0x94, 0x3e, 0x1a, 0xdb,
+    0xd9, 0x38, 0x9e, 0x6b, 0xd1, 0x03, 0x9c, 0x2c,
+    0xa7, 0x44, 0x99, 0xad, 0x59, 0x3d, 0x56, 0xd9,
+    0xf3, 0x25, 0x3c, 0x06, 0x2a, 0xdc, 0x1f, 0xfc
+};
+
+// Intel's i40e PMD default RSS key
+static const rss_key_type default_rsskey_52bytes = {
+    0x44, 0x39, 0x79, 0x6b, 0xb5, 0x4c, 0x50, 0x23,
+    0xb6, 0x75, 0xea, 0x5b, 0x12, 0x4f, 0x9f, 0x30,
+    0xb8, 0xa2, 0xc0, 0x3d, 0xdf, 0xdc, 0x4d, 0x02,
+    0xa0, 0x8c, 0x9b, 0x33, 0x4a, 0xf6, 0x4a, 0x4c,
+    0x05, 0xc6, 0xfa, 0x34, 0x39, 0x58, 0xd8, 0x55,
+    0x7d, 0x99, 0x58, 0x3a, 0xe1, 0x38, 0xc9, 0x2e,
+    0x81, 0x15, 0x03, 0x66
+};
+*/
+
 static volatile bool force_quit;
 
 /* MAC updating enabled by default */
@@ -102,12 +128,13 @@ static uint32_t l2fwd_enabled_port_mask = 0;
 static uint32_t l2fwd_dst_ports[RTE_MAX_ETHPORTS];
 
 static unsigned int l2fwd_rx_queue_per_lcore = 1;
+static unsigned int lcore_num = 1;
 
 #define MAX_RX_QUEUE_PER_LCORE 16
 #define MAX_TX_QUEUE_PER_PORT 16
 struct lcore_queue_conf {
-    unsigned n_rx_port;
-    unsigned rx_port_list[MAX_RX_QUEUE_PER_LCORE];
+    unsigned n_rx_queue;
+    unsigned rx_queue_list[MAX_RX_QUEUE_PER_LCORE];
 } __rte_cache_aligned;
 struct lcore_queue_conf lcore_queue_conf[RTE_MAX_LCORE];
 
@@ -210,7 +237,7 @@ l2fwd_simple_forward(struct rte_mbuf *m, unsigned portid)
     int sent;
     struct rte_eth_dev_tx_buffer *buffer;
 
-    dst_port = l2fwd_dst_ports[portid];
+    dst_port = 0;
 
     if (mac_updating)
         l2fwd_mac_updating(m, dst_port);
@@ -242,16 +269,16 @@ l2fwd_main_loop(void)
     lcore_id = rte_lcore_id();
     qconf = &lcore_queue_conf[lcore_id];
 
-    if (qconf->n_rx_port == 0) {
+    if (qconf->n_rx_queue == 0) {
         RTE_LOG(INFO, L2FWD, "lcore %u has nothing to do\n", lcore_id);
         return;
     }
 
     RTE_LOG(INFO, L2FWD, "entering main loop on lcore %u\n", lcore_id);
 
-    for (i = 0; i < qconf->n_rx_port; i++) {
+    for (i = 0; i < qconf->n_rx_queue; i++) {
 
-        portid = qconf->rx_port_list[i];
+        portid = qconf->rx_queue_list[i];
         RTE_LOG(INFO, L2FWD, " -- lcoreid=%u portid=%u\n", lcore_id,
             portid);
 
@@ -267,9 +294,9 @@ l2fwd_main_loop(void)
         diff_tsc = cur_tsc - prev_tsc;
         if (unlikely(diff_tsc > drain_tsc)) {
 
-            for (i = 0; i < qconf->n_rx_port; i++) {
+            for (i = 0; i < qconf->n_rx_queue; i++) {
 
-                portid = l2fwd_dst_ports[qconf->rx_port_list[i]];
+                portid = 0;
                 buffer = tx_buffer[portid];
 
                 sent = rte_eth_tx_buffer_flush(portid, 0, buffer);
@@ -302,9 +329,9 @@ l2fwd_main_loop(void)
         /*
          * Read packet from RX queues
          */
-        for (i = 0; i < qconf->n_rx_port; i++) {
+        for (i = 0; i < qconf->n_rx_queue; i++) {
 
-            portid = qconf->rx_port_list[i];
+            portid = qconf->rx_queue_list[i];
             nb_rx = rte_eth_rx_burst((uint8_t) portid, 0,
                          pkts_burst, MAX_PKT_BURST);
 
@@ -323,6 +350,45 @@ static int
 l2fwd_launch_one_lcore(__attribute__((unused)) void *dummy)
 {
     l2fwd_main_loop();
+    return 0;
+}
+
+
+static int
+l2fwd_init_core_queue_map(__attribute__((unused)) void *dummy)
+{
+	unsigned lcore_id;
+	lcore_id = rte_lcore_id();
+	struct lcore_queue_conf* qconf = &lcore_queue_conf[lcore_id];
+	qconf->n_rx_queue = l2fwd_rx_queue_per_lcore;
+	for(int i=0 ; i<l2fwd_rx_queue_per_lcore; i++){
+		/* get the lcore_id for this port */
+
+		qconf->rx_queue_list[i] = 0;
+
+		printf("Lcore %u: RX queue %u\n", lcore_id, (unsigned) lcore_id+i*l2fwd_rx_queue_per_lcore);
+	}
+	return 0;
+}
+
+static int
+l2fwd_init_queue_set_up(__attribute__((unused)) void *dummy){
+
+	unsigned lcore_id;
+	lcore_id = rte_lcore_id();
+	struct lcore_queue_conf* qconf = &lcore_queue_conf[lcore_id];
+	unsigned port_id = *((unsigned*)dummy);
+	for(int i=0; i<l2fwd_rx_queue_per_lcore; i++){
+
+        ret = rte_eth_rx_queue_setup(port_id, qconf->rx_queue_list[i], nb_rxd,
+                         rte_eth_dev_socket_id(port_id),
+                         NULL,
+                         l2fwd_pktmbuf_pool);
+        if (ret < 0)
+            rte_exit(EXIT_FAILURE, "rte_eth_rx_queue_setup:err=%d, port=%u\n",
+                  ret, (unsigned) portid);
+    printf("Set up RX queue %u on lcore success! %u\n",(unsigned)qconf->rx_queue_list[i],lcore_id);
+	}
     return 0;
 }
 
@@ -371,6 +437,21 @@ l2fwd_parse_nqueue(const char *q_arg)
     if (n == 0)
         return 0;
     if (n >= MAX_RX_QUEUE_PER_LCORE)
+        return 0;
+
+    return n;
+}
+
+static unsigned int
+l2fwd_parse_core_num(const char *q_arg){
+    char *end = NULL;
+    unsigned long n;
+
+    /* parse hexadecimal string */
+    n = strtoul(q_arg, &end, 10);
+    if ((q_arg[0] == '\0') || (end == NULL) || (*end != '\0'))
+        return 0;
+    if (n == 0)
         return 0;
 
     return n;
@@ -449,6 +530,9 @@ l2fwd_parse_args(int argc, char **argv)
                 return -1;
             }
             break;
+        case 'n':
+        	lcore_num = l2fwd_parse_core_num(optarg);
+        	break;
 
         /* timer period */
         case 'T':
@@ -588,7 +672,8 @@ main(int argc, char **argv)
     if (l2fwd_pktmbuf_pool == NULL)
         rte_exit(EXIT_FAILURE, "Cannot init mbuf pool\n");
 
-    nb_ports = rte_eth_dev_count();
+   // nb_ports = rte_eth_dev_count();
+    nb_ports = 1;
     if (nb_ports == 0)
         rte_exit(EXIT_FAILURE, "No Ethernet ports - bye\n");
 
@@ -630,22 +715,9 @@ main(int argc, char **argv)
         if ((l2fwd_enabled_port_mask & (1 << portid)) == 0)
             continue;
 
-        /* get the lcore_id for this port */
-        while (rte_lcore_is_enabled(rx_lcore_id) == 0 ||
-               lcore_queue_conf[rx_lcore_id].n_rx_port ==
-               l2fwd_rx_queue_per_lcore) {
-            rx_lcore_id++;
-            if (rx_lcore_id >= RTE_MAX_LCORE)
-                rte_exit(EXIT_FAILURE, "Not enough cores\n");
-        }
 
-        if (qconf != &lcore_queue_conf[rx_lcore_id])
-            /* Assigned a new logical core in the loop above. */
-            qconf = &lcore_queue_conf[rx_lcore_id];
+	    rte_eal_mp_remote_launch(l2fwd_init_core_queue_map, NULL, CALL_MASTER);
 
-        qconf->rx_port_list[qconf->n_rx_port] = portid;
-        qconf->n_rx_port++;
-        printf("Lcore %u: RX port %u\n", rx_lcore_id, (unsigned) portid);
     }
 
     nb_ports_available = nb_ports;
@@ -661,22 +733,19 @@ main(int argc, char **argv)
         /* init port */
         printf("Initializing port %u... ", (unsigned) portid);
         fflush(stdout);
-        ret = rte_eth_dev_configure(portid, 1, 1, &port_conf);
+        ret = rte_eth_dev_configure(portid, lcore_num*l2fwd_rx_queue_per_lcore, 1, &port_conf);
         if (ret < 0)
             rte_exit(EXIT_FAILURE, "Cannot configure device: err=%d, port=%u\n",
                   ret, (unsigned) portid);
 
         rte_eth_macaddr_get(portid,&l2fwd_ports_eth_addr[portid]);
 
-        /* init one RX queue */
+        /* init l2fwd_rx_queue_per_lcore RX queue */
         fflush(stdout);
-        ret = rte_eth_rx_queue_setup(portid, 0, nb_rxd,
-                         rte_eth_dev_socket_id(portid),
-                         NULL,
-                         l2fwd_pktmbuf_pool);
-        if (ret < 0)
-            rte_exit(EXIT_FAILURE, "rte_eth_rx_queue_setup:err=%d, port=%u\n",
-                  ret, (unsigned) portid);
+
+
+        rte_eal_mp_remote_launch(l2fwd_init_queue_set_up, &portid, CALL_MASTER);
+
 
         /* init one TX queue on each port */
         fflush(stdout);
