@@ -641,7 +641,8 @@ main(int argc, char **argv)
     uint8_t nb_ports;
     uint8_t nb_ports_available;
     uint8_t portid, last_port;
-    //unsigned lcore_id, rx_lcore_id;
+    unsigned lcore_id;
+   // unsigned rx_lcore_id;
     unsigned nb_ports_in_mask = 0;
 
     /* init EAL */
@@ -706,8 +707,8 @@ main(int argc, char **argv)
         l2fwd_dst_ports[last_port] = last_port;
     }
 
-    rx_lcore_id = 0;
-    qconf = NULL;
+   // rx_lcore_id = 0;
+   // qconf = NULL;
 
     /* Initialize the port/queue configuration of each logical core */
     for (portid = 0; portid < nb_ports; portid++) {
