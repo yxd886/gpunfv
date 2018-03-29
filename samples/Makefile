@@ -80,8 +80,8 @@ CU_OBJS = $(CU_SRCS:.cu=.o)
 PLAYGROUND_EXEC = playground
 PLAYGROUND_OBJS = playground.o $(CU_OBJS)
 
-L2_FORWARD_EXEC = l2forward
-L2_FORWARD_OBJS = l2forward.o $(CU_OBJS)
+L2_FORWARD_EXEC = l2_forward
+L2_FORWARD_OBJS = l2_forward.o $(CU_OBJS)
 
 
 .PHONY: all clean tests protobuf
