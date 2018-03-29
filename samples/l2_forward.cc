@@ -332,7 +332,7 @@ l2fwd_main_loop(void)
         for (i = 0; i < qconf->n_rx_queue; i++) {
 
             portid = qconf->rx_queue_list[i];
-            nb_rx = rte_eth_rx_burst((uint8_t) portid, 0,
+            nb_rx = rte_eth_rx_burst((uint8_t) portid, lcore_id+i*l2fwd_rx_queue_per_lcore,
                          pkts_burst, MAX_PKT_BURST);
 
             port_statistics[portid].rx += nb_rx;
