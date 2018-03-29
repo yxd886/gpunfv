@@ -138,8 +138,9 @@ public:
             struct aho_state* gpu_root;
             int offset = (char *)&dfa_arr[i].root - (char *)this;
             char *des_addr = (char *)gpu_ips + offset;
-
+            printf("i = :%d, max = %d\n",i,AHO_MAX_DFA);
             gpu_malloc((void**)(&gpu_root), AHO_MAX_STATES * sizeof(struct aho_state));
+
             gpu_memcpy_async_h2d(gpu_root, dfa_arr[i].root, AHO_MAX_STATES * sizeof(struct aho_state));
             gpu_memcpy_async_h2d(des_addr, &gpu_root, sizeof(struct aho_state *));
         }
