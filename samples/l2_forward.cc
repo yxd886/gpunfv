@@ -87,6 +87,7 @@ std::chrono::time_point<std::chrono::steady_clock> gpu_stoped;
 
 
 app_template app;
+std::vector<std::unique_ptr<net::device>> global_dev;
 
 struct fake_val {
     uint64_t v[3];
@@ -1026,11 +1027,11 @@ static int
 l2fwd_launch_one_lcore(__attribute__((unused)) void *dummy)
 {
 
-	std::unique_ptr<net::device> dev=(std::unique_ptr<net::device>)dummy;
+
 	unsigned lcore_id;
 	lcore_id = rte_lcore_id();
 	for(unsigned i=0;i<QUEUE_PER_CORE;i++){
-		dev->init_local_queue(app.configuration(),lcore_id+i*QUEUE_PER_CORE);
+		global_dev[0]->init_local_queue(app.configuration(),lcore_id+i*QUEUE_PER_CORE);
 	}
 	l2fwd_main_loop();
 	return 0;
@@ -1059,11 +1060,12 @@ int main(int ac, char** av) {
 	std::cout<<"smp::count: "<<seastar::smp::count<<std::endl;
 
 	std::unique_ptr<net::device> dev = seastar::create_standard_device(0, seastar::smp::count);
+	global_dev.push_back(dev);
 
 
 	std::cout<<"port init finished"<<std::endl;
 
-	rte_eal_mp_remote_launch(l2fwd_launch_one_lcore,(void*) dev, CALL_MASTER);
+	rte_eal_mp_remote_launch(l2fwd_launch_one_lcore,NULL, CALL_MASTER);
 	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
 		if (rte_eal_wait_lcore(lcore_id) < 0)
 			return -1;
