@@ -62,6 +62,7 @@
 #include <rte_ethdev.h>
 #include <rte_cycles.h>
 #include <rte_memzone.h>
+#include "core/dpdk_rte.hh"
 #define GPU_BATCH_SIZE 2000
 
 #define PRINT_TIME 0
