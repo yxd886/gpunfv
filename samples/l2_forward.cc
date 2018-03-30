@@ -1045,6 +1045,7 @@ int main(int ac, char** av) {
     async_flow_manager<tcp_ppr> m3;
     async_flow_manager<udp_ppr> m4;
     app.set_config(ac,av);
+    unsigned lcore_id;
 
 
     seastar::dpdk::eal::cpuset cpus;
