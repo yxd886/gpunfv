@@ -61,6 +61,8 @@
 
 #define COMPUTE_RATIO 100
 
+#define QUEUE_PER_CORE 1
+
 using namespace seastar;
 using namespace netstar;
 using namespace std::chrono_literals;
@@ -957,6 +959,73 @@ my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
 
 }
 
+
+static int
+l2fwd_send_burst(struct rte_mbuf **m_table, unsigned n, uint8_t port)
+{
+
+	unsigned ret;
+	unsigned queueid =0;
+	ret = rte_eth_tx_burst(port, (uint16_t) queueid, m_table, (uint16_t) n);
+	printf("send out %u packets!\n",ret);
+	port_statistics[port].tx += ret;
+	if (unlikely(ret < n)) {
+		printf("drop %u packets!\n",n-ret);
+		do {
+			rte_pktmbuf_free(m_table[ret]);
+		} while (++ret < n);
+	}
+
+	return 0;
+}
+
+static void
+l2fwd_main_loop(void)
+{
+	struct rte_mbuf *pkts_burst[MAX_PKT_BURST];
+
+	unsigned lcore_id;
+	unsigned i, portid, nb_rx;
+
+
+
+
+	lcore_id = rte_lcore_id();
+
+
+
+	while (1) {
+
+
+		/*
+		 * TX burst queue drain
+		 */
+
+
+		/*
+		 * Read packet from RX queues
+		 */
+		portid = 0;
+		for (i = 0; i < QUEUE_PER_CORE; i++) {
+
+
+			nb_rx = rte_eth_rx_burst((uint8_t) portid, 0,
+						 pkts_burst, MAX_PKT_BURST);
+
+			printf("received %u packets from lcore %u!\n",lcore_id.nb_rx);
+
+
+			l2fwd_send_burst(pkts_burst,nb_rx, portid);
+		}
+	}
+}
+static int
+l2fwd_launch_one_lcore(__attribute__((unused)) void *dummy)
+{
+	l2fwd_main_loop();
+	return 0;
+}
+
 int main(int ac, char** av) {
     app_template app;
     sd_async_flow_manager<tcp_ppr> m1;
@@ -967,6 +1036,7 @@ int main(int ac, char** av) {
         //auto& opts = app.configuration();
     	std::cout<<"smp::count: "<<seastar::smp::count<<std::endl;
         auto dev = seastar::create_standard_device(0, seastar::smp::count);
+        rte_eal_mp_remote_launch(l2fwd_launch_one_lcore, NULL, CALL_MASTER);
 
 
     });
