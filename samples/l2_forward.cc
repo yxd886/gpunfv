@@ -1033,6 +1033,7 @@ l2fwd_launch_one_lcore(__attribute__((unused)) void *dummy)
 	l2fwd_main_loop();
 	return 0;
 }
+namespace bpo = boost::program_options;
 
 int main(int ac, char** av) {
     app_template app;
@@ -1040,11 +1041,34 @@ int main(int ac, char** av) {
     sd_async_flow_manager<udp_ppr> m2;
     async_flow_manager<tcp_ppr> m3;
     async_flow_manager<udp_ppr> m4;
+    bpo::variables_map configuration;
+    try {
+        bpo::store(bpo::command_line_parser(ac, av)
+                    .options(_opts)
+                    .positional(_pos_opts)
+                    .run()
+            , configuration);
+        auto home = std::getenv("HOME");
+        if (home) {
+            std::ifstream ifs(std::string(home) + "/.config/seastar/seastar.conf");
+            if (ifs) {
+                bpo::store(bpo::parse_config_file(ifs, _opts), configuration);
+            }
+            std::ifstream ifs_io(std::string(home) + "/.config/seastar/io.conf");
+            if (ifs_io) {
+                bpo::store(bpo::parse_config_file(ifs_io, _opts), configuration);
+            }
+        }
+    } catch (bpo::error& e) {
+        print("error: %s\n\nTry --help.\n", e.what());
+        return 2;
+    }
 
-    return app.run_deprecated(ac, av, [&app] {
-    	return make_ready_future<>();
-
-     });
+    dpdk::eal::cpuset cpus;
+    for (int i = 0; i<NUM_OF_GPU; i++) {
+        cpus[i] = true;
+    }
+    dpdk::eal::init(cpus, configuration);
 
 	//auto& opts = app.configuration();
 	std::cout<<"smp::count: "<<seastar::smp::count<<std::endl;
