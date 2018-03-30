@@ -346,6 +346,8 @@ l2fwd_main_loop(void)
 
     lcore_id = rte_lcore_id();
     qconf = &lcore_conf[lcore_id];
+    prev_tsc = rte_rdtsc();
+    timer_tsc=0;
 
     if (qconf->n_rx_queue == 0) {
 
@@ -366,6 +368,7 @@ l2fwd_main_loop(void)
 
 			/* advance the timer */
 		timer_tsc += diff_tsc;
+		printf("timer_tsc: %18"PRIu64"\n",timer_tsc);
 
 		/* if timer has reached its timeout */
 		if (unlikely(timer_tsc >= timer_period)) {
@@ -875,7 +878,7 @@ main(int argc, char **argv)
 	unsigned lcore_id;
 	uint32_t n_tx_queue, nb_lcores;
 	uint8_t portid, nb_rx_queue, queue, socketid;
-	timer_period *= rte_get_timer_hz();
+	timer_period =timer_period* rte_get_timer_hz();
 	/* init EAL */
 	ret = rte_eal_init(argc, argv);
 	if (ret < 0)
