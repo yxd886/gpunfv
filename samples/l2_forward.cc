@@ -30,6 +30,39 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "netstar/preprocessor/tcp_ppr.hh"
+
+#include "core/reactor.hh"
+#include "core/app-template.hh"
+#include "core/sleep.hh"
+
+#include "netstar/port_manager.hh"
+#include "netstar/stack/stack_manager.hh"
+#include "netstar/hookpoint/hook_manager.hh"
+#include "netstar/mica/mica_client.hh"
+
+#include "netstar/asyncflow/sd_async_flow.hh"
+#include "netstar/asyncflow/async_flow.hh"
+
+#include "netstar/preprocessor/udp_ppr.hh"
+
+#include <vector>
+#include <iostream>
+#include <algorithm>
+#include "nf/aho-corasick/fpp.h"
+#include "nf/aho-corasick/aho.h"
+#include "core/dpdk_rte.hh"
+
+#include <helper_functions.h>
+#include <helper_cuda.h>
+#include <cuda_runtime.h>
+#include <cuda_profiler_api.h>
+#include "playground.hh"
+#define MAX_MATCH 8192
+#include <stdlib.h>
+#include <time.h>
+
+#include <unordered_map>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,6 +90,7 @@
 #include <rte_per_lcore.h>
 #include <rte_launch.h>
 #include <rte_atomic.h>
+#include <rte_cycles.h>
 #include <rte_prefetch.h>
 #include <rte_lcore.h>
 #include <rte_per_lcore.h>
@@ -69,42 +103,7 @@
 #include <rte_ethdev.h>
 #include <rte_mempool.h>
 #include <rte_mbuf.h>
-#include "netstar/preprocessor/tcp_ppr.hh"
 
-#include "core/reactor.hh"
-#include "core/app-template.hh"
-#include "core/sleep.hh"
-
-#include "netstar/port_manager.hh"
-#include "netstar/stack/stack_manager.hh"
-#include "netstar/hookpoint/hook_manager.hh"
-#include "netstar/mica/mica_client.hh"
-
-#include "netstar/asyncflow/sd_async_flow.hh"
-#include "netstar/asyncflow/async_flow.hh"
-
-#include "netstar/preprocessor/udp_ppr.hh"
-
-
-
-
-
-#include <vector>
-#include <iostream>
-#include <algorithm>
-#include "nf/aho-corasick/fpp.h"
-#include "nf/aho-corasick/aho.h"
-
-#include <helper_functions.h>
-#include <helper_cuda.h>
-#include <cuda_runtime.h>
-#include <cuda_profiler_api.h>
-#include "playground.hh"
-#define MAX_MATCH 8192
-#include <stdlib.h>
-#include <time.h>
-
-#include <unordered_map>
 using namespace seastar;
 /*
 
