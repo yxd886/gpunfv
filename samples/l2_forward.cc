@@ -71,6 +71,8 @@
 #include <rte_tcp.h>
 #include <rte_udp.h>
 #include <rte_string_fns.h>
+#include <sys/time.h>
+#include <unistd.h>
 
 #include <cmdline_parse.h>
 #include <cmdline_parse_etheraddr.h>
