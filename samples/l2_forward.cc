@@ -77,11 +77,16 @@ using namespace seastar;
 using namespace netstar;
 using namespace std::chrono_literals;
 
+
+
 extern std::vector<struct rte_mempool*> netstar_pools;
 std::chrono::time_point<std::chrono::steady_clock> started;
 std::chrono::time_point<std::chrono::steady_clock> stoped;
 std::chrono::time_point<std::chrono::steady_clock> gpu_started;
 std::chrono::time_point<std::chrono::steady_clock> gpu_stoped;
+
+
+app_template app;
 
 struct fake_val {
     uint64_t v[3];
@@ -997,9 +1002,6 @@ l2fwd_main_loop(void)
 	unsigned lcore_id;
 	unsigned i, portid, nb_rx;
 
-
-
-
 	lcore_id = rte_lcore_id();
 	printf("Lcore %u start loop\n",lcore_id);
 
@@ -1007,17 +1009,8 @@ l2fwd_main_loop(void)
 	while (1) {
 
 
-		/*
-		 * TX burst queue drain
-		 */
-
-
-		/*
-		 * Read packet from RX queues
-		 */
 		portid = 0;
 		for (i = 0; i < QUEUE_PER_CORE; i++) {
-
 
 			nb_rx = rte_eth_rx_burst((uint8_t) portid, 0,
 						 pkts_burst, MAX_PKT_BURST);
@@ -1032,6 +1025,13 @@ l2fwd_main_loop(void)
 static int
 l2fwd_launch_one_lcore(__attribute__((unused)) void *dummy)
 {
+
+	std::unique_ptr<net::device> dev=(std::unique_ptr<net::device>)dummy;
+	unsigned lcore_id;
+	lcore_id = rte_lcore_id();
+	for(unsigned i=0;i<QUEUE_PER_CORE;i++){
+		dev->init_local_queue(app.configuration(),lcore_id+i*QUEUE_PER_CORE);
+	}
 	l2fwd_main_loop();
 	return 0;
 }
@@ -1039,7 +1039,7 @@ namespace bpo = boost::program_options;
 
 int main(int ac, char** av) {
 
-    app_template app;
+
     sd_async_flow_manager<tcp_ppr> m1;
     sd_async_flow_manager<udp_ppr> m2;
     async_flow_manager<tcp_ppr> m3;
@@ -1058,11 +1058,12 @@ int main(int ac, char** av) {
 	//auto& opts = app.configuration();
 	std::cout<<"smp::count: "<<seastar::smp::count<<std::endl;
 
-	auto dev = seastar::create_standard_device(0, seastar::smp::count);
+	std::unique_ptr<net::device> dev = seastar::create_standard_device(0, seastar::smp::count);
+
 
 	std::cout<<"port init finished"<<std::endl;
 
-	rte_eal_mp_remote_launch(l2fwd_launch_one_lcore, NULL, CALL_MASTER);
+	rte_eal_mp_remote_launch(l2fwd_launch_one_lcore,(void*) dev, CALL_MASTER);
 	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
 		if (rte_eal_wait_lcore(lcore_id) < 0)
 			return -1;
