@@ -510,7 +510,7 @@ static const struct option lgopts[] = {
 };
 
 /* Parse the argument given in the command line of the application */
-static int
+ int
 l2fwd_parse_args(int argc, char **argv)
 {
     int opt, ret, timer_secs;
