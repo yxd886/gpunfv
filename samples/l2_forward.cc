@@ -85,7 +85,9 @@ std::chrono::time_point<std::chrono::steady_clock> stoped;
 std::chrono::time_point<std::chrono::steady_clock> gpu_started;
 std::chrono::time_point<std::chrono::steady_clock> gpu_stoped;
 
-
+int total_send[10];
+int total_receive[10];
+long current_sec;
 
 std::vector<std::unique_ptr<net::device>> global_dev;
 
@@ -979,10 +981,13 @@ my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
 static int
 l2fwd_send_burst(struct rte_mbuf **m_table, unsigned n, uint8_t port)
 {
-
+	unsigned lcore_id;
+	lcore_id = rte_lcore_id();
 	unsigned ret;
 	unsigned queueid =0;
 	ret = rte_eth_tx_burst(port, (uint16_t) queueid, m_table, (uint16_t) n);
+	total_send[lcore_id]+=ret;
+
 	printf("send out %u packets!\n",ret);
 	//port_statistics[port].tx += ret;
 	if (unlikely(ret < n)) {
@@ -1006,17 +1011,34 @@ l2fwd_main_loop(void)
 	lcore_id = rte_lcore_id();
 	printf("Lcore %u start loop\n",lcore_id);
 
-
 	while (1) {
 
+		if(lcore_id==0){
+		    struct  timeval  tv;
+		    gettimeofday(&tv,NULL);
+			if(tv.tv_sec!=current_sec){
+				current_sec=tv.tv_sec;
+				int send=0;
+				int receive=0;
+				for(unsigned i = 0; i < seastar::smp::count; i ++){
+					send+=total_send[i];
+					total_send[i]=0;
+					receive+=total_send[i];
+					total_receive[i]=0;
+				}
+				printf("total_receive:%d, total_send:%d\n",receive,send);
+			}
+
+		}
 
 		portid = 0;
 		for (i = 0; i < QUEUE_PER_CORE; i++) {
 
-			nb_rx = rte_eth_rx_burst((uint8_t) portid, 0,
+			nb_rx = rte_eth_rx_burst((uint8_t) portid, lcore_id+i*QUEUE_PER_CORE,
 						 pkts_burst, MAX_PKT_BURST);
+			total_receive[lcore_id]+=nb_rx;
 			if(nb_rx!=0){
-				printf("received %u packets from lcore %u!\n",lcore_id,nb_rx);
+				printf("received %u packets from lcore %u queue %u !\n",nb_rx,lcore_id,lcore_id+i*QUEUE_PER_CORE);
 				l2fwd_send_burst(pkts_burst,nb_rx, portid);
 			}
 
