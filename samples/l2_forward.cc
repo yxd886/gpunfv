@@ -1059,8 +1059,8 @@ int main(int ac, char** av) {
 	//auto& opts = app.configuration();
 	std::cout<<"smp::count: "<<seastar::smp::count<<std::endl;
 
-	std::unique_ptr<net::device> dev = seastar::create_standard_device(0, seastar::smp::count);
-	global_dev.push_back(dev);
+	auto dev = seastar::create_standard_device(0, seastar::smp::count);
+	global_dev.push_back(std::move(dev));
 
 
 	std::cout<<"port init finished"<<std::endl;
