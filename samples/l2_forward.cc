@@ -70,6 +70,7 @@
 
 #define QUEUE_PER_CORE 1
 #define MAX_PKT_BURST 32
+//#define NUM_OF_CPU 4
 
 using namespace seastar;
 using namespace netstar;
@@ -1036,47 +1037,26 @@ l2fwd_launch_one_lcore(__attribute__((unused)) void *dummy)
 namespace bpo = boost::program_options;
 
 int main(int ac, char** av) {
+
     app_template app;
     sd_async_flow_manager<tcp_ppr> m1;
     sd_async_flow_manager<udp_ppr> m2;
     async_flow_manager<tcp_ppr> m3;
     async_flow_manager<udp_ppr> m4;
-    bpo::variables_map configuration;
-    try {
-        bpo::store(bpo::command_line_parser(ac, av)
-                    .options(_opts)
-                    .positional(_pos_opts)
-                    .run()
-            , configuration);
-        auto home = std::getenv("HOME");
-        if (home) {
-            std::ifstream ifs(std::string(home) + "/.config/seastar/seastar.conf");
-            if (ifs) {
-                bpo::store(bpo::parse_config_file(ifs, _opts), configuration);
-            }
-            std::ifstream ifs_io(std::string(home) + "/.config/seastar/io.conf");
-            if (ifs_io) {
-                bpo::store(bpo::parse_config_file(ifs_io, _opts), configuration);
-            }
-        }
-    } catch (bpo::error& e) {
-        print("error: %s\n\nTry --help.\n", e.what());
-        return 2;
-    }
+    app.setup_config(ac,av);
+
 
     dpdk::eal::cpuset cpus;
-    for (int i = 0; i<NUM_OF_GPU; i++) {
+    for (int i = 0; i<seastar::smp::count; i++) {
         cpus[i] = true;
     }
-    dpdk::eal::init(cpus, configuration);
+
+    dpdk::eal::init(cpus, app.configuration());
 
 	//auto& opts = app.configuration();
 	std::cout<<"smp::count: "<<seastar::smp::count<<std::endl;
 	auto dev = seastar::create_standard_device(0, seastar::smp::count);
 	rte_eal_mp_remote_launch(l2fwd_launch_one_lcore, NULL, CALL_MASTER);
-
-
-
 
 
 
