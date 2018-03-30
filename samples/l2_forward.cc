@@ -1056,8 +1056,16 @@ int main(int ac, char** av) {
 
 	//auto& opts = app.configuration();
 	std::cout<<"smp::count: "<<seastar::smp::count<<std::endl;
+
 	auto dev = seastar::create_standard_device(0, seastar::smp::count);
+
+	std::cout<<"port init finished"<<std::endl;
+
 	rte_eal_mp_remote_launch(l2fwd_launch_one_lcore, NULL, CALL_MASTER);
+	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
+		if (rte_eal_wait_lcore(lcore_id) < 0)
+			return -1;
+	}
 
 
 
