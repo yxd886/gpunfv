@@ -275,33 +275,18 @@ static void
 l2fwd_main_loop(void)
 {
     struct rte_mbuf *pkts_burst[MAX_PKT_BURST];
-    struct rte_mbuf *m;
-    int sent;
     unsigned lcore_id;
-    unsigned i, j, portid, nb_rx, send, queueid;
+    unsigned i, portid, nb_rx, send, queueid;
     struct lcore_conf *qconf;
-    const uint64_t drain_tsc = (rte_get_tsc_hz() + US_PER_S - 1) / US_PER_S *
-            BURST_TX_DRAIN_US;
-
-
 
     lcore_id = rte_lcore_id();
-    qconf = &lcore_queue_conf[lcore_id];
+    qconf = &lcore_conf[lcore_id];
 
     if (qconf->n_rx_queue == 0) {
-        RTE_LOG(INFO, L2FWD, "lcore %u has nothing to do\n", lcore_id);
+
         return;
     }
 
-    RTE_LOG(INFO, L2FWD, "entering main loop on lcore %u\n", lcore_id);
-
-    for (i = 0; i < qconf->n_rx_queue; i++) {
-
-        portid = qconf->rx_queue_list[i].port_id;
-        RTE_LOG(INFO, L2FWD, " -- lcoreid=%u portid=%u\n", lcore_id,
-            portid);
-
-    }
 
     while (1) {
 
