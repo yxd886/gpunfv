@@ -778,7 +778,7 @@ main(int argc, char **argv)
                 ret, (unsigned) portid);
 
         /* Initialize TX buffers */
-        tx_buffer[portid] = rte_zmalloc_socket("tx_buffer",
+        tx_buffer[portid] = (struct rte_eth_dev_tx_buffer*)rte_zmalloc_socket("tx_buffer",
                 RTE_ETH_TX_BUFFER_SIZE(MAX_PKT_BURST), 0,
                 rte_eth_dev_socket_id(portid));
         if (tx_buffer[portid] == NULL)
