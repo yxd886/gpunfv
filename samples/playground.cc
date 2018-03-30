@@ -581,11 +581,11 @@ public:
 
 
         batch():gpu_pkts(nullptr),gpu_states(nullptr),need_process(false),processing(false),current_idx(0){
-        	checkCudaErrors(cudaStreamCreate(&stream));
+        	create_stream(&stream);
 
         }
         ~batch(){
-        	checkCudaErrors(cudaStreamDestroy(stream));
+        	destory_stream(stream);
 
         }
 
