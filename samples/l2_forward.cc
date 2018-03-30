@@ -1041,49 +1041,10 @@ int main(int ac, char** av) {
     async_flow_manager<tcp_ppr> m3;
     async_flow_manager<udp_ppr> m4;
 
-    bpo::variables_map configuration;
-    try {
-        bpo::store(bpo::command_line_parser(ac, av)
-                    .options(_opts)
-                    .positional(_pos_opts)
-                    .run()
-            , configuration);
-        auto home = std::getenv("HOME");
-        if (home) {
-            std::ifstream ifs(std::string(home) + "/.config/seastar/seastar.conf");
-            if (ifs) {
-                bpo::store(bpo::parse_config_file(ifs, _opts), configuration);
-            }
-            std::ifstream ifs_io(std::string(home) + "/.config/seastar/io.conf");
-            if (ifs_io) {
-                bpo::store(bpo::parse_config_file(ifs_io, _opts), configuration);
-            }
-        }
-    } catch (bpo::error& e) {
-        print("error: %s\n\nTry --help.\n", e.what());
-        return 2;
-    }
-    if (configuration.count("help")) {
-        std::cout << _opts << "\n";
-        return 1;
-    }
-    if (configuration["help-loggers"].as<bool>()) {
-        log_cli::print_available_loggers(std::cout);
-        return 1;
-    }
+    return app.run_deprecated(ac, av, [&app] {
+    	return make_ready_future<>();
 
-    bpo::notify(configuration);
-
-    // Needs to be before `smp::configure()`.
-    try {
-        apply_logging_settings(log_cli::extract_settings(configuration));
-    } catch (const std::runtime_error& exn) {
-        std::cout << "logging configuration error: " << exn.what() << '\n';
-        return 1;
-    }
-
-    configuration.emplace("argv0", boost::program_options::variable_value(std::string(av[0]), false));
-    smp::configure(configuration);
+     });
 
 	//auto& opts = app.configuration();
 	std::cout<<"smp::count: "<<seastar::smp::count<<std::endl;
