@@ -879,7 +879,7 @@ main(int argc, char **argv)
 	unsigned lcore_id;
 	uint32_t n_tx_queue, nb_lcores;
 	uint8_t portid, nb_rx_queue, queue, socketid;
-	timer_period =timer_period* rte_get_timer_hz();
+	timer_period =rte_get_timer_hz();
 	/* init EAL */
 	ret = rte_eal_init(argc, argv);
 	if (ret < 0)
