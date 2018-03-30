@@ -879,7 +879,7 @@ main(int argc, char **argv)
 	unsigned lcore_id;
 	uint32_t n_tx_queue, nb_lcores;
 	uint8_t portid, nb_rx_queue, queue, socketid;
-	timer_period =rte_get_timer_hz();
+
 	/* init EAL */
 	ret = rte_eal_init(argc, argv);
 	if (ret < 0)
@@ -892,6 +892,7 @@ main(int argc, char **argv)
 		dest_eth_addr[portid] = ETHER_LOCAL_ADMIN_ADDR + ((uint64_t)portid << 40);
 		*(uint64_t *)(val_eth + portid) = dest_eth_addr[portid];
 	}
+	timer_period =rte_get_timer_hz();
 
 	/* parse application arguments (after the EAL ones) */
 	ret = parse_args(argc, argv);
