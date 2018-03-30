@@ -179,6 +179,11 @@ static int numa_on = 1; /**< NUMA is enabled by default. */
 static int ipv6 = 0; /**< ipv6 is false by default. */
 #endif
 
+
+int total_receive;
+int total_send;
+
+
 struct mbuf_table {
 	uint16_t len;
 	struct rte_mbuf *m_table[MAX_PKT_BURST];
@@ -220,6 +225,8 @@ static uint16_t nb_lcore_params = sizeof(lcore_params_array_default) /
 static struct rte_eth_conf port_conf;
 
 static struct rte_mempool * pktmbuf_pool[NB_SOCKETS];
+struct  timeval    tv;
+
 
 
 
@@ -295,6 +302,17 @@ l2fwd_main_loop(void)
         /*
          * Read packet from RX queues
          */
+    	if(lcore_id==0){
+
+    		struct  timeval    cur;
+    		gettimeofday(&cur,NULL);
+    		if(tv.tv_sec!=cur.tv_sec){
+    			tv.tv_sec=cur.tv_sec;
+    			printf("total send: %d, total receive: %d\n",total_send,total_receive);
+    			total_send=0;
+    			total_receive=0;
+    		}
+    	}
         for (i = 0; i < qconf->n_rx_queue; i++) {
 
 			portid = qconf->rx_queue_list[i].port_id;
@@ -303,14 +321,14 @@ l2fwd_main_loop(void)
 
             nb_rx = rte_eth_rx_burst((uint8_t) portid, queueid,
                          pkts_burst, MAX_PKT_BURST);
-            if(nb_rx){
-            	printf("receive %u pkts\n",nb_rx);
-            }
+
+            total_receive+=nb_rx;
 
 
 
             send = rte_eth_tx_burst(portid,portid,pkts_burst,nb_rx);
-            printf("send %u pkts\n",send);
+            //printf("send %u pkts\n",send);
+            total_send+=send;
             if(send<nb_rx){
             	for(unsigned i= send;i<nb_rx;i++){
             		rte_pktmbuf_free(pkts_burst[i]);
@@ -762,7 +780,7 @@ int
 main(int argc, char **argv)
 {
 
-
+	gettimeofday(&tv,NULL);
 	port_conf.rxmode.mq_mode = ETH_MQ_RX_RSS;
 	port_conf.rxmode.max_rx_pkt_len = ETHER_MAX_LEN;
 	port_conf.rxmode.split_hdr_size = 0;
