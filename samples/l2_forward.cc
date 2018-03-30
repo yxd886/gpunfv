@@ -1043,10 +1043,10 @@ int main(int ac, char** av) {
     sd_async_flow_manager<udp_ppr> m2;
     async_flow_manager<tcp_ppr> m3;
     async_flow_manager<udp_ppr> m4;
-    app.setup_config(ac,av);
+    app.set_config(ac,av);
 
 
-    dpdk::eal::cpuset cpus;
+    seastar::dpdk::eal::cpuset cpus;
     for (int i = 0; i<seastar::smp::count; i++) {
         cpus[i] = true;
     }
