@@ -86,7 +86,7 @@ std::chrono::time_point<std::chrono::steady_clock> gpu_started;
 std::chrono::time_point<std::chrono::steady_clock> gpu_stoped;
 
 
-app_template app;
+
 std::vector<std::unique_ptr<net::device>> global_dev;
 
 struct fake_val {
@@ -1027,11 +1027,11 @@ static int
 l2fwd_launch_one_lcore(__attribute__((unused)) void *dummy)
 {
 
-
+	app_template * app=(app_template*)dummy;
 	unsigned lcore_id;
 	lcore_id = rte_lcore_id();
 	for(unsigned i=0;i<QUEUE_PER_CORE;i++){
-		global_dev[0]->init_local_queue(app.configuration(),lcore_id+i*QUEUE_PER_CORE);
+		global_dev[0]->init_local_queue(app->configuration(),lcore_id+i*QUEUE_PER_CORE);
 	}
 	l2fwd_main_loop();
 	return 0;
@@ -1041,7 +1041,8 @@ namespace bpo = boost::program_options;
 int main(int ac, char** av) {
 
 
-    sd_async_flow_manager<tcp_ppr> m1;
+	app_template app;
+	sd_async_flow_manager<tcp_ppr> m1;
     sd_async_flow_manager<udp_ppr> m2;
     async_flow_manager<tcp_ppr> m3;
     async_flow_manager<udp_ppr> m4;
@@ -1065,7 +1066,7 @@ int main(int ac, char** av) {
 
 	std::cout<<"port init finished"<<std::endl;
 
-	rte_eal_mp_remote_launch(l2fwd_launch_one_lcore,NULL, CALL_MASTER);
+	rte_eal_mp_remote_launch(l2fwd_launch_one_lcore,(void*)&app, CALL_MASTER);
 	RTE_LCORE_FOREACH_SLAVE(lcore_id) {
 		if (rte_eal_wait_lcore(lcore_id) < 0)
 			return -1;
