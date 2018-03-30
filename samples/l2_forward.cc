@@ -57,7 +57,6 @@
 #include <rte_per_lcore.h>
 #include <rte_launch.h>
 #include <rte_atomic.h>
-#include <rte_cycles.h>
 #include <rte_prefetch.h>
 #include <rte_lcore.h>
 #include <rte_per_lcore.h>
@@ -106,7 +105,7 @@
 #include <time.h>
 
 #include <unordered_map>
-
+using namespace seastar;
 /*
 
 using rss_key_type = std::vector<uint8_t>;
@@ -121,15 +120,6 @@ static const rss_key_type default_rsskey_40bytes = {
 };*/
 
 // Intel's i40e PMD default RSS key
-uint8_t default_rsskey_52bytes[52] = {
-    0x44, 0x39, 0x79, 0x6b, 0xb5, 0x4c, 0x50, 0x23,
-    0xb6, 0x75, 0xea, 0x5b, 0x12, 0x4f, 0x9f, 0x30,
-    0xb8, 0xa2, 0xc0, 0x3d, 0xdf, 0xdc, 0x4d, 0x02,
-    0xa0, 0x8c, 0x9b, 0x33, 0x4a, 0xf6, 0x4a, 0x4c,
-    0x05, 0xc6, 0xfa, 0x34, 0x39, 0x58, 0xd8, 0x55,
-    0x7d, 0x99, 0x58, 0x3a, 0xe1, 0x38, 0xc9, 0x2e,
-    0x81, 0x15, 0x03, 0x66
-};
 
 
 static volatile bool force_quit;
@@ -175,25 +165,6 @@ struct lcore_queue_conf lcore_queue_conf[RTE_MAX_LCORE];
 
 static struct rte_eth_dev_tx_buffer *tx_buffer[RTE_MAX_ETHPORTS];
 
-static const struct rte_eth_conf port_conf = {
-    .rxmode = {
-    	.mq_mode = ETH_MQ_RX_RSS,
-        .split_hdr_size = 0,
-        .header_split   = 0, /**< Header Split disabled */
-        .hw_ip_checksum = 0, /**< IP checksum offload disabled */
-        .hw_vlan_filter = 0, /**< VLAN filtering disabled */
-        .jumbo_frame    = 0, /**< Jumbo Frame Support disabled */
-        .hw_strip_crc   = 1, /**< CRC stripped by hardware */
-    },
-    .txmode = {
-        .mq_mode = ETH_MQ_TX_NONE,
-    },
-	.rx_adv_conf ={
-			.rss_conf.rss_hf = ETH_RSS_PROTO_MASK,
-			.rss_conf.rss_key = default_rsskey_52bytes,
-			.rss_conf.rss_key_len = 52,
-	},
-};
 
 struct rte_mempool * l2fwd_pktmbuf_pool = NULL;
 
@@ -691,7 +662,6 @@ main(int argc, char **argv)
 
 	app_template app;
     app.set_config(argc,argv);
-    unsigned lcore_id;
 
 
     seastar::dpdk::eal::cpuset cpus;
