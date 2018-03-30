@@ -270,11 +270,79 @@ static struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
 /* Send burst of packets on an output interface */
 
+
+static void
+l2fwd_main_loop(void)
+{
+    struct rte_mbuf *pkts_burst[MAX_PKT_BURST];
+    struct rte_mbuf *m;
+    int sent;
+    unsigned lcore_id;
+    unsigned i, j, portid, nb_rx, send, queueid;
+    struct lcore_conf *qconf;
+    const uint64_t drain_tsc = (rte_get_tsc_hz() + US_PER_S - 1) / US_PER_S *
+            BURST_TX_DRAIN_US;
+
+
+
+    lcore_id = rte_lcore_id();
+    qconf = &lcore_queue_conf[lcore_id];
+
+    if (qconf->n_rx_queue == 0) {
+        RTE_LOG(INFO, L2FWD, "lcore %u has nothing to do\n", lcore_id);
+        return;
+    }
+
+    RTE_LOG(INFO, L2FWD, "entering main loop on lcore %u\n", lcore_id);
+
+    for (i = 0; i < qconf->n_rx_queue; i++) {
+
+        portid = qconf->rx_queue_list[i].port_id;
+        RTE_LOG(INFO, L2FWD, " -- lcoreid=%u portid=%u\n", lcore_id,
+            portid);
+
+    }
+
+    while (1) {
+
+
+
+        /*
+         * Read packet from RX queues
+         */
+        for (i = 0; i < qconf->n_rx_queue; i++) {
+
+			portid = qconf->rx_queue_list[i].port_id;
+			queueid = qconf->rx_queue_list[i].queue_id;
+
+
+            nb_rx = rte_eth_rx_burst((uint8_t) portid, queueid,
+                         pkts_burst, MAX_PKT_BURST);
+            if(nb_rx){
+            	printf("receive %u pkts\n",nb_rx);
+            }
+
+
+
+            send = rte_eth_tx_burst(portid,portid,pkts_burst,nb_rx);
+            printf("send %u pkts\n",send);
+            if(send<nb_rx){
+            	for(unsigned i= send;i<nb_rx;i++){
+            		rte_pktmbuf_free(pkts_burst[i]);
+            	}
+
+            }
+        }
+    }
+}
+
+
 /* main processing loop */
 static int
 main_loop(__attribute__((unused)) void *dummy)
 {
   printf("locre\n");
+  l2fwd_main_loop();
   return 0;
 }
 
