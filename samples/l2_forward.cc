@@ -999,7 +999,7 @@ l2fwd_main_loop(void)
 
 
 	lcore_id = rte_lcore_id();
-
+	printf("Lcore %u start loop\n",lcore_id);
 
 
 	while (1) {
