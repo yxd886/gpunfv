@@ -9,6 +9,7 @@
 using namespace std;
 
 #define THREADPERBLOCK	256
+#define SHARE_MEM_SIZE  256
 
 __global__ void testKernel(char *s) {
 	int i = threadIdx.x;
@@ -137,8 +138,8 @@ void gpu_launch(char **pkt_batch, char **state_batch, char *extra_info, int flow
 	assert(nflows > 0);
 	int nblocks = (nflows + THREADPERBLOCK - 1) / THREADPERBLOCK;
 //printf("nblocks = %d, nthread = %d, nflows = %d\n", nblocks, THREADPERBLOCK, nflows);
-	gpu_nf_logic<<<nblocks, THREADPERBLOCK,stream>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
-	//gpu_nf_logic<<<1, 1,stream>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
+	gpu_nf_logic<<<nblocks, THREADPERBLOCK, SHARE_MEM_SIZE, stream>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
+	//gpu_nf_logic<<<1, 1, SHARE_MEM_SIZE, stream>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
 }
 
 void gpu_sync(cudaStream_t stream) {
