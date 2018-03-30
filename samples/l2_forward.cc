@@ -368,7 +368,7 @@ l2fwd_main_loop(void)
 
 			/* advance the timer */
 		timer_tsc += diff_tsc;
-		//printf("timer_tsc: %18"PRIu64"\n",timer_tsc);
+		printf("timer_period: %18"PRIu64"\n",timer_period);
 
 		/* if timer has reached its timeout */
 		if (unlikely(timer_tsc >= timer_period)) {
