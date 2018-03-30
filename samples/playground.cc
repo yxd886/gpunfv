@@ -577,11 +577,15 @@ public:
         bool need_process;
         bool processing;
         uint64_t current_idx;
+        cudaStream_t stream;
+
 
         batch():gpu_pkts(nullptr),gpu_states(nullptr),need_process(false),processing(false),current_idx(0){
+        	checkCudaErrors(cudaStreamCreate(&stream));
 
         }
         ~batch(){
+        	checkCudaErrors(cudaStreamDestroy(stream));
 
         }
 
@@ -598,7 +602,7 @@ public:
             started = steady_clock_type::now();
 
             if(_flows[!index].empty()==false){
-                gpu_sync();
+                gpu_sync(stream);
                 gpu_stoped = steady_clock_type::now();
                 elapsed = gpu_stoped - gpu_started;
          if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
@@ -698,7 +702,7 @@ public:
                 //cudaEventRecord(event_start, 0);
 
 
-                gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition);
+                gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
 
 
                 //cudaEventRecord(event_stop, 0);
