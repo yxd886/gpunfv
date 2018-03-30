@@ -1048,7 +1048,7 @@ int main(int ac, char** av) {
 
 
     seastar::dpdk::eal::cpuset cpus;
-    for (int i = 0; i<seastar::smp::count; i++) {
+    for (unsigned int i = 0; i<seastar::smp::count; i++) {
         cpus[i] = true;
     }
 
