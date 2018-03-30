@@ -146,7 +146,7 @@ static uint16_t nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 static struct ether_addr l2fwd_ports_eth_addr[RTE_MAX_ETHPORTS];
 
 /* mask of enabled ports */
-static uint32_t l2fwd_enabled_port_mask = 0;
+static uint32_t l2fwd_enabled_port_mask = 1;
 
 /* list of enabled ports */
 static uint32_t l2fwd_dst_ports[RTE_MAX_ETHPORTS];
