@@ -965,6 +965,7 @@ int main(int ac, char** av) {
     async_flow_manager<udp_ppr> m4;
     return app.run_deprecated(ac, av, [&app] {
         //auto& opts = app.configuration();
+    	std::cout<<"smp::count: "<<seastar::smp::count<<std::endl;
         auto dev = seastar::create_standard_device(0, seastar::smp::count);
 
 
