@@ -290,6 +290,8 @@ uint64_t pre_total_rx;
 uint64_t pre_total_tx;
 uint64_t pre_total_drop;
 
+#define CORE_NUM 4
+
 static void
 print_stats(void)
 {
