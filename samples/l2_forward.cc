@@ -55,6 +55,13 @@
 #include <time.h>
 
 #include <unordered_map>
+#include <rte_config.h>
+#include <rte_common.h>
+#include <rte_eal.h>
+#include <rte_pci.h>
+#include <rte_ethdev.h>
+#include <rte_cycles.h>
+#include <rte_memzone.h>
 #define GPU_BATCH_SIZE 2000
 
 #define PRINT_TIME 0
@@ -62,6 +69,7 @@
 #define COMPUTE_RATIO 100
 
 #define QUEUE_PER_CORE 1
+#define MAX_PKT_BURST 32
 
 using namespace seastar;
 using namespace netstar;
@@ -968,7 +976,7 @@ l2fwd_send_burst(struct rte_mbuf **m_table, unsigned n, uint8_t port)
 	unsigned queueid =0;
 	ret = rte_eth_tx_burst(port, (uint16_t) queueid, m_table, (uint16_t) n);
 	printf("send out %u packets!\n",ret);
-	port_statistics[port].tx += ret;
+	//port_statistics[port].tx += ret;
 	if (unlikely(ret < n)) {
 		printf("drop %u packets!\n",n-ret);
 		do {
@@ -1012,7 +1020,7 @@ l2fwd_main_loop(void)
 			nb_rx = rte_eth_rx_burst((uint8_t) portid, 0,
 						 pkts_burst, MAX_PKT_BURST);
 
-			printf("received %u packets from lcore %u!\n",lcore_id.nb_rx);
+			printf("received %u packets from lcore %u!\n",lcore_id,nb_rx);
 
 
 			l2fwd_send_burst(pkts_burst,nb_rx, portid);
