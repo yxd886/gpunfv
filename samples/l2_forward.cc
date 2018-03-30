@@ -306,7 +306,7 @@ print_stats(void)
 
 	for (portid = 0; portid < RTE_MAX_ETHPORTS; portid++) {
 		/* skip disabled ports */
-		if ((l2fwd_enabled_port_mask & (1 << portid)) == 0)
+		if ((enabled_port_mask & (1 << portid)) == 0)
 			continue;
 		printf("\nStatistics for port %u ------------------------------"
 			   "\nPackets sent: %24"PRIu64
@@ -342,7 +342,7 @@ l2fwd_main_loop(void)
     unsigned lcore_id;
     unsigned i, portid, nb_rx, send, queueid;
     struct lcore_conf *qconf;
-    uint64_t cur_tsc,diff_tsc,prev_tsc,drain_tsc,timer_tsc;
+    uint64_t cur_tsc,diff_tsc,prev_tsc,timer_tsc;
 
     lcore_id = rte_lcore_id();
     qconf = &lcore_conf[lcore_id];
