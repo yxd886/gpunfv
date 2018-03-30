@@ -1015,11 +1015,11 @@ l2fwd_main_loop(void)
 
 			nb_rx = rte_eth_rx_burst((uint8_t) portid, 0,
 						 pkts_burst, MAX_PKT_BURST);
+			if(nb_rx!=0){
+				printf("received %u packets from lcore %u!\n",lcore_id,nb_rx);
+				l2fwd_send_burst(pkts_burst,nb_rx, portid);
+			}
 
-			printf("received %u packets from lcore %u!\n",lcore_id,nb_rx);
-
-
-			l2fwd_send_burst(pkts_burst,nb_rx, portid);
 		}
 	}
 }
