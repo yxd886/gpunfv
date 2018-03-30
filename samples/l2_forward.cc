@@ -963,7 +963,13 @@ int main(int ac, char** av) {
     sd_async_flow_manager<udp_ppr> m2;
     async_flow_manager<tcp_ppr> m3;
     async_flow_manager<udp_ppr> m4;
-    auto dev = seastar::create_standard_device(0, seastar::smp::count);
+    return app.run_deprecated(ac, av, [&app] {
+        auto& opts = app.configuration();
+        auto dev = seastar::create_standard_device(0, seastar::smp::count);
+
+
+    });
+
 
 
 }
