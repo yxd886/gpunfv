@@ -678,9 +678,9 @@ main(int argc, char **argv)
     signal(SIGTERM, signal_handler);
 
     /* parse application arguments (after the EAL ones) */
-    ret = l2fwd_parse_args(argc, argv);
-    if (ret < 0)
-        rte_exit(EXIT_FAILURE, "Invalid L2FWD arguments\n");
+    //ret = l2fwd_parse_args(argc, argv);
+    //if (ret < 0)
+    //    rte_exit(EXIT_FAILURE, "Invalid L2FWD arguments\n");
 
     printf("MAC updating %s\n", mac_updating ? "enabled" : "disabled");
 
@@ -755,16 +755,14 @@ main(int argc, char **argv)
         /* init port */
         printf("Initializing port %u... ", (unsigned) portid);
         fflush(stdout);
-        ret = rte_eth_dev_configure(portid, lcore_num*l2fwd_rx_queue_per_lcore, 1, &port_conf);
-        if (ret < 0)
-            rte_exit(EXIT_FAILURE, "Cannot configure device: err=%d, port=%u\n",
-                  ret, (unsigned) portid);
+        auto dev = seastar::create_standard_device(0, seastar::smp::count*l2fwd_rx_queue_per_lcore);
+
 
         rte_eth_macaddr_get(portid,&l2fwd_ports_eth_addr[portid]);
 
         /* init l2fwd_rx_queue_per_lcore RX queue */
         fflush(stdout);
-        auto dev = seastar::create_standard_device(0, seastar::smp::count*l2fwd_rx_queue_per_lcore);
+
 
 
         rte_eal_mp_remote_launch(l2fwd_init_queue_set_up, &portid, CALL_MASTER);
