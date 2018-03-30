@@ -286,6 +286,10 @@ struct lcore_conf {
 static struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
 /* Send burst of packets on an output interface */
+uint64_t pre_total_rx;
+uint64_t pre_total_tx;
+uint64_t pre_total_drop;
+
 static void
 print_stats(void)
 {
@@ -313,17 +317,17 @@ print_stats(void)
 			   "\nPackets received: %20"PRIu64
 			   "\nPackets dropped: %21"PRIu64,
 			   portid,
-			   statistics[portid].tx,
-			   statistics[portid].rx,
-			   statistics[portid].dropped);
+			   statistics[portid].tx-pre_total_tx,
+			   statistics[portid].rx-pre_total_rx,
+			   statistics[portid].dropped-pre_total_drop);
 
-		total_packets_dropped += statistics[portid].dropped;
-		total_packets_tx += statistics[portid].tx;
-		total_packets_rx += statistics[portid].rx;
+		total_packets_dropped += statistics[portid].dropped-pre_total_drop;
+		total_packets_tx += statistics[portid].tx-pre_total_tx;
+		total_packets_rx += statistics[portid].rx-pre_total_rx;
 
-		statistics[portid].dropped=0;
-		statistics[portid].tx=0;
-		statistics[portid].rx=0;
+		pre_total_tx=statistics[portid].tx;
+		pre_total_drop=statistics[portid].dropped;
+		pre_total_rx=statistics[portid].rx;
 	}
 	printf("\nAggregate statistics ==============================="
 		   "\nTotal packets sent: %18"PRIu64
