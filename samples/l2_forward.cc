@@ -177,13 +177,21 @@ static uint32_t enabled_port_mask = 0;
 static int promiscuous_on = 0; /**< Ports set in promiscuous mode off by default. */
 static int numa_on = 1; /**< NUMA is enabled by default. */
 
+static uint64_t timer_period = 1;
+
 #if (APP_LOOKUP_METHOD == APP_LOOKUP_EXACT_MATCH)
 static int ipv6 = 0; /**< ipv6 is false by default. */
 #endif
 
 
-int total_receive;
-int total_send;
+
+
+struct port_statistics {
+    uint64_t tx;
+    uint64_t rx;
+    uint64_t dropped;
+} __rte_cache_aligned;
+struct port_statistics statistics[RTE_MAX_ETHPORTS];
 
 
 struct mbuf_table {
@@ -278,7 +286,54 @@ struct lcore_conf {
 static struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
 /* Send burst of packets on an output interface */
+static void
+print_stats(void)
+{
+	uint64_t total_packets_dropped, total_packets_tx, total_packets_rx;
+	unsigned portid;
 
+	total_packets_dropped = 0;
+	total_packets_tx = 0;
+	total_packets_rx = 0;
+
+	const char clr[] = { 27, '[', '2', 'J', '\0' };
+	const char topLeft[] = { 27, '[', '1', ';', '1', 'H','\0' };
+
+		/* Clear screen and move to top left */
+	printf("%s%s", clr, topLeft);
+
+	printf("\nPort statistics ====================================");
+
+	for (portid = 0; portid < RTE_MAX_ETHPORTS; portid++) {
+		/* skip disabled ports */
+		if ((l2fwd_enabled_port_mask & (1 << portid)) == 0)
+			continue;
+		printf("\nStatistics for port %u ------------------------------"
+			   "\nPackets sent: %24"PRIu64
+			   "\nPackets received: %20"PRIu64
+			   "\nPackets dropped: %21"PRIu64,
+			   portid,
+			   statistics[portid].tx,
+			   statistics[portid].rx,
+			   statistics[portid].dropped);
+
+		total_packets_dropped += statistics[portid].dropped;
+		total_packets_tx += statistics[portid].tx;
+		total_packets_rx += statistics[portid].rx;
+
+		statistics[portid].dropped=0;
+		statistics[portid].tx=0;
+		statistics[portid].rx=0;
+	}
+	printf("\nAggregate statistics ==============================="
+		   "\nTotal packets sent: %18"PRIu64
+		   "\nTotal packets received: %14"PRIu64
+		   "\nTotal packets dropped: %15"PRIu64,
+		   total_packets_tx,
+		   total_packets_rx,
+		   total_packets_dropped);
+	printf("\n====================================================\n");
+}
 
 static void
 l2fwd_main_loop(void)
@@ -287,6 +342,7 @@ l2fwd_main_loop(void)
     unsigned lcore_id;
     unsigned i, portid, nb_rx, send, queueid;
     struct lcore_conf *qconf;
+    uint64_t cur_tsc,diff_tsc,prev_tsc,drain_tsc,timer_tsc;
 
     lcore_id = rte_lcore_id();
     qconf = &lcore_conf[lcore_id];
@@ -300,21 +356,34 @@ l2fwd_main_loop(void)
     while (1) {
 
 
+    	cur_tsc = rte_rdtsc();
+        /*
+         * TX burst queue drain
+         */
+    	diff_tsc = cur_tsc - prev_tsc;
+
+		/* if timer is enabled */
+
+			/* advance the timer */
+		timer_tsc += diff_tsc;
+
+		/* if timer has reached its timeout */
+		if (unlikely(timer_tsc >= timer_period)) {
+
+			/* do this only on master core */
+			if (lcore_id == 0) {
+				print_stats();
+				/* reset the timer */
+				timer_tsc = 0;
+			}
+		}
+
+		prev_tsc = cur_tsc;
 
         /*
          * Read packet from RX queues
          */
-    	if(lcore_id==0){
 
-    		struct  timeval    cur;
-    		gettimeofday(&cur,NULL);
-    		if(tv.tv_sec!=cur.tv_sec){
-    			tv.tv_sec=cur.tv_sec;
-    			printf("total send: %d, total receive: %d\n",total_send,total_receive);
-    			total_send=0;
-    			total_receive=0;
-    		}
-    	}
         for (i = 0; i < qconf->n_rx_queue; i++) {
 
 			portid = qconf->rx_queue_list[i].port_id;
@@ -324,13 +393,14 @@ l2fwd_main_loop(void)
             nb_rx = rte_eth_rx_burst((uint8_t) portid, queueid,
                          pkts_burst, MAX_PKT_BURST);
 
-            total_receive+=nb_rx;
+            statistics[portid].rx+=nb_rx;
 
 
 
             send = rte_eth_tx_burst(portid,portid,pkts_burst,nb_rx);
             //printf("send %u pkts\n",send);
-            total_send+=send;
+            statistics[portid].tx+=send;
+            statistics[portid].dropped+=nb_rx-send;
             if(send<nb_rx){
             	for(unsigned i= send;i<nb_rx;i++){
             		rte_pktmbuf_free(pkts_burst[i]);
@@ -805,7 +875,7 @@ main(int argc, char **argv)
 	unsigned lcore_id;
 	uint32_t n_tx_queue, nb_lcores;
 	uint8_t portid, nb_rx_queue, queue, socketid;
-
+	timer_period *= rte_get_timer_hz();
 	/* init EAL */
 	ret = rte_eal_init(argc, argv);
 	if (ret < 0)
