@@ -1052,6 +1052,7 @@ l2fwd_launch_one_lcore(__attribute__((unused)) void *dummy)
 	app_template * app=(app_template*)dummy;
 	unsigned lcore_id;
 	lcore_id = rte_lcore_id();
+	std::cout<<"l2fwd_launch_one_lcore"<<std::endl;
 	for(unsigned i=0;i<QUEUE_PER_CORE;i++){
 		global_dev[0]->init_local_queue(app->configuration(),lcore_id+i*QUEUE_PER_CORE);
 	}
