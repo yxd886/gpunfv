@@ -191,7 +191,7 @@ struct port_statistics {
     uint64_t rx;
     uint64_t dropped;
 } __rte_cache_aligned;
-struct port_statistics statistics[RTE_MAX_ETHPORTS];
+struct port_statistics statistics[RTE_MAX_ETHPORTS][10];
 
 
 struct mbuf_table {
@@ -308,27 +308,28 @@ print_stats(void)
 
 	printf("\nPort statistics ====================================");
 
-	for (portid = 0; portid < RTE_MAX_ETHPORTS; portid++) {
-		/* skip disabled ports */
-		if ((enabled_port_mask & (1 << portid)) == 0)
-			continue;
-		printf("\nStatistics for port %u ------------------------------"
-			   "\nPackets sent: %24"PRIu64
-			   "\nPackets received: %20"PRIu64
-			   "\nPackets dropped: %21"PRIu64,
-			   portid,
-			   statistics[portid].tx-pre_total_tx,
-			   statistics[portid].rx-pre_total_rx,
-			   statistics[portid].dropped-pre_total_drop);
-
-		total_packets_dropped += statistics[portid].dropped-pre_total_drop;
-		total_packets_tx += statistics[portid].tx-pre_total_tx;
-		total_packets_rx += statistics[portid].rx-pre_total_rx;
-
-		pre_total_tx=statistics[portid].tx;
-		pre_total_drop=statistics[portid].dropped;
-		pre_total_rx=statistics[portid].rx;
+	for(unsigned i =0; i<CORE_NUM; i++){
+		total_packets_dropped += statistics[portid][i].dropped;
+		total_packets_tx += statistics[portid][i].tx;
+		total_packets_rx += statistics[portid][i].rx;
 	}
+		/* skip disabled ports */
+
+
+	printf("\nStatistics for port %u ------------------------------"
+		   "\nPackets sent: %24"PRIu64
+		   "\nPackets received: %20"PRIu64
+		   "\nPackets dropped: %21"PRIu64,
+		   0,
+		   total_packets_tx-pre_total_tx,
+		   total_packets_rx-pre_total_rx,
+		   total_packets_dropped-pre_total_drop);
+
+
+	pre_total_tx=total_packets_tx;
+	pre_total_drop=total_packets_dropped;
+	pre_total_rx=total_packets_rx;
+
 	printf("\nAggregate statistics ==============================="
 		   "\nTotal packets sent: %18"PRIu64
 		   "\nTotal packets received: %14"PRIu64
@@ -401,14 +402,14 @@ l2fwd_main_loop(void)
             nb_rx = rte_eth_rx_burst((uint8_t) portid, queueid,
                          pkts_burst, MAX_PKT_BURST);
 
-            statistics[portid].rx+=nb_rx;
+            statistics[portid][lcore_id].rx+=nb_rx;
 
 
 
             send = rte_eth_tx_burst(portid,portid,pkts_burst,nb_rx);
             //printf("send %u pkts\n",send);
-            statistics[portid].tx+=send;
-            statistics[portid].dropped+=nb_rx-send;
+            statistics[portid][lcore_id].tx+=send;
+            statistics[portid][lcore_id].dropped+=nb_rx-send;
             if(send<nb_rx){
             	for(unsigned i= send;i<nb_rx;i++){
             		rte_pktmbuf_free(pkts_burst[i]);
