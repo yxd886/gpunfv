@@ -217,27 +217,7 @@ static struct lcore_params * lcore_params = lcore_params_array_default;
 static uint16_t nb_lcore_params = sizeof(lcore_params_array_default) /
 				sizeof(lcore_params_array_default[0]);
 
-static struct rte_eth_conf port_conf = {
-	.rxmode = {
-		.mq_mode = ETH_MQ_RX_RSS,
-		.max_rx_pkt_len = ETHER_MAX_LEN,
-		.split_hdr_size = 0,
-		.header_split   = 0, /**< Header Split disabled */
-		.hw_ip_checksum = 1, /**< IP checksum offload enabled */
-		.hw_vlan_filter = 0, /**< VLAN filtering disabled */
-		.jumbo_frame    = 0, /**< Jumbo Frame Support disabled */
-		.hw_strip_crc   = 0, /**< CRC stripped by hardware */
-	},
-	.rx_adv_conf = {
-		.rss_conf = {
-			.rss_key = NULL,
-			.rss_hf = ETH_RSS_IP,
-		},
-	},
-	.txmode = {
-		.mq_mode = ETH_MQ_TX_NONE,
-	},
-};
+static struct rte_eth_conf port_conf;
 
 static struct rte_mempool * pktmbuf_pool[NB_SOCKETS];
 
@@ -443,27 +423,7 @@ struct ipv6_l3fwd_route {
 	uint8_t  if_out;
 };
 
-static struct ipv4_l3fwd_route ipv4_l3fwd_route_array[] = {
-	{IPv4(1,1,1,0), 24, 0},
-	{IPv4(2,1,1,0), 24, 1},
-	{IPv4(3,1,1,0), 24, 2},
-	{IPv4(4,1,1,0), 24, 3},
-	{IPv4(5,1,1,0), 24, 4},
-	{IPv4(6,1,1,0), 24, 5},
-	{IPv4(7,1,1,0), 24, 6},
-	{IPv4(8,1,1,0), 24, 7},
-};
 
-static struct ipv6_l3fwd_route ipv6_l3fwd_route_array[] = {
-	{{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, 48, 0},
-	{{2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, 48, 1},
-	{{3,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, 48, 2},
-	{{4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, 48, 3},
-	{{5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, 48, 4},
-	{{6,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, 48, 5},
-	{{7,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, 48, 6},
-	{{8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, 48, 7},
-};
 
 #define IPV4_L3FWD_NUM_ROUTES \
 	(sizeof(ipv4_l3fwd_route_array) / sizeof(ipv4_l3fwd_route_array[0]))
@@ -1136,7 +1096,7 @@ init_mem(unsigned nb_mbuf)
 				printf("Allocated mbuf pool on socket %d\n", socketid);
 
 #if (APP_LOOKUP_METHOD == APP_LOOKUP_LPM)
-			setup_lpm(socketid);
+			//setup_lpm(socketid);
 #else
 			setup_hash(socketid);
 #endif
@@ -1206,6 +1166,21 @@ check_all_ports_link_status(uint8_t port_num, uint32_t port_mask)
 int
 main(int argc, char **argv)
 {
+
+
+	port_conf.rxmode.mq_mode = ETH_MQ_RX_RSS;
+	port_conf.rxmode.max_rx_pkt_len = ETHER_MAX_LEN;
+	port_conf.rxmode.split_hdr_size = 0;
+	port_conf.rxmode.header_split   = 0;
+	port_conf.rxmode.hw_ip_checksum = 1;
+	port_conf.rxmode.hw_vlan_filter = 0;
+	port_conf.rxmode.jumbo_frame    = 0;
+	port_conf.rxmode.hw_strip_crc   = 0;
+	port_conf.rx_adv_conf.rss_conf.rss_key   = NULL;
+	port_conf.rx_adv_conf.rss_conf.rss_hf = ETH_RSS_IP;
+	port_conf.txmode.mq_mode=ETH_MQ_TX_NONE;
+
+
 	struct lcore_conf *qconf;
 	struct rte_eth_dev_info dev_info;
 	struct rte_eth_txconf *txconf;
