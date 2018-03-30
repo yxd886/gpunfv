@@ -368,7 +368,7 @@ l2fwd_main_loop(void)
 
 			/* advance the timer */
 		timer_tsc += diff_tsc;
-		printf("timer_tsc: %18"PRIu64"\n",timer_tsc);
+		//printf("timer_tsc: %18"PRIu64"\n",timer_tsc);
 
 		/* if timer has reached its timeout */
 		if (unlikely(timer_tsc >= timer_period)) {
@@ -377,8 +377,9 @@ l2fwd_main_loop(void)
 			if (lcore_id == 0) {
 				print_stats();
 				/* reset the timer */
-				timer_tsc = 0;
+
 			}
+			timer_tsc = 0;
 		}
 
 		prev_tsc = cur_tsc;
