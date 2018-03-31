@@ -54,6 +54,7 @@ printf("------------------2-----------------\n");
 printf("------------------3-----------------\n");
       
         int state = ips_state->_state;
+printf("state:%d\n",state);
 printf("------------------4-----------------\n");
 
         if(state >= dfa_arr[dfa_id].num_used_states){
