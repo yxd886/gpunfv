@@ -803,8 +803,8 @@ public:
             //std::vector<float> processing_time;
             float processing_time=0;
             float min_processing_time=10000000;
-           // float cpu_processing_num=0;
-           // float pre_cpu_processing_num=0;
+            float cpu_processing_num=0;
+            float pre_cpu_processing_num=0;
            /* for(unsigned int i=0;i<_flows[index].size();i++){
                 float cpu_time=0;
                 float gpu_time=0;
@@ -827,15 +827,15 @@ public:
                     cpu_time+=_flows[index][j]->packets[index].size();
                 }
                 processing_time=std::max(gpu_time,cpu_time/COMPUTE_RATIO);
-                //pre_cpu_processing_num=cpu_processing_num;
-                //cpu_processing_num=cpu_time;
+                pre_cpu_processing_num=cpu_processing_num;
+                cpu_processing_num=cpu_time;
                 if(processing_time>=min_processing_time){
-                    //std::cout<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
+                    if(PRINT_TIME)std::cout<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
                     if(i==0){
-                        //std::cout<<"GPU_max_pkt: "<<0<<std::endl;
+                    	if(PRINT_TIME)    std::cout<<"GPU_max_pkt: "<<0<<std::endl;
                         return 0;
                     }else{
-                        //std::cout<<"GPU_max_pkt: "<<_flows[index][i]->packets[index].size()<<std::endl;
+                    	if(PRINT_TIME)   std::cout<<"GPU_max_pkt: "<<_flows[index][i]->packets[index].size()<<std::endl;
                         return i+1;
                     }
                     //std::cout<<"    min_processing_time:"<<*result<<std::endl;
