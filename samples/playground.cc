@@ -230,7 +230,7 @@ public:
         	,_ips(ips)
             ,_initialized(false)
         	{
-        	gpu_sync();
+        	//gpu_sync();
             gpu_mem_map(&_fs, sizeof(ips_flow_state));
         }
         flow_operator(const flow_operator& other) = delete;
@@ -245,7 +245,7 @@ public:
             packets[1] = std::move(other.packets[1]);
         }
         ~flow_operator(){
-        	gpu_sync();
+        	//gpu_sync();
             gpu_mem_unmap(&_fs);
         }
 
