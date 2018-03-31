@@ -73,9 +73,9 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
             if(count != 0) {
                 /* This state matches some patterns: copy the pattern IDs
                  *  to the output */
-                int offset = mp_list[I].num_match;
-                memcpy(&mp_list[I].ptrn_id[offset], st_arr[state].out_arr, count * sizeof(uint16_t));
-                mp_list[I].num_match += count;
+               // int offset = mp_list[I].num_match;
+               // memcpy(&mp_list[I].ptrn_id[offset], st_arr[state].out_arr, count * sizeof(uint16_t));
+               // mp_list[I].num_match += count;
                 ips_state->_alert = true;
                 ips_state->_state = state;
                 return ;
@@ -133,8 +133,9 @@ __device__ void parse_pkt(char *pkt, struct ips_flow_state *state, struct aho_pk
     uint32_t len = pkt_len(pkt);
  //printf("parse_pkt(): state->_dfa_id = %d\n", state->_dfa_id);
 
-    aho_pkt->content = (uint8_t *)malloc(len);
-    memcpy(aho_pkt->content, pkt, len);
+   // aho_pkt->content = (uint8_t *)malloc(len);
+   // memcpy(aho_pkt->content, pkt, len);
+    aho_pkt->content=pkt;
     aho_pkt->dfa_id = state->_dfa_id;
     aho_pkt->len = len;
 }
