@@ -476,7 +476,7 @@ public:
        }
        void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state* state)
        {
-           int i, j;
+           int i;
 
 
 
