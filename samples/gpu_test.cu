@@ -139,8 +139,8 @@ void gpu_launch(char **pkt_batch, char **state_batch, char *extra_info, int flow
 	int nblocks = (nflows + THREADPERBLOCK - 1) / THREADPERBLOCK;
 //printf("nblocks = %d, nthread = %d, nflows = %d\n", nblocks, THREADPERBLOCK, nflows);
 	//gpu_nf_logic<<<nblocks, THREADPERBLOCK, SHARE_MEM_SIZE, stream>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
-	gpu_nf_logic<<<nblocks, THREADPERBLOCK>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
-	//gpu_nf_logic<<<1, 1, SHARE_MEM_SIZE, stream>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
+	//gpu_nf_logic<<<nblocks, THREADPERBLOCK>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
+	gpu_nf_logic<<<1, 1>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
 }
 
 void gpu_sync(cudaStream_t stream=0) {
