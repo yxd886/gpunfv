@@ -650,7 +650,7 @@ public:
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
                 //partition=_flows[index].size()/2;
-                if(PRINT_TIME)printf("Total flow_num: %d\n",_flows[index].size);
+                if(PRINT_TIME)printf("Total flow_num: %d\n",_flows[index].size());
                 if(PRINT_TIME)printf("partition: %d\n",partition);
             }
             assert(partition!=-1);
