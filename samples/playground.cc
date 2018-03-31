@@ -227,13 +227,14 @@ public:
         flow_operator(sd_async_flow<udp_ppr> ac, forwarder& f, IPS&ips)
             : _ac(std::move(ac))
             , _f(f)
+        	,_ips(ips)
             ,_initialized(false)
-        	,_ips(ips){
+        	{
             gpu_mem_map(&_fs, sizeof(ips_flow_state));
         }
         flow_operator(const flow_operator& other) = delete;
         flow_operator(flow_operator&& other) noexcept
-            : _ac(std::move(other._ac)),_f(other._f),_fs(other._fs) ,_initialized(other._initialized),_ips(other._ips){
+            : _ac(std::move(other._ac)),_f(other._f),_ips(other._ips),_fs(other._fs) ,_initialized(other._initialized){
 
             //for(unsigned int i=0;i<other.packets[current_idx].size();i++){
             //    packets[current_idx].push_back(std::move(other.packets[current_idx][i]));
@@ -269,12 +270,12 @@ public:
         }
         void process_pkt(netstar::rte_packet* pkt, ips_flow_state* fs){
 
-
+        	/*
             ips_flow_state old;
             old._alert=fs->_alert;
             old._dfa_id=fs->_dfa_id;
             old._state=fs->_state;
-            old.tag=fs->tag;
+            old.tag=fs->tag;*/
             //std::cout<<"before ips_detect"<<std::endl;
             ips_detect(pkt,fs);
             //std::cout<<"after ips_detect"<<std::endl;
