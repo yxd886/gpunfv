@@ -145,11 +145,12 @@ void gpu_launch(char **pkt_batch, char **state_batch, char *extra_info, int flow
 
 void gpu_sync(cudaStream_t stream=0) {
 	//checkCudaErrors(cudaStreamSynchronize(stream));
-	//checkCudaErrors(cudaDeviceSynchronize());
+	checkCudaErrors(cudaDeviceSynchronize());
 }
 
 void gpu_mem_map(void *ptr, size_t size) {
 	checkCudaErrors(cudaHostRegister(ptr, size, cudaHostRegisterMapped));
+	
 }
 
 void gpu_mem_unmap(void *ptr) {
@@ -175,7 +176,8 @@ void gpu_free(void* devPtr){
 
 void create_stream(cudaStream_t* stream_ptr){
 
-	checkCudaErrors(cudaStreamCreate(stream_ptr));
+	//checkCudaErrors(cudaStreamCreate(stream_ptr));
+	checkCudaErrors(cudaStreamCreateWithFlags(stream_ptr,cudaStreamNonBlocking));
 }
 
 void destory_stream(cudaStream_t stream){
