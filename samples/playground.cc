@@ -641,7 +641,7 @@ public:
             if(GPU_BATCH_SIZE!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
-                partition=_flows[index].size()/2;
+                //partition=_flows[index].size()/2;
             }
             assert(partition!=-1);
 
