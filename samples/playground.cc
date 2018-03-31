@@ -650,6 +650,8 @@ public:
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
                 //partition=_flows[index].size()/2;
+                if(PRINT_TIME)printf("Total flow_num: %d\n",_flows[index].size);
+                if(PRINT_TIME)printf("partition: %d\n",partition);
             }
             assert(partition!=-1);
 
@@ -662,6 +664,7 @@ public:
 
                 int max_pkt_num_per_flow=_flows[index][partition-1]->packets[index].size();
                 int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char*);
+                if(PRINT_TIME)printf("ngpu_pkts: %d\n",ngpu_pkts);
                 int ngpu_states = partition * sizeof(char*);
                 gpu_pkts = (char **)malloc(ngpu_pkts);
                 gpu_states = (char **)malloc(ngpu_states);
