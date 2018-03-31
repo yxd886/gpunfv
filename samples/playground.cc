@@ -173,7 +173,7 @@ public:
 };
 
 
-
+IPS ips;
 
 
 class forwarder;
@@ -218,20 +218,22 @@ public:
     public:
         sd_async_flow<udp_ppr> _ac;
         forwarder& _f;
+        IPS& _ips;
         ips_flow_state _fs;
         std::vector<netstar::rte_packet> packets[2];
         bool _initialized;
 
 
-        flow_operator(sd_async_flow<udp_ppr> ac, forwarder& f)
+        flow_operator(sd_async_flow<udp_ppr> ac, forwarder& f, IPS&ips)
             : _ac(std::move(ac))
             , _f(f)
-            ,_initialized(false){
+            ,_initialized(false)
+        	,_ips(ips){
             gpu_mem_map(&_fs, sizeof(ips_flow_state));
         }
         flow_operator(const flow_operator& other) = delete;
         flow_operator(flow_operator&& other) noexcept
-            : _ac(std::move(other._ac)),_f(other._f),_fs(other._fs) ,_initialized(other._initialized){
+            : _ac(std::move(other._ac)),_f(other._f),_fs(other._fs) ,_initialized(other._initialized),_ips(other._ips){
 
             //for(unsigned int i=0;i<other.packets[current_idx].size();i++){
             //    packets[current_idx].push_back(std::move(other.packets[current_idx][i]));
@@ -276,14 +278,14 @@ public:
             //std::cout<<"before ips_detect"<<std::endl;
             ips_detect(pkt,fs);
             //std::cout<<"after ips_detect"<<std::endl;
-            auto state_changed=state_updated(&old,fs);
+         /*   auto state_changed=state_updated(&old,fs);
             if(state_changed) {
                 auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
                 _f._mc.query(Operation::kSet, mica_key(key),
                         mica_value(*fs)).then([this](mica_response response){
                     return make_ready_future<>();
                 });
-            }
+            }*/
 
         }
 
@@ -529,10 +531,10 @@ public:
            parse_pkt(rte_pkt, state,pkts);
            //std::cout<<"  after parse_pkt"<<std::endl;
            struct aho_ctrl_blk worker_cb;
-           worker_cb.stats = _f.ips.stats;
+           worker_cb.stats = _ips.stats;
            worker_cb.tot_threads = 1;
            worker_cb.tid = 0;
-           worker_cb.dfa_arr = _f.ips.dfa_arr;
+           worker_cb.dfa_arr = _ips.dfa_arr;
            worker_cb.pkts = pkts;
            worker_cb.num_pkts = 1;
            //std::cout<<"  before ids_func"<<std::endl;
@@ -702,7 +704,7 @@ public:
                 //cudaEventRecord(event_start, 0);
 
 
-                gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
+                gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)(_flows[0][index]->_ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
 
 
                 //cudaEventRecord(event_stop, 0);
@@ -871,7 +873,7 @@ public:
             return _udp_forward.on_new_initial_context().then([this]() mutable {
                 auto ic = _udp_forward.get_initial_context();
 
-                do_with(flow_operator(ic.get_sd_async_flow(),(*this)), [this](flow_operator& r){
+                do_with(flow_operator(ic.get_sd_async_flow(),(*this),ips), [this](flow_operator& r){
                     r.events_registration();
                     return r.run_ips();
                 });
@@ -945,7 +947,6 @@ public:
         });
     }
 public:
-    IPS ips;
     batch _batch;
     uint64_t _pkt_counter;
 
