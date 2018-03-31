@@ -32,8 +32,8 @@ static constexpr size_t   inline_mbuf_data_size  = 2048;
 constexpr uint16_t inline_mbuf_size       =
                                 inline_mbuf_data_size + mbuf_overhead;
 
-void gpu_launch(char **pkt_batch, char **state_batch, char *extra_info, int flowDim, int nflows,cudaStream_t stream);
-void gpu_sync(cudaStream_t stream);
+void gpu_launch(char **pkt_batch, char **state_batch, char *extra_info, int flowDim, int nflows,cudaStream_t stream=0);
+void gpu_sync(cudaStream_t stream=0);
 void gpu_mem_map(void *ptr, size_t size);
 void gpu_mem_unmap(void *ptr);
 void gpu_malloc(void** devPtr, size_t size);
