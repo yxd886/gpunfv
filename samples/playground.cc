@@ -244,7 +244,7 @@ public:
             packets[1] = std::move(other.packets[1]);
         }
         ~flow_operator(){
-            gpu_mem_unmap(&_fs);
+           // gpu_mem_unmap(&_fs);
         }
 
 
