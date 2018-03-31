@@ -972,11 +972,12 @@ int main(int ac, char** av) {
     sd_async_flow_manager<udp_ppr> m2;
     async_flow_manager<tcp_ppr> m3;
     async_flow_manager<udp_ppr> m4;
-    IPS ips;
-    ips_ptr=&ips;
+
 
     return app.run_deprecated(ac, av, [&app] {
         auto& opts = app.configuration();
+        IPS ips;
+        ips_ptr=&ips;
 
         port_manager::get().add_port(opts, 0, port_type::standard).then([&opts]{
             return port_manager::get().add_port(opts, 1, port_type::fdir);
