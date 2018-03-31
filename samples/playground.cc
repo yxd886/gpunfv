@@ -649,7 +649,7 @@ public:
             if(GPU_BATCH_SIZE!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
-                partition=_flows[index].size()*2/3;
+                partition=_flows[index].size()*4/5;
                 if(PRINT_TIME)std::cout<<"Total flow_num:"<<_flows[index].size()<<std::endl;
                 if(PRINT_TIME)printf("partition: %d\n",partition);
             }
