@@ -433,7 +433,7 @@ public:
        }
 
        void process_batch(const struct aho_dfa *dfa_arr,
-           const struct aho_pkt *pkts, struct mp_list_t *mp_list, struct ips_flow_state* ips_state)
+           const struct aho_pkt *pkts, struct ips_flow_state* ips_state)
        {
            int I, j;
 
@@ -459,10 +459,7 @@ public:
                    if(count != 0) {
                        /* This state matches some patterns: copy the pattern IDs
                          *  to the output */
-                       int offset = mp_list[I].num_match;
-                       memcpy(&mp_list[I].ptrn_id[offset],
-                           st_arr[state].out_arr, count * sizeof(uint16_t));
-                       mp_list[I].num_match += count;
+
                        ips_state->_alert=true;
                        ips_state->_state=state;
                        return;
@@ -488,10 +485,7 @@ public:
            int num_pkts = cb->num_pkts;
 
            /* Per-batch matched patterns */
-           struct mp_list_t mp_list[BATCH_SIZE];
-           for(i = 0; i < BATCH_SIZE; i++) {
-               mp_list[i].num_match = 0;
-           }
+
 
            /* Being paranoid about GCC optimization: ensure that the memcpys in
              *  process_batch functions don't get optimized out */
@@ -503,16 +497,9 @@ public:
 
            for(i = 0; i < num_pkts; i += BATCH_SIZE) {
                //std::cout<<"    before process_batch"<<std::endl;
-               process_batch(dfa_arr, &pkts[i], mp_list,state);
+               process_batch(dfa_arr, &pkts[i], state);
                //std::cout<<"    after process_batch"<<std::endl;
 
-               for(j = 0; j < BATCH_SIZE; j++) {
-                   int num_match = mp_list[j].num_match;
-                   assert(num_match < MAX_MATCH);
-
-
-                   mp_list[j].num_match = 0;
-               }
            }
 
 
