@@ -55,7 +55,7 @@
 #include <time.h>
 
 #include <unordered_map>
-#define GPU_BATCH_SIZE 40000
+#define GPU_BATCH_SIZE 1
 
 #define PRINT_TIME 0
 
@@ -961,7 +961,7 @@ my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
     //struct rte_mbuf* rte_pkt=(struct rte_mbuf*)obj;
     //unsigned char *t =rte_pktmbuf_mtod(rte_pkt, unsigned char*);
     //char* raw_packet = (char*)t;
-    printf("obj_addr:%p\n",obj);
+    //printf("obj_addr:%p\n",obj);
    // printf("raw_packet_addr:%p\n",raw_packet);
 
 }
