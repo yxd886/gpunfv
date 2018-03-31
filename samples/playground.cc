@@ -604,7 +604,15 @@ public:
             started = steady_clock_type::now();
 
             if(_flows[!index].empty()==false){
+            	started = steady_clock_type::now();
                 gpu_sync(stream);
+                stoped = steady_clock_type::now();
+                auto elapsed = stoped - started;
+              if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                started = steady_clock_type::now();
+
+
+
                 gpu_stoped = steady_clock_type::now();
                 elapsed = gpu_stoped - gpu_started;
          if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
