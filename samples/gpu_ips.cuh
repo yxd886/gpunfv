@@ -135,7 +135,7 @@ __device__ void parse_pkt(char *pkt, struct ips_flow_state *state, struct aho_pk
 
    // aho_pkt->content = (uint8_t *)malloc(len);
    // memcpy(aho_pkt->content, pkt, len);
-    aho_pkt->content=pkt;
+    aho_pkt->content=(uint8_t *)pkt;
     aho_pkt->dfa_id = state->_dfa_id;
     aho_pkt->len = len;
 }
