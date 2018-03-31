@@ -664,7 +664,7 @@ public:
 
                 int max_pkt_num_per_flow=_flows[index][partition-1]->packets[index].size();
                 int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char*);
-                if(PRINT_TIME)printf("ngpu_pkts: %d\n",ngpu_pkts/sizeof(char*));
+                if(PRINT_TIME)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(char*)<<std::endl;
                 int ngpu_states = partition * sizeof(char*);
                 gpu_pkts = (char **)malloc(ngpu_pkts);
                 gpu_states = (char **)malloc(ngpu_states);
