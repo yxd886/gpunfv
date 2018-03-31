@@ -443,10 +443,11 @@ public:
                int len = pkts[I].len;
                //std::cout<<"      len:"<<len<<std::endl;
                struct aho_state *st_arr = dfa_arr[dfa_id].root;
-               printf("CPU state:%d\n",state);
-               printf("CPU dfa_arr[dfa_id].num_used_states:%d\n", dfa_arr[dfa_id].num_used_states);
+
 
                int state = ips_state->_state;
+               printf("CPU state:%d\n",state);
+               printf("CPU dfa_arr[dfa_id].num_used_states:%d\n", dfa_arr[dfa_id].num_used_states);
              if(state>=dfa_arr[dfa_id].num_used_states){
                  ips_state->_alert=false;
                  ips_state->_state=state;
