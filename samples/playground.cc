@@ -173,7 +173,7 @@ public:
 };
 
 
-IPS ips;
+IPS* ips_ptr=nullptr;
 
 
 class forwarder;
@@ -874,7 +874,7 @@ public:
             return _udp_forward.on_new_initial_context().then([this]() mutable {
                 auto ic = _udp_forward.get_initial_context();
 
-                do_with(flow_operator(ic.get_sd_async_flow(),(*this),ips), [this](flow_operator& r){
+                do_with(flow_operator(ic.get_sd_async_flow(),(*this),*ips_ptr), [this](flow_operator& r){
                     r.events_registration();
                     return r.run_ips();
                 });
@@ -972,6 +972,8 @@ int main(int ac, char** av) {
     sd_async_flow_manager<udp_ppr> m2;
     async_flow_manager<tcp_ppr> m3;
     async_flow_manager<udp_ppr> m4;
+    IPS ips;
+    ips_ptr=&ips;
 
     return app.run_deprecated(ac, av, [&app] {
         auto& opts = app.configuration();
