@@ -668,6 +668,11 @@ public:
 
             if(_flows[!index].empty()==false){
 
+            	gpu_sync(stream);
+                gpu_stoped = steady_clock_type::now();
+                elapsed = gpu_stoped - gpu_started;
+                if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+
                 gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
                 gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
 
@@ -747,9 +752,7 @@ public:
                     if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                     started = steady_clock_type::now();
 
-                    gpu_stoped = steady_clock_type::now();
-                    elapsed = gpu_stoped - gpu_started;
-                    //if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+
 
                     for(int i = 0; i < pre_partition; i++){
                     	//std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
