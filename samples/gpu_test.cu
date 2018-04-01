@@ -117,6 +117,7 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
 	if(id >= nflows) return ;
 
 	// Get start address
+	printf("sizeof bool: %d\n",sizeof(bool));
 	PKT*pkts =(PKT*)pkt_batch + id * flowDim;
 
 	//printf("pkt_batch = %x\n", pkt_batch);
