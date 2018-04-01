@@ -27,7 +27,7 @@ struct ips_flow_state{
     uint8_t tag1;
     uint16_t tag2;
 
-};
+}__attribute__((__aligned__(8)));;
 struct PKT{
 
 	char pkt[MAX_PKT_SIZE];
