@@ -86,7 +86,7 @@ struct ips_flow_state{
     uint16_t _dfa_id;
     bool _alert;
 
-};
+}__rte_cache_aligned;
 
 struct PKT{
 
@@ -1055,6 +1055,7 @@ my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
     //char* raw_packet = (char*)t;
     //printf("obj_addr:%p\n",obj);
    // printf("raw_packet_addr:%p\n",raw_packet);
+    std::out<<"sizeof bool:"<<sizeof(bool)<<std::endl;
 
 }
 
