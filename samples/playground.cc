@@ -672,11 +672,12 @@ public:
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
             //std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
-            //std::cout<<"schedule task"<<std::endl;
+            std::cout<<"index: "<<index<<std::endl;
 
-            stoped = steady_clock_type::now();
-            auto  elapsed = stoped - started;
-          if(PRINT_TIME)  printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+
+			stoped = steady_clock_type::now();
+			auto  elapsed = stoped - started;
+			if(PRINT_TIME)  printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
             started = steady_clock_type::now();
 
             if(_flows[!index].empty()==false){
