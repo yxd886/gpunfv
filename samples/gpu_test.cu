@@ -118,8 +118,8 @@ __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_i
 
 	// Get start address
 	//printf("sizeof bool: %d\n",sizeof(bool));
-	char**pkts =(PKT*)pkt_batch + id * flowDim;
-	struct ips_flow_state* state_ptr=(struct ips_flow_state*)state_batch;
+	char**pkts =pkt_batch + id * flowDim;
+	//struct ips_flow_state* state_ptr=(struct ips_flow_state*)state_batch;
 
 	//printf("pkt_batch = %x\n", pkt_batch);
 
