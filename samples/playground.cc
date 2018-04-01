@@ -55,7 +55,7 @@
 #include <time.h>
 
 #include <unordered_map>
-#define GPU_BATCH_SIZE 30000
+#define GPU_BATCH_SIZE 20000
 
 #define PRINT_TIME 1
 
@@ -684,6 +684,7 @@ public:
                 //std::cout<<_flows[index][i]->packets[index].size()<<" ";
             //}
             //std::cout<<"end before sort"<<std::endl;
+            started = steady_clock_type::now();
             int partition=0;
             if(GPU_BATCH_SIZE!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
