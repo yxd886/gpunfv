@@ -112,8 +112,8 @@ public:
 
 	ips_flow_state* state_alloc(){
 
-		ips_flow_state* ret=flow_states_ptr.front();
-		flow_states_ptr.pop_front();
+		ips_flow_state* ret=flow_states_ptr.back();
+		flow_states_ptr.pop_back();
 		return ret;
 	}
 	void state_free(ips_flow_state* ptr){
