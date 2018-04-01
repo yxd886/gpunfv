@@ -23,7 +23,10 @@ struct ips_flow_state{
     uint16_t _dfa_id;
     bool _alert;
 };
+struct PKT{
 
+	char pkt[MAX_PKT_SIZE];
+};
 struct mp_list_t {
     int num_match;
     uint16_t ptrn_id[MAX_MATCH];
