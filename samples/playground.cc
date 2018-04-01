@@ -108,14 +108,14 @@ public:
 	~cuda_mem_allocator(){}
 
 	PKT* gpu_pkt_batch_alloc(int size){
-		if(size>GPU_BATCH_SIZE*2){
+		if(size>GPU_BATCH_SIZE*4){
 			return nullptr;
 		}else{
 			return dev_pkt_batch_ptr;
 		}
 	}
 	ips_flow_state* gpu_state_batch_alloc(int size){
-		if(size>GPU_BATCH_SIZE*2){
+		if(size>MAX_FLOW_NUM*2){
 			return nullptr;
 		}else{
 			return dev_state_batch_ptr;
