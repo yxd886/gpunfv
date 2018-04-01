@@ -27,7 +27,7 @@ struct ips_flow_state{
     uint8_t tag1;
     uint16_t tag2;
 
-}
+};
 struct PKT{
 
 	char pkt[MAX_PKT_SIZE];
