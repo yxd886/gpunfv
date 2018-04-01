@@ -325,7 +325,7 @@ public:
             old._alert=fs->_alert;
             old._dfa_id=fs->_dfa_id;
             old._state=fs->_state;
-            old.tag=fs->tag;
+
             //std::cout<<"before ips_detect"<<std::endl;
             ips_detect(pkt,fs);
             //std::cout<<"after ips_detect"<<std::endl;
@@ -666,7 +666,7 @@ public:
             	started = steady_clock_type::now();
                 gpu_sync(stream);
                 stoped = steady_clock_type::now();
-                auto elapsed = stoped - started;
+                elapsed = stoped - started;
                 if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started = steady_clock_type::now();
 
@@ -680,14 +680,14 @@ public:
                 gpu_memcpy_async_d2h(gpu_states,dev_gpu_states,pre_ngpu_states,stream);
                 for(int i = 0; i < (int)_flows[!index].size(); i++){
 
-                    rte_memcpy(&(_flows[!index]->_fs),&gpu_states[i],sizeof(ips_flow_state));
+                    rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[i],sizeof(ips_flow_state));
 
                     for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
                         rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[i*(pre_ngpu_pkts/pre_ngpu_states)+j].pkt,_flows[!index][i]->packets[!index][j].len());
                     }
                 }
                 stoped = steady_clock_type::now();
-                auto elapsed = stoped - started;
+                elapsed = stoped - started;
                 if(PRINT_TIME)  printf("Copyback time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started = steady_clock_type::now();
 
