@@ -57,7 +57,7 @@
 #include <unordered_map>
 #define GPU_BATCH_SIZE 30000
 
-#define PRINT_TIME 0
+#define PRINT_TIME 1
 
 #define COMPUTE_RATIO 100
 
