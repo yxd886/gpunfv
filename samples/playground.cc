@@ -640,9 +640,10 @@ public:
         cuda_mem_allocator _cuda_mem_allocator;
         int pre_ngpu_pkts;
 		int pre_ngpu_states;
+		int pre_max_pkt_num_per_flow;
 
 
-        batch():gpu_pkts(nullptr),gpu_states(nullptr),dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),need_process(false),processing(false),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0){
+        batch():gpu_pkts(nullptr),gpu_states(nullptr),dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),need_process(false),processing(false),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0){
         	create_stream(&stream);
 
         }
@@ -684,7 +685,7 @@ public:
                     rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[i],sizeof(ips_flow_state));
 
                     for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                        rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[i*(pre_ngpu_pkts/pre_ngpu_states)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                        rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
                     }
                 }
                 stoped = steady_clock_type::now();
@@ -743,6 +744,7 @@ public:
                 gpu_states = (ips_flow_state*)malloc(ngpu_states);
                 pre_ngpu_pkts=ngpu_pkts;
              	pre_ngpu_states=ngpu_states;
+             	pre_max_pkt_num_per_flow=max_pkt_num_per_flow;
 
                 assert(gpu_pkts);
                 assert(gpu_states);
