@@ -698,12 +698,6 @@ public:
                 }
 
 
-                if(gpu_pkts[!index]){
-                    free(gpu_pkts[!index]);
-                }
-                if(gpu_states[!index]){
-                    free(gpu_states[!index]);
-                }
                 _flows[!index].clear();
             }
 
