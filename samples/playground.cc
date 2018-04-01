@@ -88,7 +88,7 @@ struct ips_flow_state{
     uint8_t tag1;
     uint16_t tag2;
 
-} __attribute__((__aligned__(8)));
+};
 
 struct PKT{
 
@@ -495,8 +495,8 @@ public:
                struct aho_state *st_arr = dfa_arr[dfa_id].root;
 
                int state = ips_state->_state;
-               std::cout<<"  CPU    state:"<<state<<std::endl;
-               std::cout<<"  CPU    dfa_arr["<<dfa_id<<"].num_used_states:"<<dfa_arr[dfa_id].num_used_states<<std::endl;
+               //std::cout<<"  CPU    state:"<<state<<std::endl;
+               //std::cout<<"  CPU    dfa_arr["<<dfa_id<<"].num_used_states:"<<dfa_arr[dfa_id].num_used_states<<std::endl;
              if(state>=dfa_arr[dfa_id].num_used_states){
                  ips_state->_alert=false;
                  ips_state->_state=0;
@@ -759,8 +759,9 @@ public:
                 //std::cout<<"memory alloc finished"<<std::endl;
                 for(int i = 0; i < partition; i++){
                     //gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
-                	assert(_flows[index][i]->_fs._dfa_id<200);
+
                     rte_memcpy(&gpu_states[i],&(_flows[index][i]->_fs),sizeof(ips_flow_state));
+                    assert(gpu_states[i]._dfa_id<200);
   //printf("cpu(): state[%d]->_dfa_id = %d\n", i, ((struct ips_flow_state *)gpu_states[i])->_dfa_id);
                     //gpu_mem_map(gpu_states[i], sizeof(struct ips_flow_state));
                     //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
