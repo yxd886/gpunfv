@@ -100,33 +100,32 @@ public:
 
 
 
-	cuda_mem_allocator(){
-		gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*GPU_BATCH_SIZE*4);
-		gpu_malloc((void**)(&dev_state_batch_ptr),sizeof(ips_flow_state)*MAX_FLOW_NUM);
+	cuda_mem_allocator():flow_states(MAX_FLOW_NUM){
 
+		gpu_mem_map(&flow_states[0],MAX_FLOW_NUM*sizeof(ips_flow_state));
+		for(unsigned int i=0; i<MAX_FLOW_NUM;i++){
+			flow_states_ptr[i]=&flow_states[i];
+		}
 
 	}
 	~cuda_mem_allocator(){}
 
-	PKT* gpu_pkt_batch_alloc(int size){
-		if(size>GPU_BATCH_SIZE*4){
-			return nullptr;
-		}else{
-			return dev_pkt_batch_ptr;
-		}
+	ips_flow_state* state_alloc(){
+
+		ips_flow_state* ret=flow_states_ptr.front();
+		flow_states_ptr.pop_front();
+		return ret;
 	}
-	ips_flow_state* gpu_state_batch_alloc(int size){
-		if(size>MAX_FLOW_NUM){
-			return nullptr;
-		}else{
-			return dev_state_batch_ptr;
-		}
+	void state_free(ips_flow_state* ptr){
+
+		flow_states_ptr.push_back(ptr);
 	}
 
 
 
-	PKT* dev_pkt_batch_ptr;
-	ips_flow_state* dev_state_batch_ptr;
+	ips_flow_state flow_states[MAX_FLOW_NUM];
+
+	std::vector<ips_flow_state*> flow_states_ptr;
 
 };
 
@@ -271,14 +270,15 @@ public:
     public:
         sd_async_flow<udp_ppr> _ac;
         forwarder& _f;
-        ips_flow_state _fs;
+        ips_flow_state& _fs;
         std::vector<netstar::rte_packet> packets[2];
         bool _initialized;
 
 
-        flow_operator(sd_async_flow<udp_ppr> ac, forwarder& f)
+        flow_operator(sd_async_flow<udp_ppr> ac, forwarder& f,ips_flow_state& fs)
             : _ac(std::move(ac))
             , _f(f)
+        	,_fs(fs)
             ,_initialized(false){
 
             init_automataState(_fs);
@@ -701,8 +701,8 @@ public:
 
 
                 // Clear and map gpu_pkts and gpu_states
-                memset(gpu_pkts[index], 0, ngpu_pkts);
-                memset(gpu_states[index], 0, ngpu_states);
+                memset(gpu_pkts[index], 0, GPU_BATCH_SIZE*4);
+                memset(gpu_states[index], 0, MAX_FLOW_NUM);
                 //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
 
 
@@ -984,7 +984,7 @@ public:
             return _udp_forward.on_new_initial_context().then([this]() mutable {
                 auto ic = _udp_forward.get_initial_context();
 
-                do_with(flow_operator(ic.get_sd_async_flow(),(*this)), [this](flow_operator& r){
+                do_with(flow_operator(ic.get_sd_async_flow(),(*this),(*_batch._cuda_mem_allocator.state_alloc())), [this](flow_operator& r){
                     r.events_registration();
                     return r.run_ips();
                 });
