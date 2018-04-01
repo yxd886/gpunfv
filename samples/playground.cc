@@ -672,7 +672,7 @@ public:
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
             //std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
-            std::cout<<"index: "<<index<<std::endl;
+            //std::cout<<"index: "<<index<<std::endl;
 
 
 			stoped = steady_clock_type::now();
