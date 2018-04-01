@@ -170,9 +170,17 @@ void gpu_memcpy_async_d2h(void* dst, const void*src, size_t count, cudaStream_t 
 	
 }
 
+
+void gpu_memset_async(void * devPtr, int value, size_t count, cudaStream_t stream = 0){
+
+	checkCudaErrors(cudaMemset(devPtr,value,count))	;
+}
+
 void gpu_free(void* devPtr){
 	checkCudaErrors(cudaFree(devPtr));
 }
+
+
 
 
 void create_stream(cudaStream_t* stream_ptr){

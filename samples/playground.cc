@@ -688,6 +688,8 @@ public:
                         rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
                     }
                 }
+                gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
+                gpu_memset_async(dev_gpu_states,0, pre_ngpu_states,stream);
                 stoped = steady_clock_type::now();
                 elapsed = stoped - started;
                 if(PRINT_TIME)  printf("Copyback time: %f\n", static_cast<double>(elapsed.count() / 1.0));
