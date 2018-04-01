@@ -461,7 +461,7 @@ public:
              state._state=0;
              state._alert=false;
              state._dfa_id=rand()%AHO_MAX_DFA;
-             state._flow_operatpr_ptr = reinterpret_cast<char*>(this);
+
              //std::cout<<"init_automataState_dfa_id:"<<state._dfa_id<<std::endl;
          }
        void parse_pkt(netstar::rte_packet *rte_pkt, struct ips_flow_state* state,struct aho_pkt*  aho_pkt){
