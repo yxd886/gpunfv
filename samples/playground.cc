@@ -681,7 +681,7 @@ public:
             	started = steady_clock_type::now();
                 gpu_sync(stream);
                 stoped = steady_clock_type::now();
-                elapsed = stoped - started;
+                auto elapsed = stoped - started;
                 if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started = steady_clock_type::now();
 
@@ -703,7 +703,7 @@ public:
             }
 
             stoped = steady_clock_type::now();
-            auto elapsed = stoped - started;
+            elapsed = stoped - started;
           if(PRINT_TIME)  printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
             started = steady_clock_type::now();
 
