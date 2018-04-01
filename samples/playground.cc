@@ -82,7 +82,6 @@ struct fake_val {
 
 struct ips_flow_state{
 
-	char* _flow_operatpr_ptr;
     uint16_t _state;
     uint16_t _dfa_id;
     bool _alert;
