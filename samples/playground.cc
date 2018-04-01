@@ -785,15 +785,22 @@ public:
                 dev_gpu_pkts=_cuda_mem_allocator.gpu_pkt_batch_alloc(ngpu_pkts/sizeof(PKT));
                 dev_gpu_states=_cuda_mem_allocator.gpu_state_batch_alloc(ngpu_states/sizeof(ips_flow_state));
                 assert(dev_gpu_pkts!=nullptr&&dev_gpu_states!=nullptr);
-                gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts,ngpu_pkts,stream);
-                gpu_memcpy_async_h2d(dev_gpu_states,gpu_states,ngpu_states,stream);
-
 
 
                 stoped = steady_clock_type::now();
                 elapsed = stoped - started;
                 if(PRINT_TIME)printf("Batching time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started = steady_clock_type::now();
+
+                gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts,ngpu_pkts,stream);
+                gpu_memcpy_async_h2d(dev_gpu_states,gpu_states,ngpu_states,stream);
+
+
+                stoped = steady_clock_type::now();
+                elapsed = stoped - started;
+                if(PRINT_TIME)printf("Memcpy to device time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                started = steady_clock_type::now();
+
 
 
 
