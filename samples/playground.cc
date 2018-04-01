@@ -427,6 +427,7 @@ public:
                 }
 
                 _f._pkt_counter++;
+                assert(_ac.cur_packet().get_header<net::eth_hdr>(0)!=nullptr);
                 packets[_f._batch.current_idx].push_back(std::move(_ac.cur_packet()));
 
                 if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
