@@ -709,7 +709,7 @@ public:
                 //std::cout<<"memory alloc finished"<<std::endl;
                 for(int i = 0; i < partition; i++){
                     gpu_states[index][i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
-
+                    std::cout<<"i:"<<i<<std::endl;
                    // rte_memcpy(&gpu_states[index][i],&(_flows[index][i]->_fs),sizeof(ips_flow_state));
                    // assert(gpu_states[index][i]._dfa_id<200);
                     //std::cout<<"CPU: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
@@ -717,7 +717,7 @@ public:
                     //gpu_mem_map(gpu_states[i], sizeof(struct ips_flow_state));
                     //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
-
+                    	std::cout<<"j:"<<j<<std::endl;
                        gpu_pkts[index][i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0));
                        // rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0)),_flows[index][i]->packets[index][j].len());
                         //std::cout<<"assign gpu_pkts["<<i<<"]"<<"["<<j<<"]"<<std::endl;
