@@ -674,6 +674,10 @@ public:
             //std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
             //std::cout<<"schedule task"<<std::endl;
 
+            stoped = steady_clock_type::now();
+            auto  elapsed = stoped - started;
+          if(PRINT_TIME)  printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            started = steady_clock_type::now();
 
             if(_flows[!index].empty()==false){
 
@@ -681,7 +685,7 @@ public:
             	started = steady_clock_type::now();
                 gpu_sync(stream);
                 stoped = steady_clock_type::now();
-                auto elapsed = stoped - started;
+                elapsed = stoped - started;
                 if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started = steady_clock_type::now();
 
@@ -702,10 +706,7 @@ public:
                 _flows[!index].clear();
             }
 
-            stoped = steady_clock_type::now();
-            elapsed = stoped - started;
-          if(PRINT_TIME)  printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
-            started = steady_clock_type::now();
+
 
             int partition=0;
             if(GPU_BATCH_SIZE!=1){
