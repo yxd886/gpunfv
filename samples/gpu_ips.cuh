@@ -19,9 +19,8 @@
 #define MAX_MATCH 8192
 
 struct ips_flow_state{
-    uint8_t tag;
-    uint32_t _state;
-    uint32_t _dfa_id;
+    uint16_t _state;
+    uint16_t _dfa_id;
     bool _alert;
 };
 

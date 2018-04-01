@@ -61,6 +61,10 @@
 
 #define COMPUTE_RATIO 100
 
+#define MAX_PKT_SIZE 1500
+
+#define MAX_FLOW_NUM 10000
+
 using namespace seastar;
 using namespace netstar;
 using namespace std::chrono_literals;
@@ -73,6 +77,55 @@ std::chrono::time_point<std::chrono::steady_clock> gpu_stoped;
 
 struct fake_val {
     uint64_t v[3];
+};
+
+
+struct ips_flow_state{
+
+	char* _flow_operatpr_ptr;
+    uint16_t _state;
+    uint16_t _dfa_id;
+    bool _alert;
+
+};
+
+struct PKT{
+
+	char pkt[MAX_PKT_SIZE];
+};
+
+class cuda_mem_allocator{
+public:
+
+
+
+	cuda_mem_allocator(){
+		gpu_malloc((void**)(dev_pkt_batch_ptr),sizeof(PKT)*GPU_BATCH_SIZE*2);
+		gpu_malloc((void**)(dev_state_batch_ptr),sizeof(ips_flow_state)*MAX_FLOW_NUM);
+
+	}
+	~cuda_mem_allocator(){}
+
+	PKT* gpu_pkt_batch_alloc(int size){
+		if(size>GPU_BATCH_SIZE*2){
+			return nullptr;
+		}else{
+			return dev_pkt_batch_ptr;
+		}
+	}
+	ips_flow_state* gpu_state_batch_alloc(int size){
+		if(size>GPU_BATCH_SIZE*2){
+			return nullptr;
+		}else{
+			return dev_state_batch_ptr;
+		}
+	}
+
+
+
+	PKT* dev_pkt_batch_ptr;
+	ips_flow_state* dev_state_batch_ptr;
+
 };
 
 
@@ -196,12 +249,7 @@ public:
         return make_ready_future<>();
     }
 
-    struct ips_flow_state{
-            uint8_t tag;
-            uint32_t _state;
-            uint32_t _dfa_id;
-            bool _alert;
-    };
+
     struct mp_list_t {
         int num_match;
         uint16_t ptrn_id[MAX_MATCH];
@@ -211,6 +259,9 @@ public:
         uint64_t v1;
         uint64_t v2;
     };
+
+
+
 
     class flow_operator {
 
@@ -227,7 +278,8 @@ public:
             : _ac(std::move(ac))
             , _f(f)
             ,_initialized(false){
-            gpu_mem_map(&_fs, sizeof(ips_flow_state));
+
+            init_automataState(_fs);
         }
         flow_operator(const flow_operator& other) = delete;
         flow_operator(flow_operator&& other) noexcept
@@ -236,12 +288,13 @@ public:
             //for(unsigned int i=0;i<other.packets[current_idx].size();i++){
             //    packets[current_idx].push_back(std::move(other.packets[current_idx][i]));
             //}
-            gpu_mem_map(&this->_fs, sizeof(ips_flow_state));
+
             packets[0] = std::move(other.packets[0]);
             packets[1] = std::move(other.packets[1]);
+            init_automataState(_fs);
         }
         ~flow_operator(){
-            gpu_mem_unmap(&_fs);
+
         }
 
 
@@ -409,6 +462,7 @@ public:
              state._state=0;
              state._alert=false;
              state._dfa_id=rand()%AHO_MAX_DFA;
+             state._flow_operatpr_ptr = reinterpret_cast<char*>(this);
              //std::cout<<"init_automataState_dfa_id:"<<state._dfa_id<<std::endl;
          }
        void parse_pkt(netstar::rte_packet *rte_pkt, struct ips_flow_state* state,struct aho_pkt*  aho_pkt){
@@ -574,15 +628,20 @@ public:
         //uint64_t max_pktnumber;
         //uint64_t gpu_flow_num;
         std::vector<flow_operator*> _flows[2];
-        char** gpu_pkts;
-        char** gpu_states;
+        PKT* gpu_pkts;
+        ips_flow_state* gpu_states;
+        PKT* dev_gpu_pkts;
+        ips_flow_state* dev_gpu_states;
         bool need_process;
         bool processing;
         uint64_t current_idx;
         cudaStream_t stream;
+        cuda_mem_allocator _cuda_mem_allocator;
+        int pre_ngpu_pkts;
+		int pre_ngpu_states;
 
 
-        batch():gpu_pkts(nullptr),gpu_states(nullptr),need_process(false),processing(false),current_idx(0){
+        batch():gpu_pkts(nullptr),gpu_states(nullptr),dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),need_process(false),processing(false),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0){
         	create_stream(&stream);
 
         }
@@ -608,15 +667,28 @@ public:
                 gpu_sync(stream);
                 stoped = steady_clock_type::now();
                 auto elapsed = stoped - started;
-              if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started = steady_clock_type::now();
-
-
 
                 gpu_stoped = steady_clock_type::now();
                 elapsed = gpu_stoped - gpu_started;
-         if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
 
+
+
+                gpu_memcpy_async_d2h(gpu_pkts,dev_gpu_pkts,pre_ngpu_pkts,stream);
+                gpu_memcpy_async_d2h(gpu_states,dev_gpu_states,pre_ngpu_states,stream);
+                for(int i = 0; i < (int)_flows[!index].size(); i++){
+
+                    rte_memcpy(&(_flows[!index]->_fs),&gpu_states[i],sizeof(ips_flow_state));
+
+                    for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
+                        rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[i*(pre_ngpu_pkts/pre_ngpu_states)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                    }
+                }
+                stoped = steady_clock_type::now();
+                auto elapsed = stoped - started;
+                if(PRINT_TIME)  printf("Copyback time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started = steady_clock_type::now();
 
                 // Unmap gpu_pkts and gpu_states
@@ -663,11 +735,13 @@ public:
             if(partition>0){
 
                 int max_pkt_num_per_flow=_flows[index][partition-1]->packets[index].size();
-                int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char*);
+                int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(PKT);
                 if(PRINT_TIME)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(char*)<<std::endl;
-                int ngpu_states = partition * sizeof(char*);
-                gpu_pkts = (char **)malloc(ngpu_pkts);
-                gpu_states = (char **)malloc(ngpu_states);
+                int ngpu_states = partition * sizeof(ips_flow_state);
+                gpu_pkts = (PKT*)malloc(ngpu_pkts);
+                gpu_states = (ips_flow_state*)malloc(ngpu_states);
+                pre_ngpu_pkts=ngpu_pkts;
+             	pre_ngpu_states=ngpu_states;
 
                 assert(gpu_pkts);
                 assert(gpu_states);
@@ -681,19 +755,25 @@ public:
 
                 //std::cout<<"memory alloc finished"<<std::endl;
                 for(int i = 0; i < partition; i++){
-                    gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
+                    //gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
+                    rte_memcpy(&gpu_states[i],&(_flows[index][i]->_fs),sizeof(ips_flow_state));
   //printf("cpu(): state[%d]->_dfa_id = %d\n", i, ((struct ips_flow_state *)gpu_states[i])->_dfa_id);
                     //gpu_mem_map(gpu_states[i], sizeof(struct ips_flow_state));
                     //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
 
-                        gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0));
+                       // gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0));
+                        rte_memcpy(gpu_pkts[i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0)),_flows[index][i]->packets[index][j].len());
                         //std::cout<<"assign gpu_pkts["<<i<<"]"<<"["<<j<<"]"<<std::endl;
 
                         // Map every packet
                         //gpu_mem_map(gpu_pkts[i*max_pkt_num_per_flow+j], _flows[index][i]->packets[index][j].len());
                     }
                 }
+                dev_gpu_pkts=_cuda_mem_allocator.gpu_pkt_batch_alloc(ngpu_pkts/sizeof(PKT));
+                dev_gpu_states=_cuda_mem_allocator.gpu_state_batch_alloc(ngpu_states/sizeof(ips_flow_state));
+                gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts,ngpu_pkts,stream);
+                gpu_memcpy_async_h2d(dev_gpu_states,gpu_states,ngpu_states,stream);
 
 
 
@@ -716,7 +796,7 @@ public:
                 //cudaEventRecord(event_start, 0);
 
 
-                gpu_launch((char **)gpu_pkts, (char **)gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
+                gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
 
 
                 //cudaEventRecord(event_stop, 0);
