@@ -118,7 +118,7 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
 
 	// Get start address
 	//printf("sizeof bool: %d\n",sizeof(bool));
-	PKT*pkts =(PKT*)pkt_batch + id * flowDim;
+	char**pkts =(PKT*)pkt_batch + id * flowDim;
 	struct ips_flow_state* state_ptr=(struct ips_flow_state*)state_batch;
 
 	//printf("pkt_batch = %x\n", pkt_batch);
@@ -132,6 +132,7 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
  //printf("gpu_nf_logic(): state->_dfa_id = %d\n", ((struct ips_flow_state *)state_batch[id])->_dfa_id);
 		//gpu_nf_logic_impl(pkts[i], state_batch[id]);
 		//ips_detect((char*)pkts[i].pkt, &state_ptr[id], (struct gpu_IPS *)extra_info);
+		ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);
 //	printf("id = %d, end\n", id);	
 	}
 	//printf("GPU: gpu_states[%d].dfa_id: %d\n",id,state_ptr[id]._dfa_id);
