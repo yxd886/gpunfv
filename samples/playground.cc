@@ -648,6 +648,17 @@ public:
         batch():need_process(false),processing(false),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0){
         	create_stream(&stream);
 
+
+
+            gpu_pkts[0] = (char**)malloc(GPU_BATCH_SIZE*4*sizeof(char*));
+            gpu_states[0] = (char**)malloc(MAX_FLOW_NUM*sizeof(char*));
+            gpu_pkts[1] = (char**)malloc(GPU_BATCH_SIZE*4*sizeof(char*));
+            gpu_states[1] = (char**)malloc(MAX_FLOW_NUM*sizeof(char*));
+            gpu_mem_map(gpu_pkts[0], GPU_BATCH_SIZE*4*sizeof(char*));
+            gpu_mem_map(gpu_states[0], MAX_FLOW_NUM*sizeof(char*));
+            gpu_mem_map(gpu_pkts[1], GPU_BATCH_SIZE*4*sizeof(char*));
+            gpu_mem_map(gpu_states[1], MAX_FLOW_NUM*sizeof(char*));
+
         }
         ~batch(){
         	destory_stream(stream);
@@ -684,22 +695,16 @@ public:
             if(partition>0){
 
                 int max_pkt_num_per_flow=_flows[index][partition-1]->packets[index].size();
-                int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(PKT);
-                if(PRINT_TIME)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(PKT)<<std::endl;
-                int ngpu_states = partition * sizeof(ips_flow_state);
-                gpu_pkts[index] = (char**)malloc(ngpu_pkts);
-                gpu_states[index] = (char**)malloc(ngpu_states);
+                int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char*);
+                if(PRINT_TIME)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(char*)<<std::endl;
+                int ngpu_states = partition * sizeof(char*);
 
-
-                assert(gpu_pkts[index]);
-                assert(gpu_states[index]);
 
                 // Clear and map gpu_pkts and gpu_states
                 memset(gpu_pkts[index], 0, ngpu_pkts);
                 memset(gpu_states[index], 0, ngpu_states);
                 //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
-                gpu_mem_map(gpu_pkts[index], ngpu_pkts);
-                gpu_mem_map(gpu_states[index], ngpu_states);
+
 
                 //std::cout<<"memory alloc finished"<<std::endl;
                 for(int i = 0; i < partition; i++){
@@ -734,9 +739,7 @@ public:
                     if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                     started = steady_clock_type::now();
 
-                    // Unmap gpu_pkts and gpu_states
-                    gpu_mem_unmap(gpu_pkts[!index]);
-                    gpu_mem_unmap(gpu_states[!index]);
+
 
                     // Forward GPU packets[current_idx]
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
@@ -805,9 +808,6 @@ public:
                     elapsed = gpu_stoped - gpu_started;
                     //if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
 
-                    // Unmap gpu_pkts and gpu_states
-                    gpu_mem_unmap(gpu_pkts[!index]);
-                    gpu_mem_unmap(gpu_states[!index]);
 
                     // Forward GPU packets[current_idx]
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
