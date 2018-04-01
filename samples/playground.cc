@@ -57,7 +57,7 @@
 #include <unordered_map>
 #define GPU_BATCH_SIZE 30000
 
-#define PRINT_TIME 1
+#define PRINT_TIME 0
 
 #define COMPUTE_RATIO 100
 
@@ -749,7 +749,7 @@ public:
 
                     gpu_stoped = steady_clock_type::now();
                     elapsed = gpu_stoped - gpu_started;
-                    if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    //if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
 
                     for(int i = 0; i < pre_partition; i++){
                     	//std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
@@ -863,7 +863,7 @@ public:
 
                     gpu_stoped = steady_clock_type::now();
                     elapsed = gpu_stoped - gpu_started;
-                    if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    //if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
 
                     for(int i = 0; i < pre_partition; i++){
                     	//std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
