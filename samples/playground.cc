@@ -494,8 +494,8 @@ public:
                struct aho_state *st_arr = dfa_arr[dfa_id].root;
 
                int state = ips_state->_state;
-               //std::cout<<"  CPU    state:"<<state<<std::endl;
-               //std::cout<<"  CPU    dfa_arr[dfa_id].num_used_states:"<<dfa_arr[dfa_id].num_used_states<<std::endl;
+               std::cout<<"  CPU    state:"<<state<<std::endl;
+               std::cout<<"  CPU    dfa_arr[dfa_id].num_used_states:"<<dfa_arr[dfa_id].num_used_states<<std::endl;
              if(state>=dfa_arr[dfa_id].num_used_states){
                  ips_state->_alert=false;
                  ips_state->_state=state;
@@ -721,7 +721,7 @@ public:
             if(GPU_BATCH_SIZE!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
-                partition=_flows[index].size()*5/6;
+                //partition=_flows[index].size()*5/6;
                 if(PRINT_TIME)std::cout<<"Total flow_num:"<<_flows[index].size()<<std::endl;
                 if(PRINT_TIME)printf("partition: %d\n",partition);
             }
@@ -736,7 +736,7 @@ public:
 
                 int max_pkt_num_per_flow=_flows[index][partition-1]->packets[index].size();
                 int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(PKT);
-                if(PRINT_TIME)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(char*)<<std::endl;
+                if(PRINT_TIME)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(PKT)<<std::endl;
                 int ngpu_states = partition * sizeof(ips_flow_state);
                 gpu_pkts = (PKT*)malloc(ngpu_pkts);
                 gpu_states = (ips_flow_state*)malloc(ngpu_states);
@@ -772,6 +772,7 @@ public:
                 }
                 dev_gpu_pkts=_cuda_mem_allocator.gpu_pkt_batch_alloc(ngpu_pkts/sizeof(PKT));
                 dev_gpu_states=_cuda_mem_allocator.gpu_state_batch_alloc(ngpu_states/sizeof(ips_flow_state));
+                assert(dev_gpu_pkts!=nullptr&&dev_gpu_states!=nullptr);
                 gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts,ngpu_pkts,stream);
                 gpu_memcpy_async_h2d(dev_gpu_states,gpu_states,ngpu_states,stream);
 
