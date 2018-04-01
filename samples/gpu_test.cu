@@ -134,7 +134,7 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
 		ips_detect((char*)pkts[i].pkt, &state_ptr[id], (struct gpu_IPS *)extra_info);
 //	printf("id = %d, end\n", id);	
 	}
-	printf("GPU: gpu_states[%d].dfa_id: %d\n",id,state_ptr[id]._dfa_id);
+	//printf("GPU: gpu_states[%d].dfa_id: %d\n",id,state_ptr[id]._dfa_id);
 }
 
 void gpu_launch(char *pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows,cudaStream_t stream) {

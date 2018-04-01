@@ -57,7 +57,7 @@
 #include <unordered_map>
 #define GPU_BATCH_SIZE 40000
 
-#define PRINT_TIME 1
+#define PRINT_TIME 0
 
 #define COMPUTE_RATIO 100
 
@@ -683,7 +683,7 @@ public:
                 gpu_memcpy_async_d2h(gpu_pkts,dev_gpu_pkts,pre_ngpu_pkts,stream);
                 gpu_memcpy_async_d2h(gpu_states,dev_gpu_states,pre_ngpu_states,stream);
                 for(int i = 0; i < pre_partition; i++){
-                	std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
+                	//std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
                 	assert(gpu_states[i]._dfa_id<200);
                     rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[i],sizeof(ips_flow_state));
 
@@ -728,7 +728,7 @@ public:
             if(GPU_BATCH_SIZE!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
-                partition=_flows[index].size()*5/6;
+               // partition=_flows[index].size()*5/6;
                 if(PRINT_TIME)std::cout<<"Total flow_num:"<<_flows[index].size()<<std::endl;
                 if(PRINT_TIME)printf("partition: %d\n",partition);
             }
@@ -768,7 +768,7 @@ public:
 
                     rte_memcpy(&gpu_states[i],&(_flows[index][i]->_fs),sizeof(ips_flow_state));
                     assert(gpu_states[i]._dfa_id<200);
-                    std::cout<<"CPU: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
+                    //std::cout<<"CPU: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
   //printf("cpu(): state[%d]->_dfa_id = %d\n", i, ((struct ips_flow_state *)gpu_states[i])->_dfa_id);
                     //gpu_mem_map(gpu_states[i], sizeof(struct ips_flow_state));
                     //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
