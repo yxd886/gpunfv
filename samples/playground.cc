@@ -116,7 +116,7 @@ public:
 		}
 	}
 	ips_flow_state* gpu_state_batch_alloc(int size){
-		if(size>MAX_FLOW_NUM*2){
+		if(size>MAX_FLOW_NUM){
 			return nullptr;
 		}else{
 			return dev_state_batch_ptr;
@@ -682,6 +682,7 @@ public:
                 gpu_memcpy_async_d2h(gpu_pkts,dev_gpu_pkts,pre_ngpu_pkts,stream);
                 gpu_memcpy_async_d2h(gpu_states,dev_gpu_states,pre_ngpu_states,stream);
                 for(int i = 0; i < (int)_flows[!index].size(); i++){
+                	std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
                 	assert(gpu_states[i]._dfa_id<200);
                     rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[i],sizeof(ips_flow_state));
 
