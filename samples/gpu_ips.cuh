@@ -17,6 +17,7 @@
 #include "../seastar/nf/aho-corasick/aho.hh"
 
 #define MAX_MATCH 8192
+#define MAX_PKT_SIZE 1500
 
 struct ips_flow_state{
     uint16_t _state;
