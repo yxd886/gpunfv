@@ -495,10 +495,10 @@ public:
 
                int state = ips_state->_state;
                std::cout<<"  CPU    state:"<<state<<std::endl;
-               std::cout<<"  CPU    dfa_arr[dfa_id].num_used_states:"<<dfa_arr[dfa_id].num_used_states<<std::endl;
+               std::cout<<"  CPU    dfa_arr["<<dfa_id<<"].num_used_states:"<<dfa_arr[dfa_id].num_used_states<<std::endl;
              if(state>=dfa_arr[dfa_id].num_used_states){
                  ips_state->_alert=false;
-                 ips_state->_state=state;
+                 ips_state->_state=0;
                  return;
              }
                //std::cout<<"      state:"<<state<<std::endl;

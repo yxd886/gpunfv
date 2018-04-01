@@ -63,7 +63,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
 
         if(state >= dfa_arr[dfa_id].num_used_states){
             ips_state->_alert=false;
-            ips_state->_state=state;
+            ips_state->_state=0;
             return ;
         }
 //printf("------------------5-----------------\n");
