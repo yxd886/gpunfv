@@ -20,10 +20,14 @@
 #define MAX_PKT_SIZE 1500
 
 struct ips_flow_state{
+
     uint16_t _state;
     uint16_t _dfa_id;
     bool _alert;
-};
+    uint8_t tag1;
+    uint16_t tag2;
+
+}
 struct PKT{
 
 	char pkt[MAX_PKT_SIZE];
