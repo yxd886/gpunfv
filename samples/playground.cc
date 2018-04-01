@@ -104,7 +104,7 @@ public:
 
 		gpu_mem_map(&flow_states[0],MAX_FLOW_NUM*sizeof(ips_flow_state));
 		for(unsigned int i=0; i<MAX_FLOW_NUM;i++){
-			flow_states_ptr[i]=&flow_states[i];
+			flow_states_ptr.push_back(&flow_states[i]);
 		}
 
 	}
