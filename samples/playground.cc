@@ -104,6 +104,7 @@ public:
 		gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*GPU_BATCH_SIZE*4);
 		gpu_malloc((void**)(&dev_state_batch_ptr),sizeof(ips_flow_state)*MAX_FLOW_NUM);
 
+
 	}
 	~cuda_mem_allocator(){}
 
@@ -681,7 +682,7 @@ public:
                 gpu_memcpy_async_d2h(gpu_pkts,dev_gpu_pkts,pre_ngpu_pkts,stream);
                 gpu_memcpy_async_d2h(gpu_states,dev_gpu_states,pre_ngpu_states,stream);
                 for(int i = 0; i < (int)_flows[!index].size(); i++){
-                	assert(gpu_states[i]._dfa_id<200);
+
                     rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[i],sizeof(ips_flow_state));
 
                     for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
@@ -764,6 +765,7 @@ public:
 
                     rte_memcpy(&gpu_states[i],&(_flows[index][i]->_fs),sizeof(ips_flow_state));
                     assert(gpu_states[i]._dfa_id<200);
+                    std::cout<<"CPU: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
   //printf("cpu(): state[%d]->_dfa_id = %d\n", i, ((struct ips_flow_state *)gpu_states[i])->_dfa_id);
                     //gpu_mem_map(gpu_states[i], sizeof(struct ips_flow_state));
                     //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
