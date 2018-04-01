@@ -681,7 +681,7 @@ public:
                 gpu_memcpy_async_d2h(gpu_pkts,dev_gpu_pkts,pre_ngpu_pkts,stream);
                 gpu_memcpy_async_d2h(gpu_states,dev_gpu_states,pre_ngpu_states,stream);
                 for(int i = 0; i < (int)_flows[!index].size(); i++){
-
+                	assert(gpu_states[i]._dfa_id<200);
                     rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[i],sizeof(ips_flow_state));
 
                     for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
@@ -759,6 +759,7 @@ public:
                 //std::cout<<"memory alloc finished"<<std::endl;
                 for(int i = 0; i < partition; i++){
                     //gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
+                	assert(_flows[index][i]->_fs._dfa_id<200);
                     rte_memcpy(&gpu_states[i],&(_flows[index][i]->_fs),sizeof(ips_flow_state));
   //printf("cpu(): state[%d]->_dfa_id = %d\n", i, ((struct ips_flow_state *)gpu_states[i])->_dfa_id);
                     //gpu_mem_map(gpu_states[i], sizeof(struct ips_flow_state));
