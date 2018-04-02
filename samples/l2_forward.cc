@@ -311,6 +311,7 @@ uint64_t pre_total_drop;
 std::chrono::time_point<std::chrono::steady_clock> started;
 std::chrono::time_point<std::chrono::steady_clock> stoped;
 using namespace std::chrono;
+using steady_clock_type = std::chrono::steady_clock;
 
 #define GPU_BATCH_SIZE 1
 
@@ -773,7 +774,7 @@ public:
                 }
 
                 _f._pkt_counter++;
-                packets[_f._batch.current_idx].push_back(pkt);
+                packets[_f._batch.current_idx].push_back(std::move(pkt));
 
                 if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
                      _f._batch.need_process=true;
