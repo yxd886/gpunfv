@@ -1807,7 +1807,7 @@ print_ethaddr(const char *name, const struct ether_addr *eth_addr)
 	printf("%s%s", name, buf);
 }
 
-static void
+/*static void
 my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
         void *obj, unsigned i)
 {
@@ -1819,7 +1819,7 @@ my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
    // printf("raw_packet_addr:%p\n",raw_packet);
     //std::cout<<"sizeof bool:"<<sizeof(bool)<<std::endl;
 
-}
+}*/
 
 
 static int
@@ -1854,7 +1854,7 @@ init_mem(unsigned nb_mbuf)
 						"Cannot init mbuf pool on socket %d\n", socketid);
 			else{
 				printf("Allocated mbuf pool on socket %d\n", socketid);
-				rte_mempool_obj_iter(pktmbuf_pool[socketid],my_obj_init,NULL);
+				//rte_mempool_obj_iter(pktmbuf_pool[socketid],my_obj_init,NULL);
 			}
 
 
