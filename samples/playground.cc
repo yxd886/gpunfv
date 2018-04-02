@@ -55,9 +55,9 @@
 #include <time.h>
 
 #include <unordered_map>
-#define GPU_BATCH_SIZE 30000
+#define GPU_BATCH_SIZE 1
 
-#define PRINT_TIME 1
+#define PRINT_TIME 0
 
 #define COMPUTE_RATIO 100
 
@@ -683,7 +683,7 @@ public:
             if(GPU_BATCH_SIZE!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
-                partition=_flows[index].size()*5/6;
+                //partition=_flows[index].size()*5/6;
                 if(PRINT_TIME)std::cout<<"Total flow_num:"<<_flows[index].size()<<std::endl;
                 if(PRINT_TIME)printf("partition: %d\n",partition);
             }
