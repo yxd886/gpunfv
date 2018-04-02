@@ -96,7 +96,7 @@ void compute_gpu_processing_time(cudaStream_t stream){
     time_start = steady_clock_type::now();
     gpu_sync(stream);
     time_stop = steady_clock_type::now();
-    auto elapsed = stoped - started;
+    auto elapsed = time_stop - time_start;
     if(PRINT_TIME)  printf("GPU_Processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
 }
 
