@@ -585,10 +585,10 @@ public:
            parse_pkt(rte_pkt, state,pkts);
            //std::cout<<"  after parse_pkt"<<std::endl;
            struct aho_ctrl_blk worker_cb;
-           worker_cb.stats = _f.ips.stats;
+           worker_cb.stats = _f.ips->stats;
            worker_cb.tot_threads = 1;
            worker_cb.tid = 0;
-           worker_cb.dfa_arr = _f.ips.dfa_arr;
+           worker_cb.dfa_arr = _f.ips->dfa_arr;
            worker_cb.pkts = pkts;
            worker_cb.num_pkts = 1;
            //std::cout<<"  before ids_func"<<std::endl;
@@ -838,10 +838,10 @@ public:
 
 
                 if(PRINT_TIME){
-                    std::thread th = std::thread(compute_gpu_processing_time,(char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
+                    std::thread th = std::thread(compute_gpu_processing_time,(char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips->gpu_ips), max_pkt_num_per_flow, partition,stream);
                     th.detach();
                 }else{
-                    gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
+                    gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips->gpu_ips), max_pkt_num_per_flow, partition,stream);
                 }
 
 
@@ -1136,7 +1136,7 @@ public:
         });
     }
 public:
-    IPS ips;
+    static IPS* ips;
     batch _batch;
     uint64_t _pkt_counter;
 
@@ -1165,6 +1165,7 @@ int main(int ac, char** av) {
 
     return app.run_deprecated(ac, av, [&app] {
         auto& opts = app.configuration();
+        forwarder::ips=new IPS;
 
         port_manager::get().add_port(opts, 0, port_type::standard).then([&opts]{
             return port_manager::get().add_port(opts, 1, port_type::fdir);
