@@ -323,22 +323,11 @@ public:
         void process_pkt(netstar::rte_packet* pkt, ips_flow_state* fs){
 
 
-            ips_flow_state old;
-            old._alert=fs->_alert;
-            old._dfa_id=fs->_dfa_id;
-            old._state=fs->_state;
 
             //std::cout<<"before ips_detect"<<std::endl;
             ips_detect(pkt,fs);
             //std::cout<<"after ips_detect"<<std::endl;
-            auto state_changed=state_updated(&old,fs);
-            if(state_changed) {
-                auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
-                _f._mc.query(Operation::kSet, mica_key(key),
-                        mica_value(*fs)).then([this](mica_response response){
-                    return make_ready_future<>();
-                });
-            }
+
 
         }
 
