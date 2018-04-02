@@ -87,7 +87,7 @@ L2_FORWARD_OBJS = l2_forward.o $(CU_OBJS) $(CU_LINK_OBJS)
 
 .PHONY: all clean tests protobuf
 
-all: $(CU_OBJS) $(OBJS) $(PLAYGROUND_EXEC) $(L2_FORWARD_EXEC)
+all: $(CU_OBJS) $(CU_LINK_OBJS) $(OBJS) $(PLAYGROUND_EXEC) $(L2_FORWARD_EXEC)
 
 clean:
 	rm -rf $(EXEC) .deps/*.d .deps/*/*.d *_test */*_test *_bench */*_bench \
