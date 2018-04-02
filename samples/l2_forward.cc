@@ -2115,11 +2115,11 @@ main(int argc, char **argv)
 
 	check_all_ports_link_status((uint8_t)nb_ports, enabled_port_mask);
 
-	int* a = (int*)malloc(sizeof(int)*3);
-	assert(a!=NULL);
-    a =(int *) malloc(AHO_MAX_STATES * sizeof(struct aho_state));
-    assert(a!= NULL);
-	forwarder::ips=new IPS;
+	//int* a = (int*)malloc(sizeof(int)*3);
+	//assert(a!=NULL);
+    //a =(int *) malloc(AHO_MAX_STATES * sizeof(struct aho_state));
+    //assert(a!= NULL);
+	//forwarder::ips=new IPS;
 
 	/* launch per-lcore init on every lcore */
 	rte_eal_mp_remote_launch(main_loop, NULL, CALL_MASTER);
