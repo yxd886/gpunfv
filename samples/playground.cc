@@ -72,8 +72,7 @@ using namespace std::chrono_literals;
 extern std::vector<struct rte_mempool*> netstar_pools;
 std::chrono::time_point<std::chrono::steady_clock> started;
 std::chrono::time_point<std::chrono::steady_clock> stoped;
-std::chrono::time_point<std::chrono::steady_clock> gpu_started;
-std::chrono::time_point<std::chrono::steady_clock> gpu_stoped;
+
 
 struct fake_val {
     uint64_t v[3];
@@ -89,6 +88,17 @@ struct ips_flow_state{
     uint16_t tag2;
 
 };
+
+
+void compute_gpu_processing_time(cudaStream_t stream){
+    std::chrono::time_point<std::chrono::steady_clock> time_start;
+    std::chrono::time_point<std::chrono::steady_clock> time_stop;
+    time_start = steady_clock_type::now();
+    gpu_sync(stream);
+    time_stop = steady_clock_type::now();
+    auto elapsed = stoped - started;
+    if(PRINT_TIME)  printf("GPU_Processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+}
 
 struct PKT{
 
@@ -667,10 +677,6 @@ public:
             if(_flows[!index].empty()==false){
 
             	gpu_sync(stream);
-                gpu_stoped = steady_clock_type::now();
-                elapsed = gpu_stoped - gpu_started;
-                if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
-
                 gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
                 gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
 
@@ -829,8 +835,6 @@ public:
 
 
 
-
-                gpu_started = steady_clock_type::now();
                 //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
 
                 /////////////////////////////////////////////
@@ -842,9 +846,11 @@ public:
                 //cudaEventRecord(event_start, 0);
 
 
+
                 gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
 
-
+                std::thread th = std::thread(compute_gpu_processing_time,stream);
+                th.detach();
                 //cudaEventRecord(event_stop, 0);
                 //cudaEventSynchronize(event_stop);
                // cudaEventElapsedTime(&elapsedTime, event_start, event_stop);
@@ -862,10 +868,6 @@ public:
                     elapsed = stoped - started;
                     if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                     started = steady_clock_type::now();
-
-                    gpu_stoped = steady_clock_type::now();
-                    elapsed = gpu_stoped - gpu_started;
-                    //if(PRINT_TIME) printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
 
                     for(int i = 0; i < pre_partition; i++){
                     	//std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
