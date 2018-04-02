@@ -45,16 +45,18 @@ __global__ void childKernel(const struct aho_dfa *dfa_arr,
    const struct aho_pkt *pkts, struct ips_flow_state *ips_state)  
 {  
     int tid = blockIdx.x*blockDim.x+threadIdx.x;  
-   
+   	printf("In child\n");
 	if(tid>=50) return;
 	int I, j;
    	I=0;
     int len = pkts[I].len;
+printf("-------------1---------------\n");
     struct aho_state *st_arr = NULL;
 	int dfa_id = pkts[I].dfa_id[tid]; 
 	int state = ips_state->_state[tid];
 	st_arr=dfa_arr[dfa_id].root; 
 	ips_state->_state[tid]=(state >= dfa_arr[dfa_id].num_used_states)?0:ips_state->_state[tid];
+printf("-------------2---------------\n");	
 	for(j = 0; j < len; j++) {
 	
 		int count = st_arr[state].output.count;
@@ -62,6 +64,7 @@ __global__ void childKernel(const struct aho_dfa *dfa_arr,
 		int inp = pkts[I].content[j];
 		state = st_arr[state].G[inp]; 
 	}
+printf("-------------3---------------\n");	
 	ips_state->_state[tid] = state;
    	
 }  
@@ -93,7 +96,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
 	ips_state->_state[times] = state;
    	}
 */
-	childKernel<<<2,32>>>(dfa_arr,pkts,ips_state);
+	childKernel<<<1,1>>>(dfa_arr,pkts,ips_state);
    
 }
 
