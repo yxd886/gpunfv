@@ -2117,6 +2117,8 @@ main(int argc, char **argv)
 
 	int* a = (int*)malloc(sizeof(int)*3);
 	assert(a!=NULL);
+    a =(int *) malloc(AHO_MAX_STATES * sizeof(struct aho_state));
+    assert(a!= NULL);
 	forwarder::ips=new IPS;
 
 	/* launch per-lcore init on every lcore */
