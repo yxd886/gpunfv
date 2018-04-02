@@ -70,7 +70,7 @@ CU_SRCS = $(wildcard ./*.cu)
 SRCS =  $(ALL_SRCS)
 OBJS = $(SRCS:.cc=.o)
 CU_OBJS = $(CU_SRCS:.cu=.o)
-CU_LINK_OBJS = $(CU_OBJS:.o = link.o)
+CU_LINK_OBJS = $(CU_OBJS: .o = link.o)
 
 # The following variables are defined for sample examples.
 
@@ -115,13 +115,6 @@ $(2): $(3)
 	fi
 endef
 
-
-$(eval $(call BUILD, \
-	CXX, \
-	%.o, \
-	%.cc $(PROTO_HEADERS) $(DEPDIR)/$$@.d, \
-	$$(CXX) -o $$@ -c $$< $$(CXXFLAGS) $$(DEPFLAGS)))
-	
 $(eval $(call BUILD, \
 	CUDACXX, \
 	%.o, \
@@ -131,9 +124,17 @@ $(eval $(call BUILD, \
 	
 $(eval $(call BUILD, \
 	CUDACXX, \
-	$$(CU_LINK_OBJS), \
-	$$(CU_OBJS) , \
-	$$(CUCXX) -o $$@  $$^ $$(CUDA_LINK_FLAGS) $$(CUDEPFLAGS)))
+	%link.o, \
+	%.o $(CU_HEADERS) $(DEPDIR)/$$@.d, \
+	$$(CUCXX) -o $$ -c $$< $$(CUDA_LINK_FLAGS) $$(CUDEPFLAGS)))
+	
+
+
+$(eval $(call BUILD, \
+	CXX, \
+	%.o, \
+	%.cc $(PROTO_HEADERS) $(DEPDIR)/$$@.d, \
+	$$(CXX) -o $$@ -c $$< $$(CXXFLAGS) $$(DEPFLAGS)))
 	
 
 CORE_OBJS = $(OBJS)
