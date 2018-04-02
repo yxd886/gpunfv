@@ -1929,7 +1929,7 @@ int
 main(int argc, char **argv)
 {
 
-	gettimeofday(&tv,NULL);
+	forwarder::ips=new IPS;
 	port_conf.rxmode.mq_mode = ETH_MQ_RX_RSS;
 	port_conf.rxmode.max_rx_pkt_len = ETHER_MAX_LEN;
 	port_conf.rxmode.split_hdr_size = 0;
@@ -2117,7 +2117,7 @@ main(int argc, char **argv)
 
 	//int* a = (int*)malloc(sizeof(int)*3);
 	//assert(a!=NULL);
-	forwarder::ips=new IPS;
+
 
 	/* launch per-lcore init on every lcore */
 	rte_eal_mp_remote_launch(main_loop, NULL, CALL_MASTER);
