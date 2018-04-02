@@ -355,7 +355,7 @@ public:
             for(unsigned int i=0;i<packets[index].size();i++){
                 //std::cout<<"packets[current_idx].size:"<<packets[index].size()<<std::endl;
                 //std::cout<<"process "<<i<<" packets[index]"<<std::endl;
-                //process_pkt(&packets[index][i],&_fs);
+                process_pkt(&packets[index][i],&_fs);
 
             }
             forward_pkts(index);
@@ -401,7 +401,7 @@ public:
 
         future<> run_ips() {
             return _ac.run_async_loop([this](){
-                return make_ready_future<af_action>(af_action::forward);
+
                 if(_ac.cur_event().on_close_event()) {
                     post_process();
                     return make_ready_future<af_action>(af_action::close_forward);

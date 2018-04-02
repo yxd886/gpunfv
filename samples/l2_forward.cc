@@ -77,6 +77,16 @@
 #include <cmdline_parse.h>
 #include <cmdline_parse_etheraddr.h>
 
+
+#include "nf/aho-corasick/fpp.h"
+#include "nf/aho-corasick/aho.h"
+
+#include <helper_functions.h>
+#include <helper_cuda.h>
+#include <cuda_runtime.h>
+#include <cuda_profiler_api.h>
+#include "playground.hh"
+
 #define APP_LOOKUP_EXACT_MATCH          0
 #define APP_LOOKUP_LPM                  1
 #define DO_RFC_1812_CHECKS
@@ -184,7 +194,7 @@ static int ipv6 = 0; /**< ipv6 is false by default. */
 #endif
 
 
-
+#define MAX_MATCH 8192
 
 struct port_statistics {
     uint64_t tx;
@@ -283,6 +293,10 @@ struct lcore_conf {
 #endif
 } __rte_cache_aligned;
 
+
+
+
+
 static struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
 /* Send burst of packets on an output interface */
@@ -290,7 +304,1028 @@ uint64_t pre_total_rx;
 uint64_t pre_total_tx;
 uint64_t pre_total_drop;
 
+std::chrono::time_point<std::chrono::steady_clock> started;
+std::chrono::time_point<std::chrono::steady_clock> stoped;
+
+#define GPU_BATCH_SIZE 1
+
+#define PRINT_TIME 0
+
+#define COMPUTE_RATIO 100
+
+#define MAX_PKT_SIZE 1500
+
+#define MAX_FLOW_NUM 10000
+
 #define CORE_NUM 4
+
+class rte_packet {
+
+
+   rte_mbuf* _mbuf;
+
+public:
+   // Explicit constructors.
+   rte_packet(rte_mbuf* mbuf) {
+       assert(mbuf);
+       assert(rte_pktmbuf_is_contiguous(mbuf));
+       _mbuf = mbuf;
+   }
+
+   rte_packet()
+       : _mbuf(nullptr) {}
+
+   // Deconstructors
+   ~rte_packet() {
+       if(_mbuf) {
+           rte_pktmbuf_free(_mbuf);
+       }
+   }
+
+   // Copy construct/assign
+   rte_packet(const rte_packet& other) = delete;
+   rte_packet& operator=(const rte_packet& other) = delete;
+
+   // Move construct/asign
+   rte_packet(rte_packet&& other) noexcept
+       : _mbuf(other._mbuf) {
+       other._mbuf = nullptr;
+   }
+   rte_packet& operator=(rte_packet&& other) noexcept {
+       if(this != &other) {
+           this->~rte_packet();
+           new (this) rte_packet(std::move(other));
+       }
+       return *this;
+   }
+
+   // Boolean operator overloads
+   explicit operator bool() {
+       return bool(_mbuf);
+   }
+
+   // Get a header pointer.
+   template <typename Header>
+   Header* get_header(size_t offset = 0) {
+       assert(_mbuf);
+       if(offset+sizeof(Header) > rte_pktmbuf_pkt_len(_mbuf)) {
+           return nullptr;
+       }
+       return reinterpret_cast<Header*>(rte_pktmbuf_mtod_offset(_mbuf, void*, offset));
+   }
+
+   char* get_header(size_t offset, size_t size) {
+       if(offset+size > rte_pktmbuf_pkt_len(_mbuf)) {
+           return nullptr;
+       }
+
+       return reinterpret_cast<char*>(rte_pktmbuf_mtod_offset(_mbuf, void*, offset));
+   }
+
+   // Trim some payload from front of the packet
+   void trim_front(size_t how_much) {
+       assert(_mbuf);
+       assert(how_much <= rte_pktmbuf_pkt_len(_mbuf));
+       rte_pktmbuf_adj(_mbuf, how_much);
+   }
+
+   // Trim some payload from the back of the packet
+   void trim_back(size_t how_much) {
+       assert(_mbuf);
+       assert(how_much <= rte_pktmbuf_pkt_len(_mbuf));
+       rte_pktmbuf_trim(_mbuf, how_much);
+   }
+
+   // Append some content to the back of the packet
+   void append(size_t how_much) {
+       assert(_mbuf);
+       assert(how_much <= rte_pktmbuf_tailroom(_mbuf));
+       rte_pktmbuf_append(_mbuf, how_much);
+   }
+
+   // Prepend a header to the front of the packet.
+   template <typename Header>
+   Header* prepend_header(size_t extra_size = 0) {
+       assert(_mbuf);
+       assert(sizeof(Header)+extra_size <= rte_pktmbuf_headroom(_mbuf));
+       auto h = rte_pktmbuf_prepend(_mbuf, sizeof(Header) + extra_size);
+       return new (h) Header{};
+   }
+
+   // Obtain the length of the packet.
+   unsigned len() const {
+       assert(_mbuf);
+       return rte_pktmbuf_pkt_len(_mbuf);
+   }
+
+   // Get copy of the packet represented in net::packet
+   rte_mbuf*
+   get_packet() {
+       // Fast path, consider removing it for stable code.
+       return _mbuf;
+   }
+
+private:
+
+
+   // Explicitly invalidate _mbuf and return the original
+   // _mbuf.
+   // Be extra careful!! This is used internally by different
+   // devices to directly send an rte_packet. And I don't know
+   // hide it from public access. User should not
+   // call this function by any means.
+   rte_mbuf* release_mbuf() {
+       rte_mbuf* tmp = _mbuf;
+       _mbuf = nullptr;
+       return tmp;
+   }
+
+   // How are you going to call this constructor, if you
+   // can't build a mbuf from the rte_mpool?
+
+
+
+};
+
+struct ips_flow_state{
+
+    uint16_t _state[50];
+    int _dfa_id[50];
+    bool _alert[50];
+
+
+};
+
+
+void compute_gpu_processing_time(char *pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows,cudaStream_t stream){
+    std::chrono::time_point<std::chrono::steady_clock> time_start;
+    std::chrono::time_point<std::chrono::steady_clock> time_stop;
+    time_start = steady_clock_type::now();
+    gpu_launch(pkt_batch, state_batch, extra_info, flowDim, nflows,stream);
+    gpu_sync(stream);
+    time_stop = steady_clock_type::now();
+    auto elapsed = time_stop - time_start;
+    if(PRINT_TIME)  printf("GPU_Processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+    return;
+}
+
+
+
+struct PKT{
+
+    char pkt[MAX_PKT_SIZE];
+};
+
+class cuda_mem_allocator{
+public:
+
+
+
+    cuda_mem_allocator(){
+        gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*GPU_BATCH_SIZE*4);
+        gpu_malloc((void**)(&dev_state_batch_ptr),sizeof(ips_flow_state)*MAX_FLOW_NUM);
+
+
+    }
+    ~cuda_mem_allocator(){}
+
+    PKT* gpu_pkt_batch_alloc(int size){
+        if(size>GPU_BATCH_SIZE*4){
+            return nullptr;
+        }else{
+            return dev_pkt_batch_ptr;
+        }
+    }
+    ips_flow_state* gpu_state_batch_alloc(int size){
+        if(size>MAX_FLOW_NUM){
+            return nullptr;
+        }else{
+            return dev_state_batch_ptr;
+        }
+    }
+
+
+
+    PKT* dev_pkt_batch_ptr;
+    ips_flow_state* dev_state_batch_ptr;
+
+};
+
+
+class IPS{
+public:
+    IPS(){
+
+        int num_patterns, i;
+
+        int num_threads = 1;
+        assert(num_threads >= 1 && num_threads <= AHO_MAX_THREADS);
+
+        // Map ips object
+        //gpu_mem_map(this, sizeof(IPS));
+        gpu_malloc((void**)(&gpu_ips), sizeof(IPS));
+
+        //gpu map
+        //gpu_mem_map(stats,num_threads * sizeof(struct stat_t));
+        struct stat_t *gpu_stats;
+        stats =(struct stat_t *)malloc(num_threads * sizeof(struct stat_t));
+        gpu_malloc((void**)(&gpu_stats), num_threads * sizeof(struct stat_t));
+
+        for(i = 0; i < num_threads; i++) {
+            stats[i].tput = 0;
+        }
+
+
+
+
+        struct aho_pattern *patterns;
+        /* Thread structures */
+        //pthread_t worker_threads[AHO_MAX_THREADS];
+
+
+        red_printf("State size = %lu\n", sizeof(struct aho_state));
+
+        /* Initialize the shared DFAs */
+        for(i = 0; i < AHO_MAX_DFA; i++) {
+            //printf("Initializing DFA %d\n", i);
+            aho_init(&dfa_arr[i], i);
+           // gpu_mem_map(dfa_arr[i].root,AHO_MAX_STATES * sizeof(struct aho_state));
+           // gpu_malloc((void**)(&dev_stats),num_threads * sizeof(struct stat_t));
+           // gpu_memcpy_async_h2d(dev_stats,stats,num_threads * sizeof(struct stat_t));
+        }
+
+        red_printf("Adding patterns to DFAs\n");
+        patterns = aho_get_patterns(AHO_PATTERN_FILE,
+            &num_patterns);
+
+        for(i = 0; i < num_patterns; i++) {
+            int dfa_id = patterns[i].dfa_id;
+            aho_add_pattern(&dfa_arr[dfa_id], &patterns[i], i);
+        }
+
+        red_printf("Building AC failure function\n");
+        for(i = 0; i < AHO_MAX_DFA; i++) {
+            aho_build_ff(&dfa_arr[i]);
+            aho_preprocess_dfa(&dfa_arr[i]);
+        }
+
+
+        gpu_memcpy_async_h2d(gpu_ips, this, sizeof(IPS));
+
+        for(i = 0; i < AHO_MAX_DFA; i++) {
+
+            struct aho_state* gpu_root;
+            int offset = (char *)&dfa_arr[i].root - (char *)this;
+            char *des_addr = (char *)gpu_ips + offset;
+            //printf("i = :%d, max = %d\n",i,AHO_MAX_DFA);
+            gpu_malloc((void**)(&gpu_root), AHO_MAX_STATES * sizeof(struct aho_state));
+
+            gpu_memcpy_async_h2d(gpu_root, dfa_arr[i].root, AHO_MAX_STATES * sizeof(struct aho_state));
+            gpu_memcpy_async_h2d(des_addr, &gpu_root, sizeof(struct aho_state *));
+        }
+
+
+        gpu_memcpy_async_h2d(gpu_stats, stats, num_threads * sizeof(struct stat_t));
+
+    }
+    ~IPS(){
+
+        for(int i = 0; i < AHO_MAX_DFA; i++) {
+
+            //gpu_mem_unmap(dfa_arr[i].root);
+            free(dfa_arr[i].root);
+        }
+
+
+
+        //gpu_mem_unmap(stats);
+       // gpu_mem_unmap(this);
+        free(stats);
+    }
+    struct aho_dfa dfa_arr[AHO_MAX_DFA];
+    struct stat_t *stats;
+    IPS *gpu_ips;
+
+};
+
+
+
+
+
+
+class forwarder {
+
+public:
+    forwarder(uint16_t port_id, uint16_t queue_id) :_pkt_counter(0),_port_id(port_id),_queue_id(queue_id){
+
+    }
+
+    struct mp_list_t {
+        int num_match;
+        uint16_t ptrn_id[MAX_MATCH];
+    };
+
+    struct query_key {
+        uint64_t v1;
+        uint64_t v2;
+    };
+
+
+
+
+    class flow_operator {
+
+
+    public:
+        forwarder& _f;
+        ips_flow_state _fs;
+        std::vector<rte_mbuf*> packets[2];
+        bool _initialized;
+
+
+        flow_operator(forwarder& f):
+            _f(f)
+            ,_initialized(false){
+
+            init_automataState(_fs);
+        }
+        flow_operator(const flow_operator& other) = delete;
+        flow_operator(flow_operator&& other) noexcept
+            :_f(other._f),_fs(other._fs) ,_initialized(other._initialized){
+
+            //for(unsigned int i=0;i<other.packets[current_idx].size();i++){
+            //    packets[current_idx].push_back(std::move(other.packets[current_idx][i]));
+            //}
+
+            packets[0] = std::move(other.packets[0]);
+            packets[1] = std::move(other.packets[1]);
+            init_automataState(_fs);
+        }
+        ~flow_operator(){
+
+        }
+
+        void post_process(){
+
+            _f._pkt_counter-=packets[_f._batch.current_idx].size();
+            assert(_f._pkt_counter>=0);
+            process_pkts(_f._batch.current_idx);
+
+            std::vector<flow_operator*>::iterator it;
+            for(it=_f._batch._flows[_f._batch.current_idx].begin();it!=_f._batch._flows[_f._batch.current_idx].end();it++){
+                if(*it==this){
+                    _f._batch._flows[_f._batch.current_idx].erase(it);
+                    break;
+                }
+            }
+
+
+        }
+        void process_pkt(rte_packet* pkt, ips_flow_state* fs){
+
+            //std::cout<<"before ips_detect"<<std::endl;
+            ips_detect(pkt,fs);
+            //std::cout<<"after ips_detect"<<std::endl;
+        }
+
+        void forward_pkts(uint64_t index){
+            for(unsigned int i=0;i<packets[index].size();i++){
+
+                //std::cout<<"begin to send pkt"<<std::endl;
+                _f.send_pkt(std::move(packets[index][i]));
+                //std::cout<<"finish sending pkt"<<std::endl;
+            }
+            packets[index].clear();
+            assert(packets[index].size()==0);
+        }
+        void process_pkts(uint64_t index){
+            //std::cout<<"packets[index].size:"<<packets[index].size()<<std::endl;
+            for(unsigned int i=0;i<packets[index].size();i++){
+                //std::cout<<"packets[current_idx].size:"<<packets[index].size()<<std::endl;
+                //std::cout<<"process "<<i<<" packets[index]"<<std::endl;
+                process_pkt(&packets[index][i],&_fs);
+
+            }
+            forward_pkts(index);
+
+        }
+        void update_state(uint64_t index){
+            if(packets[index].empty()){   //if it is the first packets[current_idx] of this flow in this batch
+                if(_initialized){    //if it has already processed previous batch, then the state is newer than remote, so update to remote.
+                   /* auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
+                    return _f._mc.query(Operation::kSet, mica_key(key),
+                            mica_value(_fs)).then([](mica_response response){
+                        return make_ready_future<>();
+                    });*/
+                }else{              //if it is just initialized, it need get the flow state from the remote server.
+                    _initialized=true;
+                    /*auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
+                    return _f._mc.query(Operation::kGet, mica_key(key),
+                            mica_value(0, temporary_buffer<char>())).then([this](mica_response response){
+                        if(response.get_result() == Result::kNotFound) {
+                            init_automataState(_fs);
+                            auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
+                            return _f._mc.query(Operation::kSet, mica_key(key),
+                                    mica_value(_fs)).then([this](mica_response response){
+                                return make_ready_future<>();
+                            });
+                        }
+                        else {
+                            _fs = response.get_value<ips_flow_state>();
+                            return make_ready_future<>();
+
+                        }
+
+                    });*/
+                    init_automataState(_fs);
+
+                }
+            }else{
+                //return make_ready_future<>();
+            }
+
+            //return make_ready_future<>();
+        }
+
+        void run_ips() {
+
+                //uint64_t test_len=mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private);
+
+                //printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %ld, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<net::eth_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
+                //assert(((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[1]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[1])||((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[0]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[0]));
+
+                if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==true){
+
+                    //drop
+                    return make_ready_future<af_action>(af_action::drop);
+
+                 }
+
+                //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
+                update_state(_f._batch.current_idx);
+                                       //update the flow state when receive the first pkt of this flow in this batch.
+
+                if(packets[_f._batch.current_idx].empty()){
+                    _f._batch._flows[_f._batch.current_idx].push_back(this);
+                }
+
+                _f._pkt_counter++;
+                packets[_f._batch.current_idx].push_back(std::move(_ac.cur_packet()));
+
+                if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
+                     _f._batch.need_process=true;
+                     _f._pkt_counter=0;
+                     _f._batch.current_idx=!_f._batch.current_idx;
+
+
+                 }
+                if(_f._batch.need_process==true&&_f._batch.processing==false){
+                    //reach batch size schedule
+                    _f._batch.processing=true;
+                    //std::cout<<"schedule_task"<<std::endl;
+
+                    _f._batch.schedule_task(!_f._batch.current_idx);
+                    _f._batch.need_process=false;
+                    _f._batch.processing=false;
+                    return;
+
+
+
+                }else{
+                    return;
+                }
+                //return make_ready_future<af_action>(af_action::forward);
+
+
+
+
+
+        }
+
+       void init_automataState(struct ips_flow_state& state){
+             for(int i=0;i<50;i++){
+                 srand((unsigned)time(NULL));
+                 state._state[i]=0;
+                 state._alert[i]=false;
+                 state._dfa_id[i]=rand()%AHO_MAX_DFA;
+             }
+
+
+             //std::cout<<"init_automataState_dfa_id:"<<state._dfa_id<<std::endl;
+         }
+       void parse_pkt(rte_packet *rte_pkt, struct ips_flow_state* state,struct aho_pkt*  aho_pkt){
+
+           aho_pkt->content=(uint8_t*)malloc(rte_pkt->len());
+           //std::cout<<"    rte_pkt->len():"<<rte_pkt->len()<<std::endl;
+           memcpy(aho_pkt->content,reinterpret_cast<uint8_t*>(rte_pkt->get_header(0,sizeof(char))),rte_pkt->len()-1);
+           aho_pkt->dfa_id=state->_dfa_id;
+           aho_pkt->len=rte_pkt->len();
+           //std::cout<<"    aho_pkt->len:"<<rte_pkt->len()<<std::endl;
+       }
+       bool state_updated(struct ips_flow_state* old_,struct ips_flow_state* new_){
+           if(old_->_alert==new_->_alert&&old_->_dfa_id==new_->_dfa_id&&old_->_state==new_->_state){
+               return false;
+           }
+           return true;
+       }
+
+       void process_batch(const struct aho_dfa *dfa_arr,
+           const struct aho_pkt *pkts, struct mp_list_t *mp_list, struct ips_flow_state* ips_state)
+       {
+           int I, j;
+
+           for(I = 0; I < BATCH_SIZE; I++) {
+               int len = pkts[I].len;
+
+               for(int times=0;times<50;times++){
+
+                   int state = ips_state->_state[times];
+                   int dfa_id = pkts[I].dfa_id[times];
+                   struct aho_state *st_arr = dfa_arr[dfa_id].root;
+                   if(state>=dfa_arr[dfa_id].num_used_states){
+                     ips_state->_alert[times]=false;
+                     ips_state->_state[times]=0;
+                   }
+
+                   for(j = 0; j < len; j++) {
+
+                     int count = st_arr[state].output.count;
+
+                     if(count != 0) {
+                         /* This state matches some patterns: copy the pattern IDs
+                           *  to the output */
+                         int offset = mp_list[I].num_match;
+                         memcpy(&mp_list[I].ptrn_id[offset],
+                             st_arr[state].out_arr, count * sizeof(uint16_t));
+                         mp_list[I].num_match += count;
+                         ips_state->_alert[times]=true;
+                         ips_state->_state[times]=0;
+
+                     }
+                     int inp = pkts[I].content[j];
+                     state = st_arr[state].G[inp];
+                 }
+                 //std::cout<<"      after for loop"<<std::endl;
+                 ips_state->_state[times]=state;
+               }
+
+           }
+
+
+       }
+       void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state* state)
+       {
+           int i, j;
+
+
+
+           struct aho_dfa *dfa_arr = cb->dfa_arr;
+           struct aho_pkt *pkts = cb->pkts;
+           int num_pkts = cb->num_pkts;
+
+           /* Per-batch matched patterns */
+           struct mp_list_t mp_list[BATCH_SIZE];
+           for(i = 0; i < BATCH_SIZE; i++) {
+               mp_list[i].num_match = 0;
+           }
+
+           /* Being paranoid about GCC optimization: ensure that the memcpys in
+             *  process_batch functions don't get optimized out */
+
+
+           //int tot_proc = 0;     /* How many packets[_f._batch.current_idx] did we actually match ? */
+           //int tot_success = 0;  /* packets[_f._batch.current_idx] that matched a DFA state */
+           // tot_bytes = 0;       /* Total bytes matched through DFAs */
+
+           for(i = 0; i < num_pkts; i += BATCH_SIZE) {
+               //std::cout<<"    before process_batch"<<std::endl;
+               process_batch(dfa_arr, &pkts[i], mp_list,state);
+               //std::cout<<"    after process_batch"<<std::endl;
+
+               for(j = 0; j < BATCH_SIZE; j++) {
+                   int num_match = mp_list[j].num_match;
+                   assert(num_match < MAX_MATCH);
+
+
+                   mp_list[j].num_match = 0;
+               }
+           }
+
+
+
+       }
+       void ips_detect(rte_packet *rte_pkt, struct ips_flow_state* state){
+
+           //cudaError_t err=cudaSuccess;
+           struct aho_pkt* pkts=(struct aho_pkt* )malloc(sizeof(struct aho_pkt));
+           //err=cudaHostRegister(rte_pkt,sizeof(netstar::rte_packet),cudaHostRegisterPortable);
+           //if(err==cudaSuccess){
+           //    printf("cudaHostRegister success!\n");
+           //}else if(err==cudaErrorHostMemoryAlreadyRegistered){
+              // printf("cudaErrorHostMemoryAlreadyRegistered!\n");
+           //}else{
+            //   printf("cudaHostRegister fail!\n");
+           //}
+           //std::cout<<"  before parse_pkt"<<std::endl;
+           parse_pkt(rte_pkt, state,pkts);
+           //std::cout<<"  after parse_pkt"<<std::endl;
+           struct aho_ctrl_blk worker_cb;
+           worker_cb.stats = _f.ips->stats;
+           worker_cb.tot_threads = 1;
+           worker_cb.tid = 0;
+           worker_cb.dfa_arr = _f.ips->dfa_arr;
+           worker_cb.pkts = pkts;
+           worker_cb.num_pkts = 1;
+           //std::cout<<"  before ids_func"<<std::endl;
+           ids_func(&worker_cb,state);
+           //std::cout<<"  after ids_func"<<std::endl;
+           free(pkts->content);
+           free(pkts);
+
+       }
+
+    };
+
+    void send_pkt(rte_packet pkt){
+
+        _send_buffer.push_back(pkt.get_packet());
+
+        if(_send_buffer.size()==MAX_PKT_BURST){
+            rte_mbuf* buf_addr=&_send_buffer[0];
+            int ret=rte_eth_tx_burst(_port_id,_queue_id,buf_addr,MAX_PKT_BURST);
+            if(ret<MAX_PKT_BURST){
+                for(int i=ret;i<MAX_PKT_BURST;i++){
+                    rte_pktmbuf_free(buf_addr[i]);
+                }
+            }
+            _send_buffer.clear();
+        }
+
+
+    }
+
+
+    static bool CompLess(const flow_operator* lhs, const flow_operator* rhs)
+    {
+        return lhs->packets[!lhs->_f._batch.current_idx].size() < rhs->packets[!lhs->_f._batch.current_idx].size();
+    }
+    class batch {
+    public:
+        //uint64_t active_flow_num;
+        //std::unordered_map<char*,uint64_t> pkt_number;
+        //std::unordered_map<char*,uint64_t> flow_index;
+        //std::unordered_map<uint64_t,char*> index_flow;
+        //char* all_pkts[GPU_BATCH_SIZE][GPU_BATCH_SIZE];
+        //char* states[GPU_BATCH_SIZE];
+        //char* gpu_pkts;
+        //char* gpu_states;
+        //uint64_t max_pktnumber;
+        //uint64_t gpu_flow_num;
+        std::vector<flow_operator*> _flows[2];
+        PKT* gpu_pkts[2];
+        ips_flow_state* gpu_states[2];
+        PKT* dev_gpu_pkts;
+        ips_flow_state* dev_gpu_states;
+        bool need_process;
+        bool processing;
+        uint64_t current_idx;
+        cudaStream_t stream;
+        cuda_mem_allocator _cuda_mem_allocator;
+        int pre_ngpu_pkts;
+        int pre_ngpu_states;
+        int pre_max_pkt_num_per_flow;
+        int pre_partition;
+
+
+        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),need_process(false),processing(false),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0){
+            create_stream(&stream);
+
+        }
+        ~batch(){
+            destory_stream(stream);
+
+        }
+
+
+
+        void schedule_task(uint64_t index){
+            //To do list:
+            //schedule the task, following is the strategy offload all to GPU
+            //std::cout<<"flow_size:"<<_flows[index].size()<<std::endl;
+            //std::cout<<"schedule task"<<std::endl;
+            stoped = steady_clock_type::now();
+            auto elapsed = stoped - started;
+          if(PRINT_TIME)  printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            started = steady_clock_type::now();
+
+            if(_flows[!index].empty()==false){
+
+
+                gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
+                gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
+
+            }
+
+
+
+            //for(unsigned int i=0;i<_flows[index].size();i=i+1){
+                //std::cout<<_flows[index][i]->packets[index].size()<<" ";
+            //}
+            //std::cout<<"end before sort"<<std::endl;
+            started = steady_clock_type::now();
+            int partition=0;
+            if(GPU_BATCH_SIZE!=1){
+                sort(_flows[index].begin(),_flows[index].end(),CompLess);
+                partition=get_partition(index);
+                //partition=_flows[index].size()*5/6;
+                if(PRINT_TIME)std::cout<<"Total flow_num:"<<_flows[index].size()<<std::endl;
+                if(PRINT_TIME)printf("partition: %d\n",partition);
+            }
+            assert(partition!=-1);
+
+            stoped = steady_clock_type::now();
+            elapsed = stoped - started;
+            if(PRINT_TIME)printf("Scheduling time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            started = steady_clock_type::now();
+
+            if(partition>0){
+
+                int max_pkt_num_per_flow=_flows[index][partition-1]->packets[index].size();
+                int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(PKT);
+                if(PRINT_TIME)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(PKT)<<std::endl;
+                int ngpu_states = partition * sizeof(ips_flow_state);
+                gpu_pkts[index] = (PKT*)malloc(ngpu_pkts);
+                gpu_states[index] = (ips_flow_state*)malloc(ngpu_states);
+
+
+                assert(gpu_pkts[index]);
+                assert(gpu_states[index]);
+
+                // Clear and map gpu_pkts and gpu_states
+                memset(gpu_pkts[index], 0, ngpu_pkts);
+                memset(gpu_states[index], 0, ngpu_states);
+                //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
+                gpu_mem_map(gpu_pkts[index], ngpu_pkts);
+                gpu_mem_map(gpu_states[index], ngpu_states);
+
+                //std::cout<<"memory alloc finished"<<std::endl;
+                for(int i = 0; i < partition; i++){
+                    //gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
+
+                   // rte_memcpy(&gpu_states[index][i],&(_flows[index][i]->_fs),sizeof(ips_flow_state));
+                   // assert(gpu_states[index][i]._dfa_id<200);
+                    //std::cout<<"CPU: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
+  //printf("cpu(): state[%d]->_dfa_id = %d\n", i, ((struct ips_flow_state *)gpu_states[i])->_dfa_id);
+                    //gpu_mem_map(gpu_states[i], sizeof(struct ips_flow_state));
+                    //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
+                    for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
+
+                       // gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0));
+                        rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0)),_flows[index][i]->packets[index][j].len());
+                        //std::cout<<"assign gpu_pkts["<<i<<"]"<<"["<<j<<"]"<<std::endl;
+
+                        // Map every packet
+                        //gpu_mem_map(gpu_pkts[i*max_pkt_num_per_flow+j], _flows[index][i]->packets[index][j].len());
+                    }
+                }
+
+
+                //sync last batch's result and copy them back to host
+                if(_flows[!index].empty()==false){
+
+
+                    started = steady_clock_type::now();
+                    gpu_sync(stream);
+                    stoped = steady_clock_type::now();
+                    elapsed = stoped - started;
+                    if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    started = steady_clock_type::now();
+
+
+
+                    for(int i = 0; i < pre_partition; i++){
+                        //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
+                        //assert(gpu_states[!index][i]._dfa_id<200);
+                        rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(ips_flow_state));
+
+                        for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
+                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                        }
+                    }
+                    gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
+                    gpu_memset_async(dev_gpu_states,0, pre_ngpu_states,stream);
+                    stoped = steady_clock_type::now();
+                    elapsed = stoped - started;
+                    if(PRINT_TIME)  printf("Copyback time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    started = steady_clock_type::now();
+
+                    // Unmap gpu_pkts and gpu_states
+                    gpu_mem_unmap(gpu_pkts[!index]);
+                    gpu_mem_unmap(gpu_states[!index]);
+
+                    // Forward GPU packets[current_idx]
+                    for(unsigned int i = 0; i < _flows[!index].size(); i++){
+                        _flows[!index][i]->forward_pkts(!index);
+                    }
+
+
+
+                    if(gpu_pkts[!index]){
+                        free(gpu_pkts[!index]);
+                    }
+                    if(gpu_states[!index]){
+                        free(gpu_states[!index]);
+                    }
+                    _flows[!index].clear();
+                }
+
+
+                //batch the current state
+                for(int i = 0; i < partition; i++){
+                    //gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
+
+                    rte_memcpy(&gpu_states[index][i],&(_flows[index][i]->_fs),sizeof(ips_flow_state));
+                    //assert(gpu_states[index][i]._dfa_id<200);
+
+                }
+
+
+
+
+
+                pre_ngpu_pkts=ngpu_pkts;
+                pre_ngpu_states=ngpu_states;
+                pre_max_pkt_num_per_flow=max_pkt_num_per_flow;
+                pre_partition=partition;
+
+                dev_gpu_pkts=_cuda_mem_allocator.gpu_pkt_batch_alloc(ngpu_pkts/sizeof(PKT));
+                dev_gpu_states=_cuda_mem_allocator.gpu_state_batch_alloc(ngpu_states/sizeof(ips_flow_state));
+                assert(dev_gpu_pkts!=nullptr&&dev_gpu_states!=nullptr);
+
+
+                stoped = steady_clock_type::now();
+                elapsed = stoped - started;
+                if(PRINT_TIME)printf("Batching time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                started = steady_clock_type::now();
+
+                gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
+                gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
+
+
+                stoped = steady_clock_type::now();
+                elapsed = stoped - started;
+                if(PRINT_TIME)printf("Memcpy to device time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                started = steady_clock_type::now();
+
+
+
+                //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
+
+                /////////////////////////////////////////////
+                // Launch kernel
+                //float elapsedTime = 0.0;
+                //// event_start, event_stop;
+                //cudaEventCreate(&event_start);
+                //cudaEventCreate(&event_stop);
+                //cudaEventRecord(event_start, 0);
+
+
+
+                if(PRINT_TIME){
+                    std::thread th = std::thread(compute_gpu_processing_time,(char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips->gpu_ips), max_pkt_num_per_flow, partition,stream);
+                    th.detach();
+                }else{
+                    gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips->gpu_ips), max_pkt_num_per_flow, partition,stream);
+                }
+
+
+            }else{
+                if(_flows[!index].empty()==false){
+
+
+                    started = steady_clock_type::now();
+                    gpu_sync(stream);
+                    stoped = steady_clock_type::now();
+                    elapsed = stoped - started;
+                    if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    started = steady_clock_type::now();
+
+                    for(int i = 0; i < pre_partition; i++){
+                        //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
+                        //assert(gpu_states[!index][i]._dfa_id<200);
+                        rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(ips_flow_state));
+
+                        for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
+                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                        }
+                    }
+                    gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
+                    gpu_memset_async(dev_gpu_states,0, pre_ngpu_states,stream);
+                    stoped = steady_clock_type::now();
+                    elapsed = stoped - started;
+                    if(PRINT_TIME)  printf("Copyback time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    started = steady_clock_type::now();
+
+                    // Unmap gpu_pkts and gpu_states
+                    gpu_mem_unmap(gpu_pkts[!index]);
+                    gpu_mem_unmap(gpu_states[!index]);
+
+                    // Forward GPU packets[current_idx]
+                    for(unsigned int i = 0; i < _flows[!index].size(); i++){
+                        _flows[!index][i]->forward_pkts(!index);
+                    }
+
+
+
+                    if(gpu_pkts[!index]){
+                        free(gpu_pkts[!index]);
+                    }
+                    if(gpu_states[!index]){
+                        free(gpu_states[!index]);
+                    }
+                    _flows[!index].clear();
+                }
+            }
+
+            started = steady_clock_type::now();
+
+            for(unsigned int i = partition; i < _flows[index].size(); i++){
+                _flows[index][i]->process_pkts(index);
+            }
+            if(partition==0){
+                _flows[index].clear();
+            }
+
+
+
+            stoped = steady_clock_type::now();
+            elapsed = stoped - started;
+            if(PRINT_TIME)printf("CPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            started = steady_clock_type::now();
+
+
+
+        }
+        uint64_t get_partition(uint64_t index){
+
+            float processing_time=0;
+            float min_processing_time=10000000;
+            float cpu_processing_num=0;
+            float pre_cpu_processing_num=0;
+
+
+            for(unsigned int i=_flows[index].size();i>=0;i--){
+                float cpu_time=0;
+                float gpu_time=0;
+                if(i>0)
+                    gpu_time=_flows[index][i-1]->packets[index].size();
+                for(unsigned int j=i;j<_flows[index].size();j++){
+                    cpu_time+=_flows[index][j]->packets[index].size();
+                }
+                processing_time=std::max(gpu_time,cpu_time/COMPUTE_RATIO);
+                pre_cpu_processing_num=cpu_processing_num;
+                cpu_processing_num=cpu_time;
+                if(processing_time>=min_processing_time){
+                    if(PRINT_TIME)std::cout<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
+                    if(i==0){
+                        if(PRINT_TIME)    std::cout<<"GPU_max_pkt: "<<0<<std::endl;
+                        return 0;
+                    }else{
+                        if(PRINT_TIME)   std::cout<<"GPU_max_pkt: "<<_flows[index][i]->packets[index].size()<<std::endl;
+                        return i+1;
+                    }
+                    //std::cout<<"    min_processing_time:"<<*result<<std::endl;
+
+
+                }else{
+                    min_processing_time=processing_time;
+                }
+
+            }
+            return 0;
+        }
+
+    };
+
+
+public:
+    static IPS* ips;
+    batch _batch;
+    uint64_t _pkt_counter;
+    uint16_t _port_id;
+    uint16_t _queue_id;
+    std::vector<rte_mbuf*> _send_buffer;
+
+};
+
+
+
+
+
+
+
+
+
 
 static void
 print_stats(void)
