@@ -89,7 +89,7 @@ struct ips_flow_state{
 
 };
 
-
+/*
 void compute_gpu_processing_time(cudaStream_t stream){
     std::chrono::time_point<std::chrono::steady_clock> time_start;
     std::chrono::time_point<std::chrono::steady_clock> time_stop;
@@ -99,6 +99,23 @@ void compute_gpu_processing_time(cudaStream_t stream){
     auto elapsed = time_stop - time_start;
     if(PRINT_TIME)  printf("GPU_Processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
     return;
+}
+*/
+
+seastar::future<> compute_gpu_processing_time(cudaStream_t stream) {
+
+    seastar::thread th([stream] {
+        std::chrono::time_point<std::chrono::steady_clock> time_start;
+        std::chrono::time_point<std::chrono::steady_clock> time_stop;
+        time_start = steady_clock_type::now();
+        gpu_sync(stream);
+        time_stop = steady_clock_type::now();
+        auto elapsed = time_stop - time_start;
+        if(PRINT_TIME)  printf("GPU_Processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+    });
+    return do_with(std::move(th), [] (auto& th) {
+        return th.join();
+    });
 }
 
 struct PKT{
@@ -850,8 +867,8 @@ public:
 
                 gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
 
-                std::thread th = std::thread(compute_gpu_processing_time,stream);
-                th.detach();
+                compute_gpu_processing_time(stream);
+
                 //cudaEventRecord(event_stop, 0);
                 //cudaEventSynchronize(event_stop);
                // cudaEventElapsedTime(&elapsedTime, event_start, event_stop);
