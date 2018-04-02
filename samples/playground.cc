@@ -1166,11 +1166,10 @@ int main(int ac, char** av) {
     sd_async_flow_manager<udp_ppr> m2;
     async_flow_manager<tcp_ppr> m3;
     async_flow_manager<udp_ppr> m4;
-    forwarder::ips=new IPS;
 
     return app.run_deprecated(ac, av, [&app] {
         auto& opts = app.configuration();
-
+        forwarder::ips=new IPS;
 
         port_manager::get().add_port(opts, 0, port_type::standard).then([&opts]{
             return port_manager::get().add_port(opts, 1, port_type::fdir);
