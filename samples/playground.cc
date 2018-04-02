@@ -98,6 +98,7 @@ void compute_gpu_processing_time(cudaStream_t stream){
     time_stop = steady_clock_type::now();
     auto elapsed = time_stop - time_start;
     if(PRINT_TIME)  printf("GPU_Processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+    return;
 }
 
 struct PKT{
@@ -676,7 +677,7 @@ public:
 
             if(_flows[!index].empty()==false){
 
-            	gpu_sync(stream);
+
                 gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
                 gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
 
