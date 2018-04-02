@@ -472,7 +472,7 @@ public:
            aho_pkt->content=(uint8_t*)malloc(rte_pkt->len());
            //std::cout<<"    rte_pkt->len():"<<rte_pkt->len()<<std::endl;
            memcpy(aho_pkt->content,reinterpret_cast<uint8_t*>(rte_pkt->get_header(0,sizeof(char))),rte_pkt->len()-1);
-           aho_pkt->dfa_id=&state->_dfa_id;
+           aho_pkt->dfa_id=state->_dfa_id;
            aho_pkt->len=rte_pkt->len();
            //std::cout<<"    aho_pkt->len:"<<rte_pkt->len()<<std::endl;
        }
@@ -490,11 +490,12 @@ public:
 
            for(I = 0; I < BATCH_SIZE; I++) {
                int len = pkts[I].len;
-               struct aho_state *st_arr = dfa_arr[dfa_id].root;
+
                for(int times=0;times<50;times++){
 
                    int state = ips_state->_state[times];
                    int dfa_id = pkts[I].dfa_id[times];
+                   struct aho_state *st_arr = dfa_arr[dfa_id].root;
                    if(state>=dfa_arr[dfa_id].num_used_states){
                      ips_state->_alert[times]=false;
                      ips_state->_state[times]=0;

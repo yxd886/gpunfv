@@ -46,13 +46,14 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
    
     int len = pkts[I].len;
     struct aho_state *st_arr = NULL;
-    st_arr=dfa_arr[dfa_id].root;     
+        
     
     
 
    	for(int times=0;times<50;times++){
    	    int dfa_id = pkts[I].dfa_id[times]; 
    	    int state = ips_state->_state[times];
+   	    st_arr=dfa_arr[dfa_id].root; 
    	    ips_state->_state[times]=(state >= dfa_arr[dfa_id].num_used_states)?0:ips_state->_state[times];
    		for(j = 0; j < len; j++) {
 	
@@ -86,7 +87,7 @@ __device__ void parse_pkt(char *pkt, struct ips_flow_state *state, struct aho_pk
 
     uint32_t len = pkt_len(pkt);
     aho_pkt->content=(uint8_t *)pkt;
-    aho_pkt->dfa_id = &state->_dfa_id;
+    aho_pkt->dfa_id = state->_dfa_id;
     aho_pkt->len = len;
 }
 
