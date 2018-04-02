@@ -71,7 +71,7 @@ __global__ void childKernel(const struct aho_dfa *dfa_arr,
 
 __device__ void process_batch(const struct aho_dfa *dfa_arr,    
    const struct aho_pkt *pkts, struct ips_flow_state *ips_state) {
-  /*  int I, j;
+    int I, j;
     I=0;
    
     int len = pkts[I].len;
@@ -95,8 +95,8 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
 		}
 	ips_state->_state[times] = state;
    	}
-*/
-	childKernel<<<1,64>>>(dfa_arr,pkts,ips_state);
+
+	//childKernel<<<1,64>>>(dfa_arr,pkts,ips_state);
    
 }
 
