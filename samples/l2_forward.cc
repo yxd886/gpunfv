@@ -1807,6 +1807,19 @@ print_ethaddr(const char *name, const struct ether_addr *eth_addr)
 	printf("%s%s", name, buf);
 }
 
+static void
+my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
+        void *obj, unsigned i)
+{
+    gpu_mem_map(obj,mp->elt_size);
+    //struct rte_mbuf* rte_pkt=(struct rte_mbuf*)obj;
+    //unsigned char *t =rte_pktmbuf_mtod(rte_pkt, unsigned char*);
+    //char* raw_packet = (char*)t;
+    //printf("obj_addr:%p\n",obj);
+   // printf("raw_packet_addr:%p\n",raw_packet);
+    //std::cout<<"sizeof bool:"<<sizeof(bool)<<std::endl;
+
+}
 
 
 static int
@@ -1839,8 +1852,11 @@ init_mem(unsigned nb_mbuf)
 			if (pktmbuf_pool[socketid] == NULL)
 				rte_exit(EXIT_FAILURE,
 						"Cannot init mbuf pool on socket %d\n", socketid);
-			else
+			else{
 				printf("Allocated mbuf pool on socket %d\n", socketid);
+				rte_mempool_obj_iter(pktmbuf_pool[socketid],my_obj_init,NULL);
+			}
+
 
 		}
 		qconf = &lcore_conf[lcore_id];
@@ -1904,6 +1920,9 @@ check_all_ports_link_status(uint8_t port_num, uint32_t port_mask)
 		}
 	}
 }
+
+
+IPS * forwarder::ips = nullptr;
 
 int
 main(int argc, char **argv)
@@ -2094,6 +2113,8 @@ main(int argc, char **argv)
 	}
 
 	check_all_ports_link_status((uint8_t)nb_ports, enabled_port_mask);
+
+	forwarder::ips=new IPS;
 
 	/* launch per-lcore init on every lcore */
 	rte_eal_mp_remote_launch(main_loop, NULL, CALL_MASTER);
