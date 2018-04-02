@@ -552,6 +552,7 @@ public:
         /* Initialize the shared DFAs */
         for(i = 0; i < AHO_MAX_DFA; i++) {
             //printf("Initializing DFA %d\n", i);
+        	printf("i=%d\n",i);
             aho_init(&dfa_arr[i], i);
            // gpu_mem_map(dfa_arr[i].root,AHO_MAX_STATES * sizeof(struct aho_state));
            // gpu_malloc((void**)(&dev_stats),num_threads * sizeof(struct stat_t));
