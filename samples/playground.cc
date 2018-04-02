@@ -81,11 +81,10 @@ struct fake_val {
 
 struct ips_flow_state{
 
-    uint16_t _state;
-    uint16_t _dfa_id;
-    bool _alert;
-    uint8_t tag1;
-    uint16_t tag2;
+    uint16_t _state[50];
+    uint16_t _dfa_id[50];
+    bool _alert[50];
+
 
 };
 
@@ -473,10 +472,13 @@ public:
         }
 
        void init_automataState(struct ips_flow_state& state){
-             srand((unsigned)time(NULL));
-             state._state=0;
-             state._alert=false;
-             state._dfa_id=rand()%AHO_MAX_DFA;
+             for(int i=0;i<50;i++){
+                 srand((unsigned)time(NULL));
+                 state._state[i]=0;
+                 state._alert[i]=false;
+                 state._dfa_id[i]=rand()%AHO_MAX_DFA;
+             }
+
 
              //std::cout<<"init_automataState_dfa_id:"<<state._dfa_id<<std::endl;
          }
@@ -485,7 +487,7 @@ public:
            aho_pkt->content=(uint8_t*)malloc(rte_pkt->len());
            //std::cout<<"    rte_pkt->len():"<<rte_pkt->len()<<std::endl;
            memcpy(aho_pkt->content,reinterpret_cast<uint8_t*>(rte_pkt->get_header(0,sizeof(char))),rte_pkt->len()-1);
-           aho_pkt->dfa_id=state->_dfa_id;
+           aho_pkt->dfa_id=&state->_dfa_id;
            aho_pkt->len=rte_pkt->len();
            //std::cout<<"    aho_pkt->len:"<<rte_pkt->len()<<std::endl;
        }
@@ -502,41 +504,39 @@ public:
            int I, j;
 
            for(I = 0; I < BATCH_SIZE; I++) {
-               int dfa_id = pkts[I].dfa_id;
-               //std::cout<<"      dfa_id:"<<dfa_id<<std::endl;
                int len = pkts[I].len;
-               //std::cout<<"      len:"<<len<<std::endl;
                struct aho_state *st_arr = dfa_arr[dfa_id].root;
+               for(int times=0;times<50;times++){
 
-               int state = ips_state->_state;
-               //std::cout<<"  CPU    state:"<<state<<std::endl;
-               //std::cout<<"  CPU    dfa_arr["<<dfa_id<<"].num_used_states:"<<dfa_arr[dfa_id].num_used_states<<std::endl;
-             if(state>=dfa_arr[dfa_id].num_used_states){
-                 ips_state->_alert=false;
-                 ips_state->_state=0;
-             }
-               //std::cout<<"      state:"<<state<<std::endl;
-               //std::cout<<"      before for loop"<<std::endl;
-               for(j = 0; j < len; j++) {
-
-                   int count = st_arr[state].output.count;
-
-                   if(count != 0) {
-                       /* This state matches some patterns: copy the pattern IDs
-                         *  to the output */
-                       int offset = mp_list[I].num_match;
-                       memcpy(&mp_list[I].ptrn_id[offset],
-                           st_arr[state].out_arr, count * sizeof(uint16_t));
-                       mp_list[I].num_match += count;
-                       ips_state->_alert=true;
-                       ips_state->_state=0;
-
+                   int state = ips_state->_state[times];
+                   int dfa_id = pkts[I].dfa_id[times];
+                   if(state>=dfa_arr[dfa_id].num_used_states){
+                     ips_state->_alert[times]=false;
+                     ips_state->_state[times]=0;
                    }
-                   int inp = pkts[I].content[j];
-                   state = st_arr[state].G[inp];
+
+                   for(j = 0; j < len; j++) {
+
+                     int count = st_arr[state].output.count;
+
+                     if(count != 0) {
+                         /* This state matches some patterns: copy the pattern IDs
+                           *  to the output */
+                         int offset = mp_list[I].num_match;
+                         memcpy(&mp_list[I].ptrn_id[offset],
+                             st_arr[state].out_arr, count * sizeof(uint16_t));
+                         mp_list[I].num_match += count;
+                         ips_state->_alert[times]=true;
+                         ips_state->_state[times]=0;
+
+                     }
+                     int inp = pkts[I].content[j];
+                     state = st_arr[state].G[inp];
+                 }
+                 //std::cout<<"      after for loop"<<std::endl;
+                 ips_state->_state[times]=state;
                }
-               //std::cout<<"      after for loop"<<std::endl;
-               ips_state->_state=state;
+
            }
 
 

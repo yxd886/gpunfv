@@ -21,12 +21,9 @@
 
 struct ips_flow_state{
 
-    uint16_t _state;
-    uint16_t _dfa_id;
-    bool _alert;
-    uint8_t tag1;
-    uint16_t tag2;
-
+    uint16_t _state[50];
+    uint16_t _dfa_id[50];
+    bool _alert[50];
 };
 struct PKT{
 
@@ -46,22 +43,27 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
    const struct aho_pkt *pkts, struct ips_flow_state *ips_state) {
     int I, j;
     I=0;
-    int dfa_id = pkts[I].dfa_id;    
+   
     int len = pkts[I].len;
     struct aho_state *st_arr = NULL;
     st_arr=dfa_arr[dfa_id].root;     
-    int state = ips_state->_state;
     
-    ips_state->_state=(state >= dfa_arr[dfa_id].num_used_states)?0:ips_state->_state;
-   
-	for(j = 0; j < len; j++) {
+    
+
+   	for(int times=0;times<50;times++){
+   	    int dfa_id = pkts[I].dfa_id[times]; 
+   	    int state = ips_state->_state[times];
+   	    ips_state->_state[times]=(state >= dfa_arr[dfa_id].num_used_states)?0:ips_state->_state[times];
+   		for(j = 0; j < len; j++) {
 	
 		int count = st_arr[state].output.count;
-		ips_state->_alert =(count != 0||ips_state->_alert==true)?true:ips_state->_alert;
+		ips_state->_alert[times] =(count != 0||ips_state->_alert[times]==true)?true:ips_state->_alert[times];
 		int inp = pkts[I].content[j];
 		state = st_arr[state].G[inp]; 
 	}
-	ips_state->_state = state;
+	ips_state->_state[times] = state;
+   	}
+
    
 }
 
@@ -84,7 +86,7 @@ __device__ void parse_pkt(char *pkt, struct ips_flow_state *state, struct aho_pk
 
     uint32_t len = pkt_len(pkt);
     aho_pkt->content=(uint8_t *)pkt;
-    aho_pkt->dfa_id = state->_dfa_id;
+    aho_pkt->dfa_id = &state->_dfa_id;
     aho_pkt->len = len;
 }
 
