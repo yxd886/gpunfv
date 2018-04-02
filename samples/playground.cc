@@ -24,6 +24,7 @@
 #include "core/reactor.hh"
 #include "core/app-template.hh"
 #include "core/sleep.hh"
+#include <core/thread.hh>
 
 #include "netstar/port_manager.hh"
 #include "netstar/stack/stack_manager.hh"
