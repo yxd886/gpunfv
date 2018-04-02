@@ -837,10 +837,14 @@ public:
 
 
 
+                if(PRINT_TIME){
+                    std::thread th = std::thread(compute_gpu_processing_time,(char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
+                    th.detach();
+                }else{
+                    gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
+                }
 
 
-                std::thread th = std::thread(compute_gpu_processing_time,(char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
-                th.detach();
                 //cudaEventRecord(event_stop, 0);
                 //cudaEventSynchronize(event_stop);
                // cudaEventElapsedTime(&elapsedTime, event_start, event_stop);
