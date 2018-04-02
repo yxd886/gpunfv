@@ -501,7 +501,6 @@ public:
              if(state>=dfa_arr[dfa_id].num_used_states){
                  ips_state->_alert=false;
                  ips_state->_state=0;
-                 return;
              }
                //std::cout<<"      state:"<<state<<std::endl;
                //std::cout<<"      before for loop"<<std::endl;
@@ -517,8 +516,7 @@ public:
                            st_arr[state].out_arr, count * sizeof(uint16_t));
                        mp_list[I].num_match += count;
                        ips_state->_alert=true;
-                       ips_state->_state=state;
-                       return;
+                       ips_state->_state=0;
 
                    }
                    int inp = pkts[I].content[j];
