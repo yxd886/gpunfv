@@ -132,7 +132,7 @@ __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_i
  //printf("gpu_nf_logic(): state->_dfa_id = %d\n", ((struct ips_flow_state *)state_batch[id])->_dfa_id);
 		//gpu_nf_logic_impl(pkts[i], state_batch[id]);
 		//ips_detect((char*)pkts[i].pkt, &state_ptr[id], (struct gpu_IPS *)extra_info);
-		//ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);
+		ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);
 //	printf("id = %d, end\n", id);	
 	}
 	//printf("GPU: gpu_states[%d].dfa_id: %d\n",id,state_ptr[id]._dfa_id);
