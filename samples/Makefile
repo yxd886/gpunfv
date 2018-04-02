@@ -70,7 +70,7 @@ CU_SRCS = $(wildcard ./*.cu)
 SRCS =  $(ALL_SRCS)
 OBJS = $(SRCS:.cc=.o)
 CU_OBJS = $(CU_SRCS:.cu=.o)
-CU_LINK_OBJS = $(CU_OBJS: .o = .l)
+CU_LINK_OBJS = $(CU_OBJS:.o =.l)
 
 # The following variables are defined for sample examples.
 
@@ -126,7 +126,7 @@ $(eval $(call BUILD, \
 	CUDACXX, \
 	%.l, \
 	%.o $(CU_HEADERS) $(DEPDIR)/$$@.d, \
-	$$(CUCXX) -o $$ -c $$< $$(CUDA_LINK_FLAGS) $$(CUDEPFLAGS)))
+	$$(CUCXX) -o $$ $$< $$(CUDA_LINK_FLAGS) $$(CUDEPFLAGS)))
 	
 
 
