@@ -355,7 +355,7 @@ public:
             for(unsigned int i=0;i<packets[index].size();i++){
                 //std::cout<<"packets[current_idx].size:"<<packets[index].size()<<std::endl;
                 //std::cout<<"process "<<i<<" packets[index]"<<std::endl;
-                process_pkt(&packets[index][i],&_fs);
+                //process_pkt(&packets[index][i],&_fs);
 
             }
             forward_pkts(index);
