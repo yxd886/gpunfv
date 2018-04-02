@@ -53,7 +53,7 @@ CXXFLAGS += -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
 	    
 CUDAFLAGS += -I/usr/local/cuda-8.0/samples/common/inc -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60 -rdc=true -I/usr/local/cuda-8.0/include -I$(DPDK_INC_DIR)
 
-
+CUDA_LINK_FLAGS += -dlink -I/usr/local/cuda-8.0/samples/common/inc -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60  -I/usr/local/cuda-8.0/include -I$(DPDK_INC_DIR)
 LDFLAGS += $(SEASTAR_FLAGS) -L/usr/local/cuda-8.0/lib64
 
 LIBS +=-lcudart -lcudadevrt -lcublas_device
@@ -70,6 +70,7 @@ CU_SRCS = $(wildcard ./*.cu)
 SRCS =  $(ALL_SRCS)
 OBJS = $(SRCS:.cc=.o)
 CU_OBJS = $(CU_SRCS:.cu=.o)
+CU_LINK_OBJS = $(CU_OBJS:.o = link.o)
 
 # The following variables are defined for sample examples.
 
@@ -78,10 +79,10 @@ CU_OBJS = $(CU_SRCS:.cu=.o)
 #SAMPLES_OBJS = $(SAMPLES_SRCS:.cc=.o)
 
 PLAYGROUND_EXEC = playground
-PLAYGROUND_OBJS = playground.o $(CU_OBJS)
+PLAYGROUND_OBJS = playground.o $(CU_OBJS) $(CU_LINK_OBJS)
 
 L2_FORWARD_EXEC = l2_forward
-L2_FORWARD_OBJS = l2_forward.o $(CU_OBJS)
+L2_FORWARD_OBJS = l2_forward.o $(CU_OBJS) $(CU_LINK_OBJS)
 
 
 .PHONY: all clean tests protobuf
@@ -126,6 +127,13 @@ $(eval $(call BUILD, \
 	%.o, \
 	%.cu $(CU_HEADERS) $(DEPDIR)/$$@.d, \
 	$$(CUCXX) -o $$@ -c $$< $$(CUDAFLAGS) $$(CUDEPFLAGS)))
+	
+	
+$(eval $(call BUILD, \
+	CUDACXX, \
+	$$(CU_LINK_OBJS), \
+	$$(CU_OBJS) , \
+	$$(CUCXX) -o $$@  $$^ $$(CUDA_LINK_FLAGS) $$(CUDEPFLAGS)))
 	
 
 CORE_OBJS = $(OBJS)
