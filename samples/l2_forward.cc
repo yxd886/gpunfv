@@ -2114,6 +2114,8 @@ main(int argc, char **argv)
 
 	check_all_ports_link_status((uint8_t)nb_ports, enabled_port_mask);
 
+	int* a = malloc(sizeof(int)*3);
+	assert(a!=NULL);
 	forwarder::ips=new IPS;
 
 	/* launch per-lcore init on every lcore */
