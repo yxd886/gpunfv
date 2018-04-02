@@ -189,7 +189,7 @@ static __m128i val_eth[RTE_MAX_ETHPORTS];
 /* mask of enabled ports */
 static uint32_t enabled_port_mask = 0;
 static int promiscuous_on = 0; /**< Ports set in promiscuous mode off by default. */
-static int numa_on = 1; /**< NUMA is enabled by default. */
+static int numa_on = 0; /**< NUMA is enabled by default. */
 
 static uint64_t timer_period = 1;
 
