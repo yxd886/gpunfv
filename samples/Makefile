@@ -70,7 +70,7 @@ CU_SRCS = $(wildcard ./*.cu)
 SRCS =  $(ALL_SRCS)
 OBJS = $(SRCS:.cc=.o)
 CU_OBJS = $(CU_SRCS:.cu=.o)
-CU_LINK_OBJS = $(CU_OBJS: .o = link.o)
+CU_LINK_OBJS = $(CU_OBJS: .o = .l)
 
 # The following variables are defined for sample examples.
 
@@ -91,7 +91,7 @@ all: $(CU_OBJS) $(CU_LINK_OBJS) $(OBJS) $(PLAYGROUND_EXEC) $(L2_FORWARD_EXEC)
 
 clean:
 	rm -rf $(EXEC) .deps/*.d .deps/*/*.d *_test */*_test *_bench */*_bench \
-		*.a *.pb.* *.o */*.o *.gcda *.gcno */*.gcda */*.gcno \
+		*.a *.pb.* *.o */*.o *.l */*.l *.gcda *.gcno */*.gcda */*.gcno \
 		coverage.info coverage_html */*.pb.cc */*.pb.h
 
 # This build wrapper takes 4 parameters:
@@ -124,7 +124,7 @@ $(eval $(call BUILD, \
 	
 $(eval $(call BUILD, \
 	CUDACXX, \
-	%link.o, \
+	%.l, \
 	%.o $(CU_HEADERS) $(DEPDIR)/$$@.d, \
 	$$(CUCXX) -o $$ -c $$< $$(CUDA_LINK_FLAGS) $$(CUDEPFLAGS)))
 	
