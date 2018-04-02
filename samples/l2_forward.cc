@@ -527,13 +527,13 @@ public:
 
         // Map ips object
         //gpu_mem_map(this, sizeof(IPS));
-        gpu_malloc((void**)(&gpu_ips), sizeof(IPS));
+     //   gpu_malloc((void**)(&gpu_ips), sizeof(IPS));
 
         //gpu map
         //gpu_mem_map(stats,num_threads * sizeof(struct stat_t));
         struct stat_t *gpu_stats;
         stats =(struct stat_t *)malloc(num_threads * sizeof(struct stat_t));
-        gpu_malloc((void**)(&gpu_stats), num_threads * sizeof(struct stat_t));
+    //    gpu_malloc((void**)(&gpu_stats), num_threads * sizeof(struct stat_t));
 
         for(i = 0; i < num_threads; i++) {
             stats[i].tput = 0;
