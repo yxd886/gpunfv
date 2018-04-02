@@ -51,6 +51,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
     
 
    	for(int times=0;times<50;times++){
+   	
    	    int dfa_id = pkts[I].dfa_id[times]; 
    	    int state = ips_state->_state[times];
    	    st_arr=dfa_arr[dfa_id].root; 

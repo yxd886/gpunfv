@@ -89,10 +89,11 @@ struct ips_flow_state{
 };
 
 
-void compute_gpu_processing_time(cudaStream_t stream){
+void compute_gpu_processing_time(char *pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows,cudaStream_t stream){
     std::chrono::time_point<std::chrono::steady_clock> time_start;
     std::chrono::time_point<std::chrono::steady_clock> time_stop;
     time_start = steady_clock_type::now();
+    gpu_launch(pkt_batch, state_batch, extra_info, flowDim, nflows,stream);
     gpu_sync(stream);
     time_stop = steady_clock_type::now();
     auto elapsed = time_stop - time_start;
@@ -836,9 +837,9 @@ public:
 
 
 
-                gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
 
-                std::thread th = std::thread(compute_gpu_processing_time,stream);
+
+                std::thread th = std::thread(compute_gpu_processing_time,(char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
                 th.detach();
                 //cudaEventRecord(event_stop, 0);
                 //cudaEventSynchronize(event_stop);
