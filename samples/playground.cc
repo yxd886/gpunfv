@@ -696,7 +696,7 @@ public:
             if(GPU_BATCH_SIZE!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
-                //partition=_flows[index].size()/2;
+                partition=_flows[index].size()/2;
                 if(PRINT_TIME)std::cout<<"Total flow_num:"<<_flows[index].size()<<std::endl;
                 if(PRINT_TIME)printf("partition: %d\n",partition);
             }
@@ -917,6 +917,7 @@ public:
             /////////////////////////////////////////////
 
             //std::cout<<"begin to process_pkts"<<std::endl;
+            started = steady_clock_type::now();
 
             for(unsigned int i = partition; i < _flows[index].size(); i++){
                 _flows[index][i]->process_pkts(index);
