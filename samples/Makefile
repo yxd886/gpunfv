@@ -70,7 +70,7 @@ CU_SRCS = $(wildcard ./*.cu)
 SRCS =  $(ALL_SRCS)
 OBJS = $(SRCS:.cc=.o)
 CU_OBJS = $(CU_SRCS:.cu=.o)
-CU_LINK_OBJS = $(CU_OBJS:.o =.l)
+CU_LINK_OBJS = $(CU_SRCS:.cu =.l)
 
 # The following variables are defined for sample examples.
 
