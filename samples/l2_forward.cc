@@ -310,6 +310,7 @@ uint64_t pre_total_drop;
 
 std::chrono::time_point<std::chrono::steady_clock> started;
 std::chrono::time_point<std::chrono::steady_clock> stoped;
+using namespace std::chrono;
 
 #define GPU_BATCH_SIZE 1
 
