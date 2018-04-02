@@ -86,6 +86,10 @@
 #include <cuda_runtime.h>
 #include <cuda_profiler_api.h>
 #include "playground.hh"
+#include <chrono>
+#include <thread>
+#include <iostream>
+#include <vector>
 
 #define APP_LOOKUP_EXACT_MATCH          0
 #define APP_LOOKUP_LPM                  1
@@ -337,9 +341,7 @@ public:
 
    // Deconstructors
    ~rte_packet() {
-       if(_mbuf) {
-           rte_pktmbuf_free(_mbuf);
-       }
+
    }
 
    // Copy construct/assign
@@ -639,7 +641,7 @@ public:
     public:
         forwarder& _f;
         ips_flow_state _fs;
-        std::vector<rte_mbuf*> packets[2];
+        std::vector<rte_packet> packets[2];
         bool _initialized;
 
 
@@ -747,17 +749,17 @@ public:
             //return make_ready_future<>();
         }
 
-        void run_ips() {
+        void run_ips(rte_packet pkt) {
 
                 //uint64_t test_len=mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private);
 
-                //printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %ld, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<net::eth_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
-                //assert(((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[1]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[1])||((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[0]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[0]));
+                //printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %ld, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<ether_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
+                //assert(((char*)_ac.cur_packet().get_header<ether_hdr>(0)>=(char*)netstar_pools[1]&&(char*)_ac.cur_packet().get_header<ether_hdr>(0)<=test_len+(char*)netstar_pools[1])||((char*)_ac.cur_packet().get_header<ether_hdr>(0)>=(char*)netstar_pools[0]&&(char*)_ac.cur_packet().get_header<ether_hdr>(0)<=test_len+(char*)netstar_pools[0]));
 
                 if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==true){
 
                     //drop
-                    return make_ready_future<af_action>(af_action::drop);
+                    return _f.drop_pkt(std::move(pkt));
 
                  }
 
@@ -770,7 +772,7 @@ public:
                 }
 
                 _f._pkt_counter++;
-                packets[_f._batch.current_idx].push_back(std::move(_ac.cur_packet()));
+                packets[_f._batch.current_idx].push_back(pkt);
 
                 if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
                      _f._batch.need_process=true;
@@ -951,7 +953,7 @@ public:
         _send_buffer.push_back(pkt.get_packet());
 
         if(_send_buffer.size()==MAX_PKT_BURST){
-            rte_mbuf* buf_addr=&_send_buffer[0];
+            rte_mbuf** buf_addr=&_send_buffer[0];
             int ret=rte_eth_tx_burst(_port_id,_queue_id,buf_addr,MAX_PKT_BURST);
             if(ret<MAX_PKT_BURST){
                 for(int i=ret;i<MAX_PKT_BURST;i++){
@@ -960,6 +962,13 @@ public:
             }
             _send_buffer.clear();
         }
+
+
+    }
+
+    void drop_pkt(rte_packet pkt){
+
+        rte_pktmbuf_free(pkt.get_packet());
 
 
     }
@@ -1080,8 +1089,8 @@ public:
                     //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
 
-                       // gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0));
-                        rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0)),_flows[index][i]->packets[index][j].len());
+                       // gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0));
+                        rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0)),_flows[index][i]->packets[index][j].len());
                         //std::cout<<"assign gpu_pkts["<<i<<"]"<<"["<<j<<"]"<<std::endl;
 
                         // Map every packet
@@ -1109,7 +1118,7 @@ public:
                         rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(ips_flow_state));
 
                         for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
                         }
                     }
                     gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
@@ -1216,7 +1225,7 @@ public:
                         rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(ips_flow_state));
 
                         for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
                         }
                     }
                     gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
