@@ -43,7 +43,7 @@ struct gpu_IPS{
 };
 
 __device__ void process_batch(const struct aho_dfa *dfa_arr,    
-   const struct aho_pkt *pkts, struct mp_list_t *mp_list, struct ips_flow_state *ips_state) {
+   const struct aho_pkt *pkts, struct ips_flow_state *ips_state) {
     int I, j;
     I=0;
     int dfa_id = pkts[I].dfa_id;    
@@ -74,7 +74,7 @@ __device__ void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state *state)
     int num_pkts = cb->num_pkts;
 
     for(i = 0; i < num_pkts; i += BATCH_SIZE) {
-        process_batch(dfa_arr, &pkts[i], mp_list, state);
+        process_batch(dfa_arr, &pkts[i], state);
 
     }
 }
