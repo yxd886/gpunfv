@@ -2119,7 +2119,7 @@ main(int argc, char **argv)
 	//assert(a!=NULL);
     //a =(int *) malloc(AHO_MAX_STATES * sizeof(struct aho_state));
     //assert(a!= NULL);
-	//forwarder::ips=new IPS;
+	forwarder::ips=new IPS;
 
 	/* launch per-lcore init on every lcore */
 	rte_eal_mp_remote_launch(main_loop, NULL, CALL_MASTER);
