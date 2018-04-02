@@ -1156,6 +1156,8 @@ my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
 
 }
 
+IPS * forwarder::ips = nullptr;
+
 int main(int ac, char** av) {
     app_template app;
     sd_async_flow_manager<tcp_ppr> m1;
