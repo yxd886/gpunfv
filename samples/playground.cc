@@ -401,7 +401,7 @@ public:
 
         future<> run_ips() {
             return _ac.run_async_loop([this](){
-                return make_ready_future<af_action::forward>;
+                return make_ready_future<af_action>(af_action::forward);
                 if(_ac.cur_event().on_close_event()) {
                     post_process();
                     return make_ready_future<af_action>(af_action::close_forward);
