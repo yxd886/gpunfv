@@ -126,7 +126,7 @@ $(eval $(call BUILD, \
 	CUDACXX, \
 	%.l, \
 	%.o $(CU_HEADERS) $(DEPDIR)/$$@.d, \
-	$$(CUCXX) -o $$ $$< $$(CUDA_LINK_FLAGS) $$(CUDEPFLAGS)))
+	$$(CUCXX) -o $$@ $$< $$(CUDA_LINK_FLAGS) $$(CUDEPFLAGS)))
 	
 
 
