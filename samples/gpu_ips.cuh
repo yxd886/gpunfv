@@ -22,7 +22,7 @@
 struct ips_flow_state{
 
     uint16_t _state[50];
-    uint16_t _dfa_id[50];
+    int _dfa_id[50];
     bool _alert[50];
 };
 struct PKT{
