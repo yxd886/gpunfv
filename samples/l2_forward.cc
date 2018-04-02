@@ -158,9 +158,9 @@
 /*
  * Configurable number of RX/TX ring descriptors
  */
-#define RTE_TEST_RX_DESC_DEFAULT 6000
+#define RTE_TEST_RX_DESC_DEFAULT 2048
 #define RTE_TEST_TX_DESC_DEFAULT 512
-static uint32_t nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
+static uint16_t nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
 static uint16_t nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 
 /* ethernet addresses of ports */
