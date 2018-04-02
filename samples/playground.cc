@@ -55,7 +55,7 @@
 #include <time.h>
 
 #include <unordered_map>
-#define GPU_BATCH_SIZE 6000
+#define GPU_BATCH_SIZE 20000
 
 #define PRINT_TIME 0
 
