@@ -918,6 +918,7 @@ public:
             }
 
 
+
             stoped = steady_clock_type::now();
             elapsed = stoped - started;
             if(PRINT_TIME)printf("CPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
