@@ -996,10 +996,8 @@ public:
         //uint64_t max_pktnumber;
         //uint64_t gpu_flow_num;
         std::vector<flow_operator*> _flows[2];
-        PKT* gpu_pkts[2];
-        ips_flow_state* gpu_states[2];
-        PKT* dev_gpu_pkts;
-        ips_flow_state* dev_gpu_states;
+        char** gpu_pkts[2];
+        char** gpu_states[2];
         bool need_process;
         bool processing;
         uint64_t current_idx;
@@ -1013,6 +1011,15 @@ public:
 
         batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),need_process(false),processing(false),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0){
             create_stream(&stream);
+
+            gpu_pkts[0] = (char**)malloc(GPU_BATCH_SIZE*4*sizeof(char*));
+            gpu_states[0] = (char**)malloc(MAX_FLOW_NUM*sizeof(char*));
+            gpu_pkts[1] = (char**)malloc(GPU_BATCH_SIZE*4*sizeof(char*));
+            gpu_states[1] = (char**)malloc(MAX_FLOW_NUM*sizeof(char*));
+            gpu_mem_map(gpu_pkts[0], GPU_BATCH_SIZE*4*sizeof(char*));
+            gpu_mem_map(gpu_states[0], MAX_FLOW_NUM*sizeof(char*));
+            gpu_mem_map(gpu_pkts[1], GPU_BATCH_SIZE*4*sizeof(char*));
+            gpu_mem_map(gpu_states[1], MAX_FLOW_NUM*sizeof(char*));
 
         }
         ~batch(){
