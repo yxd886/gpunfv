@@ -335,26 +335,25 @@ public:
         }
         void process_pkt(netstar::rte_packet* pkt, ips_flow_state* fs){
 
-            //std::cout<<"before ips_detect"<<std::endl;
+
             ips_detect(pkt,fs);
-            //std::cout<<"after ips_detect"<<std::endl;
+
         }
 
         void forward_pkts(uint64_t index){
             for(unsigned int i=0;i<packets[index].size();i++){
 
-                //std::cout<<"begin to send pkt"<<std::endl;
+
                 _ac.internal_send(std::move(packets[index][i]));
-                //std::cout<<"finish sending pkt"<<std::endl;
+
             }
             packets[index].clear();
             assert(packets[index].size()==0);
         }
         void process_pkts(uint64_t index){
-            //std::cout<<"packets[index].size:"<<packets[index].size()<<std::endl;
+
             for(unsigned int i=0;i<packets[index].size();i++){
-                //std::cout<<"packets[current_idx].size:"<<packets[index].size()<<std::endl;
-                //std::cout<<"process "<<i<<" packets[index]"<<std::endl;
+
                 process_pkt(&packets[index][i],&_fs);
 
             }
@@ -407,18 +406,6 @@ public:
                     return make_ready_future<af_action>(af_action::close_forward);
                 }
 
-                //uint64_t test_len=mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private);
-
-                //printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %ld, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<net::eth_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
-                //assert(((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[1]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[1])||((char*)_ac.cur_packet().get_header<net::eth_hdr>(0)>=(char*)netstar_pools[0]&&(char*)_ac.cur_packet().get_header<net::eth_hdr>(0)<=test_len+(char*)netstar_pools[0]));
-
-                if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==true){
-
-                    return make_ready_future<af_action>(af_action::drop);
-
-                 }
-
-                //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
                 update_state(_f._batch.current_idx);
                                        //update the flow state when receive the first pkt of this flow in this batch.
 
@@ -427,35 +414,17 @@ public:
                 }
 
                 _f._pkt_counter++;
-                assert(_ac.cur_packet().get_header<net::eth_hdr>(0)!=nullptr);
+
                 packets[_f._batch.current_idx].push_back(std::move(_ac.cur_packet()));
 
-                if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
-                     _f._batch.need_process=true;
+                if(_f._pkt_counter>=GPU_BATCH_SIZE){
                      _f._pkt_counter=0;
+                     _f._batch.schedule_task(_f._batch.current_idx);
                      _f._batch.current_idx=!_f._batch.current_idx;
-
-
-                 }
-                if(_f._batch.need_process==true&&_f._batch.processing==false){
-                    //reach batch size schedule
-                    _f._batch.processing=true;
-                    //std::cout<<"schedule_task"<<std::endl;
-
-                    _f._batch.schedule_task(!_f._batch.current_idx);
-                    _f._batch.need_process=false;
-                    _f._batch.processing=false;
-                    return make_ready_future<af_action>(af_action::hold);
-
-
-
-                }else{
+                     return make_ready_future<af_action>(af_action::hold);
+                 }else{
                     return make_ready_future<af_action>(af_action::hold);
                 }
-                //return make_ready_future<af_action>(af_action::forward);
-
-
-
 
             });
         }
@@ -640,13 +609,13 @@ public:
         uint64_t current_idx;
         cudaStream_t stream;
         cuda_mem_allocator _cuda_mem_allocator;
-        int pre_ngpu_pkts;
-		int pre_ngpu_states;
-		int pre_max_pkt_num_per_flow;
-		int pre_partition;
 
 
-        batch():need_process(false),processing(false),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0){
+
+
+
+
+        batch():need_process(false),processing(false),current_idx(0){
         	create_stream(&stream);
 
 
@@ -757,10 +726,6 @@ public:
                 //sync last batch's result and copy them back to host
 
 
-                pre_ngpu_pkts=ngpu_pkts;
-             	pre_ngpu_states=ngpu_states;
-             	pre_max_pkt_num_per_flow=max_pkt_num_per_flow;
-             	pre_partition=partition;
 
 
                 stoped = steady_clock_type::now();
