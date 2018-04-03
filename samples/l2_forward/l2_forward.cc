@@ -649,7 +649,7 @@ public:
         bool _initialized;
 
 
-        flow_operator(forwarder& f,_fs(fs)):
+        flow_operator(forwarder& f,ips_flow_state& fs):
             _f(f)
             ,_fs(fs)
             ,_initialized(false){
@@ -1092,8 +1092,8 @@ public:
                      //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
                      for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
                          //std::cout<<"j:"<<j<<std::endl;
-                        gpu_pkts[index][i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0));
-                        // rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0)),_flows[index][i]->packets[index][j].len());
+                        gpu_pkts[index][i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0));
+                        // rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0)),_flows[index][i]->packets[index][j].len());
                          //std::cout<<"assign gpu_pkts["<<i<<"]"<<"["<<j<<"]"<<std::endl;
 
                          // Map every packet
