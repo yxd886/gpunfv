@@ -118,11 +118,13 @@ __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_i
 	char**pkts =pkt_batch + id * flowDim;
 	int i=0;
 	for(i= 0; i < flowDim; i++) {
-
+//printf("-------------1---------------\n");	
 		if(pkts[i] == NULL) break;
  		struct ips_flow_state state;
  		memcpy(&state,(struct ips_flow_state *)state_batch[id],sizeof(ips_flow_state));
+//printf("-------------2---------------\n");	
 		ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);		memcpy((struct ips_flow_state *)state_batch[id],&state,sizeof(ips_flow_state));
+//printf("-------------3---------------\n");	
 	}
 
 }
@@ -132,8 +134,8 @@ void gpu_launch(char **pkt_batch, char **state_batch, char *extra_info, int flow
 	assert(nflows > 0);
 	int nblocks = (nflows + THREADPERBLOCK - 1) / THREADPERBLOCK;
 //printf("nblocks = %d, nthread = %d, nflows = %d\n", nblocks, THREADPERBLOCK, nflows);
-	gpu_nf_logic<<<nblocks, THREADPERBLOCK, SHARE_MEM_SIZE, stream>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
-	//gpu_nf_logic<<<1, 1, SHARE_MEM_SIZE, stream>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
+	//gpu_nf_logic<<<nblocks, THREADPERBLOCK, SHARE_MEM_SIZE, stream>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
+	gpu_nf_logic<<<1, 1, SHARE_MEM_SIZE, stream>>>(pkt_batch, state_batch, extra_info, flowDim, nflows);
 }
 
 void gpu_sync(cudaStream_t stream) {
