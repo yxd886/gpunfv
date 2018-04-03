@@ -88,7 +88,7 @@ struct ips_flow_state{
 
 };
 
-
+/*
 void compute_gpu_processing_time(char *pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows,cudaStream_t stream){
     std::chrono::time_point<std::chrono::steady_clock> time_start;
     std::chrono::time_point<std::chrono::steady_clock> time_stop;
@@ -100,7 +100,7 @@ void compute_gpu_processing_time(char *pkt_batch, char *state_batch, char *extra
     if(PRINT_TIME)  printf("GPU_Processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
     return;
 }
-
+*/
 
 
 struct PKT{
@@ -770,7 +770,7 @@ public:
 
 
 
-                gpu_started = steady_clock_type::now();
+               // gpu_started = steady_clock_type::now();
 
                 //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
 
@@ -784,7 +784,7 @@ public:
 
 
 
-                gpu_launch((char**)gpu_pkts[index], (char**)gpu_states[index], (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
+                gpu_launch((char**)gpu_pkts[index], (char**)gpu_states[index], (char *)(_flows[0][index]->_f.ips->gpu_ips), max_pkt_num_per_flow, partition,stream);
 
 
 
