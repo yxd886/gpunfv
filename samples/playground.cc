@@ -674,7 +674,7 @@ public:
             if(GPU_BATCH_SIZE!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
-                std::cout<<"partition:"<<partition<<std::endl;
+                //std::cout<<"partition:"<<partition<<std::endl;
                 //partition=_flows[index].size()*5/6;
                 if(PRINT_TIME)std::cout<<"Total flow_num:"<<_flows[index].size()<<std::endl;
                 if(PRINT_TIME)printf("partition: %d\n",partition);
@@ -858,12 +858,12 @@ public:
                 processing_time.push_back(std::max(gpu_time,cpu_time/COMPUTE_RATIO));
                 cpu_processing_num.push_back(cpu_time);
             }*/
-            for(unsigned int i=0; i<_flows[index].size();i++){
+           /* for(unsigned int i=0; i<_flows[index].size();i++){
                 std::cout<<_flows[index][i]->packets[index].size()<<" ";
             }
             std::cout<<std::endl;
             return _flows[index].size();
-
+*/
             for(int i=_flows[index].size();i>=0;i--){
                 float cpu_time=0;
                 float gpu_time=0;
