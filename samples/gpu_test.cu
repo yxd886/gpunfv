@@ -123,8 +123,9 @@ printf("-------------1---------------\n");
  		struct ips_flow_state state;
  		memcpy(&state,(struct ips_flow_state *)state_batch[id],sizeof(ips_flow_state));
 printf("-------------2---------------\n");	
-		ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);		memcpy((struct ips_flow_state *)state_batch[id],&state,sizeof(ips_flow_state));
-printf("-------------3---------------\n");	
+		ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);
+printf("-------------3---------------\n");			memcpy((struct ips_flow_state *)state_batch[id],&state,sizeof(ips_flow_state));
+printf("-------------4---------------\n");	
 	}
 
 }
