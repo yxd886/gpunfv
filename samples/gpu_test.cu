@@ -112,33 +112,19 @@ void start_test() {
 }
 
 __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_info, int flowDim, int nflows) {
-	//printf("in gpu_nf_logic\n");
+
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 	if(id >= nflows) return ;
-
-	// Get start address
 	char**pkts =pkt_batch + id * flowDim;
-	//struct ips_flow_state* state_ptr=(struct ips_flow_state*)state_batch;
-
-	//printf("pkt_batch = %x\n", pkt_batch);
-
-	
-	//printf("flowDim = %d, id = %d\n", flowDim, id);
-	// For every packet for this flow in this batch
 	int i=0;
 	for(i= 0; i < flowDim; i++) {
-	//printf("id = %d, i = %d, pkts[i] = %p\n", id, i, pkts[i]);	
+
 		if(pkts[i] == NULL) break;
- //printf("gpu_nf_logic(): state->_dfa_id = %d\n", ((struct ips_flow_state *)state_batch[id])->_dfa_id);
-		//gpu_nf_logic_impl(pkts[i], state_batch[id]);
-
-		//ips_detect((char*)pkts[i].pkt, &state_ptr[id], (struct gpu_IPS *)extra_info);
-		ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);
-
-//	printf("id = %d, end\n", id);	
+ 		struct ips_flow_state state;
+ 		memcpy(&state,(struct ips_flow_state *)state_batch[id],sizeof(ips_flow_state));
+		ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);		memcpy((struct ips_flow_state *)state_batch[id],&state,sizeof(ips_flow_state));
 	}
-	//printf(" *%d* ", i);
-	//printf("GPU: gpu_states[%d].dfa_id: %d\n",id,state_ptr[id]._dfa_id);
+
 }
 
 void gpu_launch(char **pkt_batch, char **state_batch, char *extra_info, int flowDim, int nflows,cudaStream_t stream) {
