@@ -85,19 +85,14 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
    	    int dfa_id = pkts[I].dfa_id[times]; 
    	    int state = ips_state->_state[times];
    	    st_arr=dfa_arr[dfa_id].root; 
-//printf("state:%d, dfa_id: %d, num_used_states:%d\n",state,dfa_id,dfa_arr[dfa_id].num_used_states);
+
    	    ips_state->_state[times]=(state >= dfa_arr[dfa_id].num_used_states)?0:ips_state->_state[times];
 
    		for(j = 0; j < len; j++) {
-//printf("-------------1---------------\n");	
-			int count = st_arr[state].output.count;
-//printf("-------------2---------------\n");			
+			int count = st_arr[state].output.count;	
 			ips_state->_alert[times] =(count != 0||ips_state->_alert[times]==true)?true:ips_state->_alert[times];
-//printf("-------------3---------------\n");			
 			int inp = pkts[I].content[j];
-//printf("-------------4---------------\n");
 			state = st_arr[state].G[inp]; 
-//printf("-------------5---------------\n");
 		}
 
 	ips_state->_state[times] = state;
