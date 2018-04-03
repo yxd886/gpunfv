@@ -55,7 +55,7 @@
 #include <time.h>
 
 #include <unordered_map>
-#define GPU_BATCH_SIZE 20000
+#define GPU_BATCH_SIZE 1
 
 #define PRINT_TIME 1
 
@@ -72,8 +72,7 @@ using namespace std::chrono_literals;
 extern std::vector<struct rte_mempool*> netstar_pools;
 std::chrono::time_point<std::chrono::steady_clock> started;
 std::chrono::time_point<std::chrono::steady_clock> stoped;
-std::chrono::time_point<std::chrono::steady_clock> gpu_started;
-std::chrono::time_point<std::chrono::steady_clock> gpu_stoped;
+
 
 struct fake_val {
     uint64_t v[3];
@@ -82,13 +81,27 @@ struct fake_val {
 
 struct ips_flow_state{
 
-    uint16_t _state;
-    uint16_t _dfa_id;
-    bool _alert;
-    uint8_t tag1;
-    uint16_t tag2;
+    uint16_t _state[50];
+    int _dfa_id[50];
+    bool _alert[50];
+
 
 };
+
+
+void compute_gpu_processing_time(char *pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows,cudaStream_t stream){
+    std::chrono::time_point<std::chrono::steady_clock> time_start;
+    std::chrono::time_point<std::chrono::steady_clock> time_stop;
+    time_start = steady_clock_type::now();
+    gpu_launch(pkt_batch, state_batch, extra_info, flowDim, nflows,stream);
+    gpu_sync(stream);
+    time_stop = steady_clock_type::now();
+    auto elapsed = time_stop - time_start;
+    if(PRINT_TIME)  printf("GPU_Processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+    return;
+}
+
+
 
 struct PKT{
 
@@ -322,24 +335,9 @@ public:
         }
         void process_pkt(netstar::rte_packet* pkt, ips_flow_state* fs){
 
-
-            ips_flow_state old;
-            old._alert=fs->_alert;
-            old._dfa_id=fs->_dfa_id;
-            old._state=fs->_state;
-
             //std::cout<<"before ips_detect"<<std::endl;
             ips_detect(pkt,fs);
             //std::cout<<"after ips_detect"<<std::endl;
-            auto state_changed=state_updated(&old,fs);
-            if(state_changed) {
-                auto key = query_key{_ac.get_flow_key_hash(), _ac.get_flow_key_hash()};
-                _f._mc.query(Operation::kSet, mica_key(key),
-                        mica_value(*fs)).then([this](mica_response response){
-                    return make_ready_future<>();
-                });
-            }
-
         }
 
         void forward_pkts(uint64_t index){
@@ -403,10 +401,12 @@ public:
 
         future<> run_ips() {
             return _ac.run_async_loop([this](){
+
                 if(_ac.cur_event().on_close_event()) {
                     post_process();
                     return make_ready_future<af_action>(af_action::close_forward);
                 }
+
                 //uint64_t test_len=mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private);
 
                 //printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %ld, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<net::eth_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
@@ -461,10 +461,13 @@ public:
         }
 
        void init_automataState(struct ips_flow_state& state){
-             srand((unsigned)time(NULL));
-             state._state=0;
-             state._alert=false;
-             state._dfa_id=rand()%AHO_MAX_DFA;
+             for(int i=0;i<50;i++){
+                 srand((unsigned)time(NULL));
+                 state._state[i]=0;
+                 state._alert[i]=false;
+                 state._dfa_id[i]=rand()%AHO_MAX_DFA;
+             }
+
 
              //std::cout<<"init_automataState_dfa_id:"<<state._dfa_id<<std::endl;
          }
@@ -490,43 +493,40 @@ public:
            int I, j;
 
            for(I = 0; I < BATCH_SIZE; I++) {
-               int dfa_id = pkts[I].dfa_id;
-               //std::cout<<"      dfa_id:"<<dfa_id<<std::endl;
                int len = pkts[I].len;
-               //std::cout<<"      len:"<<len<<std::endl;
-               struct aho_state *st_arr = dfa_arr[dfa_id].root;
 
-               int state = ips_state->_state;
-               //std::cout<<"  CPU    state:"<<state<<std::endl;
-               //std::cout<<"  CPU    dfa_arr["<<dfa_id<<"].num_used_states:"<<dfa_arr[dfa_id].num_used_states<<std::endl;
-             if(state>=dfa_arr[dfa_id].num_used_states){
-                 ips_state->_alert=false;
-                 ips_state->_state=0;
-                 return;
-             }
-               //std::cout<<"      state:"<<state<<std::endl;
-               //std::cout<<"      before for loop"<<std::endl;
-               for(j = 0; j < len; j++) {
+               for(int times=0;times<50;times++){
 
-                   int count = st_arr[state].output.count;
-
-                   if(count != 0) {
-                       /* This state matches some patterns: copy the pattern IDs
-                         *  to the output */
-                       int offset = mp_list[I].num_match;
-                       memcpy(&mp_list[I].ptrn_id[offset],
-                           st_arr[state].out_arr, count * sizeof(uint16_t));
-                       mp_list[I].num_match += count;
-                       ips_state->_alert=true;
-                       ips_state->_state=state;
-                       return;
-
+                   int state = ips_state->_state[times];
+                   int dfa_id = pkts[I].dfa_id[times];
+                   struct aho_state *st_arr = dfa_arr[dfa_id].root;
+                   if(state>=dfa_arr[dfa_id].num_used_states){
+                     ips_state->_alert[times]=false;
+                     ips_state->_state[times]=0;
                    }
-                   int inp = pkts[I].content[j];
-                   state = st_arr[state].G[inp];
+
+                   for(j = 0; j < len; j++) {
+
+                     int count = st_arr[state].output.count;
+
+                     if(count != 0) {
+                         /* This state matches some patterns: copy the pattern IDs
+                           *  to the output */
+                         int offset = mp_list[I].num_match;
+                         memcpy(&mp_list[I].ptrn_id[offset],
+                             st_arr[state].out_arr, count * sizeof(uint16_t));
+                         mp_list[I].num_match += count;
+                         ips_state->_alert[times]=true;
+                         ips_state->_state[times]=0;
+
+                     }
+                     int inp = pkts[I].content[j];
+                     state = st_arr[state].G[inp];
+                 }
+                 //std::cout<<"      after for loop"<<std::endl;
+                 ips_state->_state[times]=state;
                }
-               //std::cout<<"      after for loop"<<std::endl;
-               ips_state->_state=state;
+
            }
 
 
@@ -588,10 +588,10 @@ public:
            parse_pkt(rte_pkt, state,pkts);
            //std::cout<<"  after parse_pkt"<<std::endl;
            struct aho_ctrl_blk worker_cb;
-           worker_cb.stats = _f.ips.stats;
+           worker_cb.stats = _f.ips->stats;
            worker_cb.tot_threads = 1;
            worker_cb.tid = 0;
-           worker_cb.dfa_arr = _f.ips.dfa_arr;
+           worker_cb.dfa_arr = _f.ips->dfa_arr;
            worker_cb.pkts = pkts;
            worker_cb.num_pkts = 1;
            //std::cout<<"  before ids_func"<<std::endl;
@@ -707,7 +707,7 @@ public:
             if(GPU_BATCH_SIZE!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
-                //partition=_flows[index].size()/2;
+                //partition=_flows[index].size()*5/6;
                 if(PRINT_TIME)std::cout<<"Total flow_num:"<<_flows[index].size()<<std::endl;
                 if(PRINT_TIME)printf("partition: %d\n",partition);
             }
@@ -757,7 +757,6 @@ public:
                 //sync last batch's result and copy them back to host
 
 
-
                 pre_ngpu_pkts=ngpu_pkts;
              	pre_ngpu_states=ngpu_states;
              	pre_max_pkt_num_per_flow=max_pkt_num_per_flow;
@@ -770,7 +769,9 @@ public:
                 started = steady_clock_type::now();
 
 
+
                 gpu_started = steady_clock_type::now();
+
                 //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
 
                 /////////////////////////////////////////////
@@ -782,7 +783,9 @@ public:
                 //cudaEventRecord(event_start, 0);
 
 
+
                 gpu_launch((char**)gpu_pkts[index], (char**)gpu_states[index], (char *)(_flows[0][index]->_f.ips.gpu_ips), max_pkt_num_per_flow, partition,stream);
+
 
 
                 //cudaEventRecord(event_stop, 0);
@@ -795,12 +798,14 @@ public:
             }
 
 
+
             for(unsigned int i = partition; i < _flows[index].size(); i++){
                 _flows[index][i]->process_pkts(index);
             }
             if(partition==0){
                 _flows[index].clear();
             }
+
 
 
             stoped = steady_clock_type::now();
@@ -1020,7 +1025,7 @@ public:
         });
     }
 public:
-    IPS ips;
+    static IPS* ips;
     batch _batch;
     uint64_t _pkt_counter;
 
@@ -1040,6 +1045,8 @@ my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
 
 }
 
+IPS * forwarder::ips = nullptr;
+
 int main(int ac, char** av) {
     app_template app;
     sd_async_flow_manager<tcp_ppr> m1;
@@ -1049,6 +1056,7 @@ int main(int ac, char** av) {
 
     return app.run_deprecated(ac, av, [&app] {
         auto& opts = app.configuration();
+        forwarder::ips=new IPS;
 
         port_manager::get().add_port(opts, 0, port_type::standard).then([&opts]{
             return port_manager::get().add_port(opts, 1, port_type::fdir);

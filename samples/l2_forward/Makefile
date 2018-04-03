@@ -49,22 +49,23 @@ CUDA_INC_DIR= /usr/local/cuda-8.0/samples/common/inc /usr/local/cuda-8.0/include
 
 
 CXXFLAGS += -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
-	    -isystem $(DPDK_INC_DIR) -isystem /usr/local/cuda-8.0/samples/common/inc -isystem /usr/local/cuda-8.0/include $(SEASTAR_FLAGS)
+	    -isystem $(DPDK_INC_DIR) -isystem /usr/local/cuda-8.0/samples/common/inc -isystem /usr/local/cuda-8.0/include
+
 	    
 CUDAFLAGS += -I/usr/local/cuda-8.0/samples/common/inc -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60 -rdc=true -I/usr/local/cuda-8.0/include -I$(DPDK_INC_DIR)
 
 CUDA_LINK_FLAGS += -dlink -I/usr/local/cuda-8.0/samples/common/inc -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60  -I/usr/local/cuda-8.0/include -I$(DPDK_INC_DIR)
-LDFLAGS += $(SEASTAR_FLAGS) -L/usr/local/cuda-8.0/lib64
+LDFLAGS += -L/usr/local/cuda-8.0/lib64 -L$(DPDK_LIB_DIR)
 
-LIBS +=-lcudart -lcudadevrt -lcublas_device
+LIBS +=-lcudart -lcudadevrt -lcublas_device -ldpdk -ldl -pthread -lrte_pmd_e1000 -lrte_pmd_i40e -lrte_pmd_ixgbe
 
 ALL_SRCS = $(wildcard ./*.cc ) 
                       
-HEADERS =  $(wildcard ./*.h )
+HEADERS =  $(wildcard ./*.h ../*.h)
 
-CU_HEADERS =  $(wildcard ./*.cuh )
+CU_HEADERS =  $(wildcard ./*.cuh ../*.cuh )
 
-CU_SRCS = $(wildcard ./*.cu)
+CU_SRCS = $(wildcard ./*.cu ../*.cu)
 
 
 SRCS =  $(ALL_SRCS)
@@ -78,13 +79,14 @@ CU_LINK_OBJS = $(CU_SRCS:.cu=.l)
 #SAMPLES_SRCS += $(wildcard samples/*/*.cc)
 #SAMPLES_OBJS = $(SAMPLES_SRCS:.cc=.o)
 
-PLAYGROUND_EXEC = playground
-PLAYGROUND_OBJS = playground.o $(CU_OBJS) $(CU_LINK_OBJS)
+
+L2_FORWARD_EXEC = l2_forward
+L2_FORWARD_OBJS = l2_forward.o $(CU_OBJS) $(CU_LINK_OBJS)
 
 
 .PHONY: all clean tests protobuf
 
-all: $(CU_OBJS) $(CU_LINK_OBJS) $(OBJS) $(PLAYGROUND_EXEC) 
+all: $(CU_OBJS) $(CU_LINK_OBJS) $(OBJS) $(L2_FORWARD_EXEC)
 
 clean:
 	rm -rf $(EXEC) .deps/*.d .deps/*/*.d *_test */*_test *_bench */*_bench \
@@ -143,13 +145,13 @@ $(eval $(call BUILD, \
 	$$(AR) rcs $$@ $$^))
 
 # The rule for linking samples are added below here.
-	
+
+
 $(eval $(call BUILD, \
 	LD, \
-	$$(PLAYGROUND_EXEC), \
-	$$(PLAYGROUND_OBJS), \
+	$$(L2_FORWARD_EXEC), \
+	$$(L2_FORWARD_OBJS), \
 	$$(CXX) -o $$@ $$^ $$(LDFLAGS) $$(LIBS)))
-
 
 
 %.d: ;
