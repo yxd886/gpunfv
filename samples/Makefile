@@ -81,13 +81,10 @@ CU_LINK_OBJS = $(CU_SRCS:.cu=.l)
 PLAYGROUND_EXEC = playground
 PLAYGROUND_OBJS = playground.o $(CU_OBJS) $(CU_LINK_OBJS)
 
-L2_FORWARD_EXEC = l2_forward
-L2_FORWARD_OBJS = l2_forward.o $(CU_OBJS) $(CU_LINK_OBJS)
-
 
 .PHONY: all clean tests protobuf
 
-all: $(CU_OBJS) $(CU_LINK_OBJS) $(OBJS) $(PLAYGROUND_EXEC) $(L2_FORWARD_EXEC)
+all: $(CU_OBJS) $(CU_LINK_OBJS) $(OBJS) $(PLAYGROUND_EXEC) 
 
 clean:
 	rm -rf $(EXEC) .deps/*.d .deps/*/*.d *_test */*_test *_bench */*_bench \
@@ -153,11 +150,6 @@ $(eval $(call BUILD, \
 	$$(PLAYGROUND_OBJS), \
 	$$(CXX) -o $$@ $$^ $$(LDFLAGS) $$(LIBS)))
 
-$(eval $(call BUILD, \
-	LD, \
-	$$(L2_FORWARD_EXEC), \
-	$$(L2_FORWARD_OBJS), \
-	$$(CXX) -o $$@ $$^ $$(LDFLAGS) $$(LIBS)))
 
 
 %.d: ;
