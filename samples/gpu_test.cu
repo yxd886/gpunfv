@@ -117,14 +117,13 @@ __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_i
 	if(id >= nflows) return ;
 
 	// Get start address
-	//printf("sizeof bool: %d\n",sizeof(bool));
 	char**pkts =pkt_batch + id * flowDim;
 	//struct ips_flow_state* state_ptr=(struct ips_flow_state*)state_batch;
 
 	//printf("pkt_batch = %x\n", pkt_batch);
 
 	
-	//printf("flowDim = %d, id = %d, pkts = %p, pkts[0] = %p\n", flowDim, id, pkts, pkts[0]);
+	printf("flowDim = %d, id = %d\n", flowDim, id);
 	// For every packet for this flow in this batch
 	int i=0;
 	for(i= 0; i < flowDim; i++) {
@@ -138,7 +137,7 @@ __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_i
 
 //	printf("id = %d, end\n", id);	
 	}
-	printf(" *%d* ", i);
+	//printf(" *%d* ", i);
 	//printf("GPU: gpu_states[%d].dfa_id: %d\n",id,state_ptr[id]._dfa_id);
 }
 
