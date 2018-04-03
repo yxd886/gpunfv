@@ -862,7 +862,7 @@ public:
             }
             std::cout<<std::endl;
 
-            for(unsigned int i=_flows[index].size();i>=0;i--){
+            for(int i=_flows[index].size();i>=0;i--){
                 float cpu_time=0;
                 float gpu_time=0;
                 if(i>0)
