@@ -996,7 +996,7 @@ public:
             unsigned ip_len = ntohs(ip_h->tot_len);
             unsigned iphdr_len = ip_h->ihl * 4;
             unsigned pkt_len = pkt.len() - sizeof(ether_hdr);
-            auto frag= ntohs(h->frag_off);
+            auto frag= ntohs(ip_h->frag_off);
             auto offset = frag<<3;
             auto mf = frag & (1 << 13);
             if (pkt_len > ip_len) {
@@ -1008,7 +1008,7 @@ public:
                 drop_pkt(std::move(pkt));
             }
 
-            if(h->protocol == static_cast<uint8_t>(ip_protocol_num::udp)) {
+            if(ip_h->protocol == static_cast<uint8_t>(ip_protocol_num::udp)) {
                 auto udp_h =
                         pkt.get_header<udp_hdr>(
                                 sizeof(ether_hdr)+iphdr_len);
@@ -1016,8 +1016,8 @@ public:
                     drop_pkt(std::move(pkt));
                 }
 
-                flow_key fk{ntohl(ip_h->dst_ip),
-                                        ntohl(ip_h->src_ip),
+                flow_key fk{ntohl(ip_h->daddr),
+                                        ntohl(ip_h->saddr),
                                         ntohs(udp_h->dst_port),
                                         ntohs(udp_h->src_port)};
                 auto afi = _flow_table.find(fk);
@@ -1049,8 +1049,8 @@ public:
                     drop_pkt(std::move(pkt));
                 }
 
-                flow_key fk{ntohl(ip_h->dst_ip),
-                                        ntohl(ip_h->src_ip),
+                flow_key fk{ntohl(ip_h->daddr),
+                                        ntohl(ip_h->saddr),
                                         ntohs(tcp_h->dst_port),
                                         ntohs(tcp_h->src_port)};
                 auto afi = _flow_table.find(fk);
