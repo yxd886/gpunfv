@@ -90,6 +90,7 @@
 #include <thread>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 
 #define APP_LOOKUP_EXACT_MATCH          0
 #define APP_LOOKUP_LPM                  1
@@ -977,8 +978,8 @@ public:
             drop_pkt(std::move(pkt));
         }
 
-        if(ntoh(eth_h->eth_proto) == static_cast<uint16_t>(eth_protocol_num::ipv4)) {
-            auto ip_h = pkt.get_header<ip_hdr>(sizeof(ether_hdr));
+        if(ntohs(eth_h->ether_type) == static_cast<uint16_t>(eth_protocol_num::ipv4)) {
+            auto ip_h = pkt.get_header<iphdr>(sizeof(ether_hdr));
             if(!ip_h) {
                 drop_pkt(std::move(pkt));
             }
@@ -986,24 +987,26 @@ public:
 
             // The following code blocks checks and regulates
             // incoming IP packets.
-            auto h = ntoh(*ip_h);
-            unsigned ip_len = h.len;
-            unsigned ip_hdr_len = h.ihl * 4;
+
+            unsigned ip_len = ntohs(ip_h->tot_len);
+            unsigned iphdr_len = ip_h->ihl * 4;
             unsigned pkt_len = pkt.len() - sizeof(ether_hdr);
-            auto offset = h.offset();
+            auto frag= ntohs(h->frag_off);
+            auto offset = frag<<3;
+            auto mf = frag & (1 << 13);
             if (pkt_len > ip_len) {
                 pkt.trim_back(pkt_len - ip_len);
             } else if (pkt_len < ip_len) {
                 drop_pkt(std::move(pkt));
             }
-            if (h.mf() == true || offset != 0) {
+            if (mf == true || offset != 0) {
                 drop_pkt(std::move(pkt));
             }
 
-            if(h.ip_proto == static_cast<uint8_t>(ip_protocol_num::udp)) {
+            if(h->protocol == static_cast<uint8_t>(ip_protocol_num::udp)) {
                 auto udp_h =
                         pkt.get_header<udp_hdr>(
-                                sizeof(ether_hdr)+ip_hdr_len);
+                                sizeof(ether_hdr)+iphdr_len);
                 if(!udp_h) {
                     drop_pkt(std::move(pkt));
                 }
@@ -1028,10 +1031,10 @@ public:
 
                 return;
             }
-            else if(h.ip_proto == static_cast<uint8_t>(ip_protocol_num::tcp)) {
+            else if(h.protocol == static_cast<uint8_t>(ip_protocol_num::tcp)) {
                 auto tcp_h =
                         pkt.get_header<tcp_hdr>(
-                                sizeof(ether_hdr)+ip_hdr_len);
+                                sizeof(ether_hdr)+iphdr_len);
                 if(!tcp_h) {
                     drop_pkt(std::move(pkt));
                 }
@@ -1476,7 +1479,7 @@ l2fwd_main_loop(void)
 
     lcore_id = rte_lcore_id();
     qconf = &lcore_conf[lcore_id];
-    forwarder flow_forwarder(qconf->rx_queue_list[0].port_id,qconf->rx_queue_list[0].queue_id);
+    forwarder flow_forwarder(qconf->rx_queue_list[0].port_id,qconf->rx_queue_list[0].queue_id,lcore_id);
     prev_tsc = rte_rdtsc();
     timer_tsc=0;
 
