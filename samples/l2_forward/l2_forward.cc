@@ -1531,6 +1531,30 @@ struct flow_key{
 
     	}
     };
+struct HashFunc
+{
+    std::size_t operator()(const flow_key &key) const
+    {
+        using std::size_t;
+        using std::hash;
+
+        return ((hash<int>()(key.saddr)
+            ^ (hash<int>()(key.daddr) << 1)) >> 1)
+            ^ (hash<int>()(key.sport) << 1)
+			^(hash<int>()(key.dport) << 1);
+    }
+};
+
+struct EqualKey
+{
+    bool operator () (const flow_key &lhs, const flow_key &rhs) const
+    {
+        return lhs.saddr  == rhs.saddr
+            && lhs.daddr == rhs.daddr
+            && lhs.sport  == rhs.sport
+			&& lhs.dport == rhs.dport;
+    }
+};
 public:
     static IPS* ips;
     batch _batch;
@@ -1539,7 +1563,7 @@ public:
     uint16_t _queue_id;
     uint16_t _lcore_id;
     std::vector<rte_mbuf*> _send_buffer;
-    std::unordered_map<flow_key,flow_operator*> _flow_table;
+    std::unordered_map<flow_key,flow_operator*,HashFunc,EqualKey> _flow_table;
 
 };
 
