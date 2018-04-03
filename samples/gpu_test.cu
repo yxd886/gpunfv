@@ -118,13 +118,13 @@ __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_i
 	char**pkts =pkt_batch + id * flowDim;
 	int i=0;
 	for(i= 0; i < flowDim; i++) {
-//printf("-------------1---------------\n");	
+printf("-------------1---------------\n");	
 		if(pkts[i] == NULL) break;
  		struct ips_flow_state state;
  		memcpy(&state,(struct ips_flow_state *)state_batch[id],sizeof(ips_flow_state));
-//printf("-------------2---------------\n");	
+printf("-------------2---------------\n");	
 		ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);		memcpy((struct ips_flow_state *)state_batch[id],&state,sizeof(ips_flow_state));
-//printf("-------------3---------------\n");	
+printf("-------------3---------------\n");	
 	}
 
 }
