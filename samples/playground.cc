@@ -604,8 +604,6 @@ public:
         char** gpu_states[2];
         //char** dev_gpu_pkts;
         //char** dev_gpu_states;
-        bool need_process;
-        bool processing;
         uint64_t current_idx;
         cudaStream_t stream;
         cuda_mem_allocator _cuda_mem_allocator;
@@ -615,7 +613,7 @@ public:
 
 
 
-        batch():need_process(false),processing(false),current_idx(0){
+        batch():current_idx(0){
         	create_stream(&stream);
 
 
@@ -690,9 +688,9 @@ public:
             if(partition>0){
 
                 int max_pkt_num_per_flow=_flows[index][partition-1]->packets[index].size();
-                int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char*);
-                if(PRINT_TIME)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(char*)<<std::endl;
-                int ngpu_states = partition * sizeof(char*);
+                //int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char*);
+                //if(PRINT_TIME)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(char*)<<std::endl;
+
 
 
                 // Clear and map gpu_pkts and gpu_states
