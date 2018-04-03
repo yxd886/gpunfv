@@ -74,6 +74,10 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include <linux/udp.h>
+#include <linux/ip.h>
+#include <linux/tcp.h>
+
 #include <cmdline_parse.h>
 #include <cmdline_parse_etheraddr.h>
 
@@ -966,7 +970,7 @@ public:
 
     const uint8_t eth_hdr_len = 14;
     const uint8_t tcp_hdr_len_min = 20;
-    const uint8_t ipv4_hdr_len_min = 20;
+    const uint8_t iphdr_len_min = 20;
     const uint8_t ipv6_hdr_len_min = 40;
     const uint16_t ip_packet_len_max = 65535;
 
