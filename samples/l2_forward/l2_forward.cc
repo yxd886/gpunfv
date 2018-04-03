@@ -1009,7 +1009,7 @@ public:
         int pre_partition;
 
 
-        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),need_process(false),processing(false),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0){
+        batch():need_process(false),processing(false),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0){
             create_stream(&stream);
 
             gpu_pkts[0] = (char**)malloc(GPU_BATCH_SIZE*4*sizeof(char*));
