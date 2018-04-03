@@ -1023,7 +1023,7 @@ public:
                 auto afi = _flow_table.find(fk);
                 if(afi == _flow_table.end()) {
 
-                    auto impl_lw_ptr =  new flow_operator(*this, *(_batch._cuda_mem_allocator.state_alloc()));
+                    auto impl_lw_ptr =  new flow_operator(*this);
                     auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
                     assert(succeed);
                     impl_lw_ptr->run_ips(std::move(pkt));
@@ -1036,7 +1036,7 @@ public:
 
                 return;
             }
-            else if(h.protocol == static_cast<uint8_t>(ip_protocol_num::tcp)) {
+            else if(ip_h->protocol == static_cast<uint8_t>(ip_protocol_num::tcp)) {
                 auto tcp_h =
                         pkt.get_header<tcp_hdr>(
                                 sizeof(ether_hdr)+iphdr_len);
@@ -1224,8 +1224,8 @@ public:
                     //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
 
-                       // gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0));
-                        rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0)),_flows[index][i]->packets[index][j].len());
+                       // gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0));
+                        rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0)),_flows[index][i]->packets[index][j].len());
                         //std::cout<<"assign gpu_pkts["<<i<<"]"<<"["<<j<<"]"<<std::endl;
 
                         // Map every packet
@@ -1253,7 +1253,7 @@ public:
                         rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(ips_flow_state));
 
                         for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
                         }
                     }
                     gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
@@ -1334,13 +1334,15 @@ public:
                 //cudaEventRecord(event_start, 0);
 
 
-
+/*
                 if(PRINT_TIME){
                     std::thread th = std::thread(compute_gpu_processing_time,(char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips->gpu_ips), max_pkt_num_per_flow, partition,stream);
                     th.detach();
                 }else{
                     gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips->gpu_ips), max_pkt_num_per_flow, partition,stream);
                 }
+*/
+                gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, (char *)(_flows[0][index]->_f.ips->gpu_ips), max_pkt_num_per_flow, partition,stream);
 
 
                 //cudaEventRecord(event_stop, 0);
@@ -1367,7 +1369,7 @@ public:
                         rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(ips_flow_state));
 
                         for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
                         }
                     }
                     gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
