@@ -85,7 +85,7 @@
 #include <helper_cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_profiler_api.h>
-#include "playground.hh"
+#include "/home/net/gpunfv/samples/playground.hh"
 #include <chrono>
 #include <thread>
 #include <iostream>
