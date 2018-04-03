@@ -126,7 +126,8 @@ __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_i
 	
 	//printf("flowDim = %d, id = %d, pkts = %p, pkts[0] = %p\n", flowDim, id, pkts, pkts[0]);
 	// For every packet for this flow in this batch
-	for(int i = 0; i < flowDim; i++) {
+	int i=0;
+	for(i= 0; i < flowDim; i++) {
 	//printf("id = %d, i = %d, pkts[i] = %p\n", id, i, pkts[i]);	
 		if(pkts[i] == NULL) break;
  //printf("gpu_nf_logic(): state->_dfa_id = %d\n", ((struct ips_flow_state *)state_batch[id])->_dfa_id);
@@ -137,6 +138,7 @@ __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_i
 
 //	printf("id = %d, end\n", id);	
 	}
+	printf(" *%d* ", i);
 	//printf("GPU: gpu_states[%d].dfa_id: %d\n",id,state_ptr[id]._dfa_id);
 }
 
