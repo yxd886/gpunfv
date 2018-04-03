@@ -585,7 +585,7 @@ public:
 
     static bool CompLess(const flow_operator* lhs, const flow_operator* rhs)
     {
-        return lhs->packets[!lhs->_f._batch.current_idx].size() < rhs->packets[!lhs->_f._batch.current_idx].size();
+        return lhs->packets[lhs->_f._batch.current_idx].size() < rhs->packets[lhs->_f._batch.current_idx].size();
     }
     class batch {
     public:
