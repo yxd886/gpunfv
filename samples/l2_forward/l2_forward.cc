@@ -78,8 +78,8 @@
 #include <cmdline_parse_etheraddr.h>
 
 
-#include "nf/aho-corasick/fpp.h"
-#include "nf/aho-corasick/aho.h"
+#include "/home/net/gpunfv/seastar/nf/aho-corasick/fpp.h"
+#include "/home/net/gpunfv/seastar/nf/aho-corasick/aho.h"
 
 #include <helper_functions.h>
 #include <helper_cuda.h>
