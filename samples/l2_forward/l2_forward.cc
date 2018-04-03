@@ -492,7 +492,7 @@ public:
 
 
 	cuda_mem_allocator(){
-		gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*GPU_BATCH_SIZE*4);
+		gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*GPU_BATCH_SIZE*40);
 		gpu_malloc((void**)(&dev_state_batch_ptr),sizeof(ips_flow_state)*MAX_FLOW_NUM);
 
 
@@ -501,7 +501,7 @@ public:
 	~cuda_mem_allocator(){}
 
 	PKT* gpu_pkt_batch_alloc(int size){
-		if(size>GPU_BATCH_SIZE*4){
+		if(size>GPU_BATCH_SIZE*40){
 			return nullptr;
 		}else{
 			return dev_pkt_batch_ptr;
