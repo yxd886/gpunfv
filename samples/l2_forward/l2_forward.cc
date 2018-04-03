@@ -622,7 +622,7 @@ public:
 class forwarder {
 
 public:
-    forwarder(uint16_t port_id, uint16_t queue_id) :_pkt_counter(0),_port_id(port_id),_queue_id(queue_id){
+    forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id) :_pkt_counter(0),_port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id){
 
     }
 
@@ -953,6 +953,124 @@ public:
 
     };
 
+
+    enum class ip_protocol_num : uint8_t {
+        icmp = 1, tcp = 6, udp = 17, unused = 255
+    };
+
+    enum class eth_protocol_num : uint16_t {
+        ipv4 = 0x0800, arp = 0x0806, ipv6 = 0x86dd
+    };
+
+    const uint8_t eth_hdr_len = 14;
+    const uint8_t tcp_hdr_len_min = 20;
+    const uint8_t ipv4_hdr_len_min = 20;
+    const uint8_t ipv6_hdr_len_min = 40;
+    const uint16_t ip_packet_len_max = 65535;
+
+
+
+    void dispath_flow(rte_packet pkt){
+
+        auto eth_h = pkt.get_header<ether_hdr>(0);
+        if(!eth_h) {
+            drop_pkt(std::move(pkt));
+        }
+
+        if(ntoh(eth_h->eth_proto) == static_cast<uint16_t>(eth_protocol_num::ipv4)) {
+            auto ip_h = pkt.get_header<ip_hdr>(sizeof(ether_hdr));
+            if(!ip_h) {
+                drop_pkt(std::move(pkt));
+            }
+
+
+            // The following code blocks checks and regulates
+            // incoming IP packets.
+            auto h = ntoh(*ip_h);
+            unsigned ip_len = h.len;
+            unsigned ip_hdr_len = h.ihl * 4;
+            unsigned pkt_len = pkt.len() - sizeof(ether_hdr);
+            auto offset = h.offset();
+            if (pkt_len > ip_len) {
+                pkt.trim_back(pkt_len - ip_len);
+            } else if (pkt_len < ip_len) {
+                drop_pkt(std::move(pkt));
+            }
+            if (h.mf() == true || offset != 0) {
+                drop_pkt(std::move(pkt));
+            }
+
+            if(h.ip_proto == static_cast<uint8_t>(ip_protocol_num::udp)) {
+                auto udp_h =
+                        pkt.get_header<udp_hdr>(
+                                sizeof(ether_hdr)+ip_hdr_len);
+                if(!udp_h) {
+                    drop_pkt(std::move(pkt));
+                }
+
+                flow_key fk{ntoh(ip_h->dst_ip),
+                                        ntoh(ip_h->src_ip),
+                                        ntoh(udp_h->dst_port),
+                                        ntoh(udp_h->src_port)};
+                auto afi = _flow_table.find(fk);
+                if(afi == _flow_table.end()) {
+
+                    auto impl_lw_ptr =  new flow_operator(*this, *(_batch._cuda_mem_allocator.state_alloc()));
+                    auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
+                    assert(succeed);
+                    impl_lw_ptr->run_ips(std::move(pkt));
+
+
+                }
+                else {
+                    afi->second->run_ips(std::move(pkt));
+                }
+
+                return;
+            }
+            else if(h.ip_proto == static_cast<uint8_t>(ip_protocol_num::tcp)) {
+                auto tcp_h =
+                        pkt.get_header<tcp_hdr>(
+                                sizeof(ether_hdr)+ip_hdr_len);
+                if(!tcp_h) {
+                    drop_pkt(std::move(pkt));
+                }
+
+                auto data_offset = tcp_h->data_off >> 4;
+                if (size_t(data_offset * 4) < 20) {
+                    drop_pkt(std::move(pkt));
+                }
+
+                flow_key fk{ntoh(ip_h->dst_ip),
+                                        ntoh(ip_h->src_ip),
+                                        ntoh(tcp_h->dst_port),
+                                        ntoh(tcp_h->src_port)};
+                auto afi = _flow_table.find(fk);
+                if(afi == _flow_table.end()) {
+
+                    auto impl_lw_ptr =  new flow_operator(*this, *(_batch._cuda_mem_allocator.state_alloc()));
+                    auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
+                    assert(succeed);
+                    impl_lw_ptr->run_ips(std::move(pkt));
+
+
+                }
+                else {
+                    afi->second->run_ips(std::move(pkt));
+                }
+
+                return;
+            }
+            else{
+                drop_pkt(std::move(pkt));
+            }
+        }
+        else{
+            drop_pkt(std::move(pkt));
+        }
+
+    }
+
     void send_pkt(rte_packet pkt){
 
         _send_buffer.push_back(pkt.get_packet());
@@ -960,6 +1078,10 @@ public:
         if(_send_buffer.size()==MAX_PKT_BURST){
             rte_mbuf** buf_addr=&_send_buffer[0];
             int ret=rte_eth_tx_burst(_port_id,_queue_id,buf_addr,MAX_PKT_BURST);
+
+            statistics[_port_id][_lcore_id].tx+=ret;
+            statistics[_port_id][_lcore_id].dropped+=MAX_PKT_BURST-ret;
+
             if(ret<MAX_PKT_BURST){
                 for(int i=ret;i<MAX_PKT_BURST;i++){
                     rte_pktmbuf_free(buf_addr[i]);
@@ -1268,14 +1390,18 @@ public:
 
     };
 
+struct flow_key{
 
+    };
 public:
     static IPS* ips;
     batch _batch;
     uint64_t _pkt_counter;
     uint16_t _port_id;
     uint16_t _queue_id;
+    uint16_t _lcore_id;
     std::vector<rte_mbuf*> _send_buffer;
+    std::unordered_map<flow_key,flow_operator*> _flow_table;
 
 };
 
@@ -1347,8 +1473,10 @@ l2fwd_main_loop(void)
     struct lcore_conf *qconf;
     uint64_t cur_tsc,diff_tsc,prev_tsc,timer_tsc;
 
+
     lcore_id = rte_lcore_id();
     qconf = &lcore_conf[lcore_id];
+    forwarder flow_forwarder(qconf->rx_queue_list[0].port_id,qconf->rx_queue_list[0].queue_id);
     prev_tsc = rte_rdtsc();
     timer_tsc=0;
 
@@ -1402,9 +1530,12 @@ l2fwd_main_loop(void)
 
             statistics[portid][lcore_id].rx+=nb_rx;
 
+            for(int i=0;i<nb_rx;i++){
+                flow_forwarder.dispath_flow(std::move(rte_packet(pkts_burst[i])));
+            }
 
 
-            send = rte_eth_tx_burst(portid,portid,pkts_burst,nb_rx);
+          /*  send = rte_eth_tx_burst(portid,portid,pkts_burst,nb_rx);
             //printf("send %u pkts\n",send);
             statistics[portid][lcore_id].tx+=send;
             statistics[portid][lcore_id].dropped+=nb_rx-send;
@@ -1413,7 +1544,7 @@ l2fwd_main_loop(void)
                     rte_pktmbuf_free(pkts_burst[i]);
                 }
 
-            }
+            }*/
         }
     }
 }
