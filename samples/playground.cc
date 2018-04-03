@@ -727,8 +727,8 @@ public:
 
 
                 // Clear and map gpu_pkts and gpu_states
-                memset(gpu_pkts[index], 0, GPU_BATCH_SIZE*4);
-                memset(gpu_states[index], 0, MAX_FLOW_NUM);
+                memset(gpu_pkts[index], 0, GPU_BATCH_SIZE*4*sizeof(char*));
+                memset(gpu_states[index], 0, MAX_FLOW_NUM*sizeof(char*));
                 //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
 
 
