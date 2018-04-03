@@ -90,6 +90,7 @@
 #include <thread>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 
 #define APP_LOOKUP_EXACT_MATCH          0
 #define APP_LOOKUP_LPM                  1
@@ -460,7 +461,7 @@ struct ips_flow_state{
 
 };
 
-
+/*
 void compute_gpu_processing_time(char *pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows,cudaStream_t stream){
     std::chrono::time_point<std::chrono::steady_clock> time_start;
     std::chrono::time_point<std::chrono::steady_clock> time_stop;
@@ -472,7 +473,7 @@ void compute_gpu_processing_time(char *pkt_batch, char *state_batch, char *extra
     if(PRINT_TIME)  printf("GPU_Processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
     return;
 }
-
+*/
 
 
 struct PKT{
@@ -480,38 +481,40 @@ struct PKT{
     char pkt[MAX_PKT_SIZE];
 };
 
+
 class cuda_mem_allocator{
 public:
 
 
 
-    cuda_mem_allocator(){
-        gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*GPU_BATCH_SIZE*4);
-        gpu_malloc((void**)(&dev_state_batch_ptr),sizeof(ips_flow_state)*MAX_FLOW_NUM);
-
-
-    }
-    ~cuda_mem_allocator(){}
-
-    PKT* gpu_pkt_batch_alloc(int size){
-        if(size>GPU_BATCH_SIZE*4){
-            return nullptr;
-        }else{
-            return dev_pkt_batch_ptr;
-        }
-    }
-    ips_flow_state* gpu_state_batch_alloc(int size){
-        if(size>MAX_FLOW_NUM){
-            return nullptr;
-        }else{
-            return dev_state_batch_ptr;
-        }
-    }
+	cuda_mem_allocator(){
+		gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*GPU_BATCH_SIZE*4);
+		gpu_malloc((void**)(&dev_state_batch_ptr),sizeof(ips_flow_state)*MAX_FLOW_NUM);
 
 
 
-    PKT* dev_pkt_batch_ptr;
-    ips_flow_state* dev_state_batch_ptr;
+	}
+	~cuda_mem_allocator(){}
+
+	PKT* gpu_pkt_batch_alloc(int size){
+		if(size>GPU_BATCH_SIZE*4){
+			return nullptr;
+		}else{
+			return dev_pkt_batch_ptr;
+		}
+	}
+	ips_flow_state* gpu_state_batch_alloc(int size){
+		if(size>MAX_FLOW_NUM){
+			return nullptr;
+		}else{
+			return dev_state_batch_ptr;
+		}
+	}
+
+
+
+	PKT* dev_pkt_batch_ptr;
+	ips_flow_state* dev_state_batch_ptr;
 
 };
 
@@ -622,7 +625,7 @@ public:
 class forwarder {
 
 public:
-    forwarder(uint16_t port_id, uint16_t queue_id) :_pkt_counter(0),_port_id(port_id),_queue_id(queue_id){
+    forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id) :_pkt_counter(0),_port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id){
 
     }
 
@@ -650,7 +653,7 @@ public:
 
 
         flow_operator(forwarder& f):
-            _f(f)
+            _f(f)         
             ,_initialized(false){
 
             init_automataState(_fs);
@@ -952,6 +955,126 @@ public:
 
     };
 
+
+    enum class ip_protocol_num : uint8_t {
+        icmp = 1, tcp = 6, udp = 17, unused = 255
+    };
+
+    enum class eth_protocol_num : uint16_t {
+        ipv4 = 0x0800, arp = 0x0806, ipv6 = 0x86dd
+    };
+
+    const uint8_t eth_hdr_len = 14;
+    const uint8_t tcp_hdr_len_min = 20;
+    const uint8_t ipv4_hdr_len_min = 20;
+    const uint8_t ipv6_hdr_len_min = 40;
+    const uint16_t ip_packet_len_max = 65535;
+
+
+
+    void dispath_flow(rte_packet pkt){
+
+        auto eth_h = pkt.get_header<ether_hdr>(0);
+        if(!eth_h) {
+            drop_pkt(std::move(pkt));
+        }
+
+        if(ntohs(eth_h->ether_type) == static_cast<uint16_t>(eth_protocol_num::ipv4)) {
+            auto ip_h = pkt.get_header<iphdr>(sizeof(ether_hdr));
+            if(!ip_h) {
+                drop_pkt(std::move(pkt));
+            }
+
+
+            // The following code blocks checks and regulates
+            // incoming IP packets.
+
+            unsigned ip_len = ntohs(ip_h->tot_len);
+            unsigned iphdr_len = ip_h->ihl * 4;
+            unsigned pkt_len = pkt.len() - sizeof(ether_hdr);
+            auto frag= ntohs(h->frag_off);
+            auto offset = frag<<3;
+            auto mf = frag & (1 << 13);
+            if (pkt_len > ip_len) {
+                pkt.trim_back(pkt_len - ip_len);
+            } else if (pkt_len < ip_len) {
+                drop_pkt(std::move(pkt));
+            }
+            if (mf == true || offset != 0) {
+                drop_pkt(std::move(pkt));
+            }
+
+            if(h->protocol == static_cast<uint8_t>(ip_protocol_num::udp)) {
+                auto udp_h =
+                        pkt.get_header<udp_hdr>(
+                                sizeof(ether_hdr)+iphdr_len);
+                if(!udp_h) {
+                    drop_pkt(std::move(pkt));
+                }
+
+                flow_key fk{ntoh(ip_h->dst_ip),
+                                        ntoh(ip_h->src_ip),
+                                        ntoh(udp_h->dst_port),
+                                        ntoh(udp_h->src_port)};
+                auto afi = _flow_table.find(fk);
+                if(afi == _flow_table.end()) {
+
+                    auto impl_lw_ptr =  new flow_operator(*this, *(_batch._cuda_mem_allocator.state_alloc()));
+                    auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
+                    assert(succeed);
+                    impl_lw_ptr->run_ips(std::move(pkt));
+
+
+                }
+                else {
+                    afi->second->run_ips(std::move(pkt));
+                }
+
+                return;
+            }
+            else if(h.protocol == static_cast<uint8_t>(ip_protocol_num::tcp)) {
+                auto tcp_h =
+                        pkt.get_header<tcp_hdr>(
+                                sizeof(ether_hdr)+iphdr_len);
+                if(!tcp_h) {
+                    drop_pkt(std::move(pkt));
+                }
+
+                auto data_offset = tcp_h->data_off >> 4;
+                if (size_t(data_offset * 4) < 20) {
+                    drop_pkt(std::move(pkt));
+                }
+
+                flow_key fk{ntoh(ip_h->dst_ip),
+                                        ntoh(ip_h->src_ip),
+                                        ntoh(tcp_h->dst_port),
+                                        ntoh(tcp_h->src_port)};
+                auto afi = _flow_table.find(fk);
+                if(afi == _flow_table.end()) {
+
+                    auto impl_lw_ptr =  new flow_operator(*this, *(_batch._cuda_mem_allocator.state_alloc()));
+                    auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
+                    assert(succeed);
+                    impl_lw_ptr->run_ips(std::move(pkt));
+
+
+                }
+                else {
+                    afi->second->run_ips(std::move(pkt));
+                }
+
+                return;
+            }
+            else{
+                drop_pkt(std::move(pkt));
+            }
+        }
+        else{
+            drop_pkt(std::move(pkt));
+        }
+
+    }
+
     void send_pkt(rte_packet pkt){
 
         _send_buffer.push_back(pkt.get_packet());
@@ -959,6 +1082,10 @@ public:
         if(_send_buffer.size()==MAX_PKT_BURST){
             rte_mbuf** buf_addr=&_send_buffer[0];
             int ret=rte_eth_tx_burst(_port_id,_queue_id,buf_addr,MAX_PKT_BURST);
+
+            statistics[_port_id][_lcore_id].tx+=ret;
+            statistics[_port_id][_lcore_id].dropped+=MAX_PKT_BURST-ret;
+
             if(ret<MAX_PKT_BURST){
                 for(int i=ret;i<MAX_PKT_BURST;i++){
                     rte_pktmbuf_free(buf_addr[i]);
@@ -1005,17 +1132,17 @@ public:
         cudaStream_t stream;
         cuda_mem_allocator _cuda_mem_allocator;
         int pre_ngpu_pkts;
-        int pre_ngpu_states;
-        int pre_max_pkt_num_per_flow;
-        int pre_partition;
+		int pre_ngpu_states;
+		int pre_max_pkt_num_per_flow;
+		int pre_partition;
 
 
         batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),need_process(false),processing(false),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0){
-            create_stream(&stream);
+        	create_stream(&stream);
 
         }
         ~batch(){
-            destory_stream(stream);
+        	destory_stream(stream);
 
         }
 
@@ -1093,8 +1220,8 @@ public:
                     //std::cout<<"assign gpu_states["<<i<<"]"<<std::endl;
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
 
-                       // gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0));
-                        rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0)),_flows[index][i]->packets[index][j].len());
+                       // gpu_pkts[i*max_pkt_num_per_flow+j]=reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0));
+                        rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<net::eth_hdr>(0)),_flows[index][i]->packets[index][j].len());
                         //std::cout<<"assign gpu_pkts["<<i<<"]"<<"["<<j<<"]"<<std::endl;
 
                         // Map every packet
@@ -1107,7 +1234,7 @@ public:
                 if(_flows[!index].empty()==false){
 
 
-                    started = steady_clock_type::now();
+                	started = steady_clock_type::now();
                     gpu_sync(stream);
                     stoped = steady_clock_type::now();
                     elapsed = stoped - started;
@@ -1117,12 +1244,12 @@ public:
 
 
                     for(int i = 0; i < pre_partition; i++){
-                        //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
-                        //assert(gpu_states[!index][i]._dfa_id<200);
+                    	//std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
+                    	//assert(gpu_states[!index][i]._dfa_id<200);
                         rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(ips_flow_state));
 
                         for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
                         }
                     }
                     gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
@@ -1167,9 +1294,9 @@ public:
 
 
                 pre_ngpu_pkts=ngpu_pkts;
-                pre_ngpu_states=ngpu_states;
-                pre_max_pkt_num_per_flow=max_pkt_num_per_flow;
-                pre_partition=partition;
+             	pre_ngpu_states=ngpu_states;
+             	pre_max_pkt_num_per_flow=max_pkt_num_per_flow;
+             	pre_partition=partition;
 
                 dev_gpu_pkts=_cuda_mem_allocator.gpu_pkt_batch_alloc(ngpu_pkts/sizeof(PKT));
                 dev_gpu_states=_cuda_mem_allocator.gpu_state_batch_alloc(ngpu_states/sizeof(ips_flow_state));
@@ -1212,11 +1339,18 @@ public:
                 }
 
 
+                //cudaEventRecord(event_stop, 0);
+                //cudaEventSynchronize(event_stop);
+               // cudaEventElapsedTime(&elapsedTime, event_start, event_stop);
+               // printf("CUDA_GPU processing time: %f\n", static_cast<double>(elapsedTime / 1.0));
+                //cudaEventDestroy(event_start);
+                //cudaEventDestroy(event_stop);
+
             }else{
                 if(_flows[!index].empty()==false){
 
 
-                    started = steady_clock_type::now();
+                	started = steady_clock_type::now();
                     gpu_sync(stream);
                     stoped = steady_clock_type::now();
                     elapsed = stoped - started;
@@ -1224,12 +1358,12 @@ public:
                     started = steady_clock_type::now();
 
                     for(int i = 0; i < pre_partition; i++){
-                        //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
-                        //assert(gpu_states[!index][i]._dfa_id<200);
+                    	//std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
+                    	//assert(gpu_states[!index][i]._dfa_id<200);
                         rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(ips_flow_state));
 
                         for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<net::eth_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
                         }
                     }
                     gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
@@ -1260,6 +1394,14 @@ public:
                 }
             }
 
+
+
+            //std::cout<<"   partition:"<<partition<<std::endl;
+
+            //
+            /////////////////////////////////////////////
+
+            //std::cout<<"begin to process_pkts"<<std::endl;
             started = steady_clock_type::now();
 
             for(unsigned int i = partition; i < _flows[index].size(); i++){
@@ -1276,6 +1418,66 @@ public:
             if(PRINT_TIME)printf("CPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
             started = steady_clock_type::now();
 
+            // Wait for GPU process
+           /* if(partition>0){
+                gpu_sync();
+                gpu_stoped = steady_clock_type::now();
+                elapsed = gpu_stoped - gpu_started;
+                printf("GPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+
+                started = steady_clock_type::now();
+
+                // Unmap gpu_pkts and gpu_states
+                gpu_mem_unmap(gpu_pkts);
+                gpu_mem_unmap(gpu_states);
+
+                // Forward GPU packets[current_idx]
+                for(int i = 0; i < partition; i++){
+                    _flows[index][i]->forward_pkts(index);
+                }
+
+
+
+                if(gpu_pkts){
+                    free(gpu_pkts);
+                }
+                if(gpu_states){
+                    free(gpu_states);
+                }
+            }
+            _flows[index].clear();
+            */
+
+            //return make_ready_future<>();
+
+            //std::cout<<"gpu_process_pkts finished"<<std::endl;
+
+          /*  return seastar::do_with(std::vector<flow_operator*>(_flows), [this] (auto& obj) {
+                    // obj is passed by reference to slow_op, and this is fine:
+                _flows.clear();
+                if(gpu_pkts){
+                    free(gpu_pkts);
+                }
+                if(gpu_states){
+                    free(gpu_states);
+                }
+                return seastar::do_with(seastar::semaphore(100), [& obj] (auto& limit) {
+                    return seastar::do_for_each(boost::counting_iterator<int>(0),
+                            boost::counting_iterator<int>((int)obj.size()), [&limit,& obj] (int i) {
+                        std::cout<<"flows_size:"<<obj.size()<<std::endl;
+                        return seastar::get_units(limit, 1).then([i,& obj] (auto units) {
+                            auto key = query_key{obj[i]->_ac.get_flow_key_hash(), obj[i]->_ac.get_flow_key_hash()};
+                            return obj[i]->_f._mc.query(Operation::kSet, mica_key(key),
+                                    mica_value(obj[i]->_fs)).then([](mica_response response){
+                                return make_ready_future<>();
+                            }).finally([units = std::move(units)] {});
+                        });
+                    }).finally([&limit] {
+                        return limit.wait(100);
+                    });
+                });
+            });*/
+
 
 
         }
@@ -1287,7 +1489,7 @@ public:
             float pre_cpu_processing_num=0;
 
 
-            for(unsigned int i=_flows[index].size();i>=0;i--){
+            for(int i=_flows[index].size();i>=0;i--){
                 float cpu_time=0;
                 float gpu_time=0;
                 if(i>0)
@@ -1320,14 +1522,18 @@ public:
 
     };
 
+struct flow_key{
 
+    };
 public:
     static IPS* ips;
     batch _batch;
     uint64_t _pkt_counter;
     uint16_t _port_id;
     uint16_t _queue_id;
+    uint16_t _lcore_id;
     std::vector<rte_mbuf*> _send_buffer;
+    std::unordered_map<flow_key,flow_operator*> _flow_table;
 
 };
 
@@ -1399,8 +1605,10 @@ l2fwd_main_loop(void)
     struct lcore_conf *qconf;
     uint64_t cur_tsc,diff_tsc,prev_tsc,timer_tsc;
 
+
     lcore_id = rte_lcore_id();
     qconf = &lcore_conf[lcore_id];
+    forwarder flow_forwarder(qconf->rx_queue_list[0].port_id,qconf->rx_queue_list[0].queue_id,lcore_id);
     prev_tsc = rte_rdtsc();
     timer_tsc=0;
 
@@ -1454,9 +1662,12 @@ l2fwd_main_loop(void)
 
             statistics[portid][lcore_id].rx+=nb_rx;
 
+            for(int i=0;i<nb_rx;i++){
+                flow_forwarder.dispath_flow(std::move(rte_packet(pkts_burst[i])));
+            }
 
 
-            send = rte_eth_tx_burst(portid,portid,pkts_burst,nb_rx);
+          /*  send = rte_eth_tx_burst(portid,portid,pkts_burst,nb_rx);
             //printf("send %u pkts\n",send);
             statistics[portid][lcore_id].tx+=send;
             statistics[portid][lcore_id].dropped+=nb_rx-send;
@@ -1465,7 +1676,7 @@ l2fwd_main_loop(void)
                     rte_pktmbuf_free(pkts_burst[i]);
                 }
 
-            }
+            }*/
         }
     }
 }
