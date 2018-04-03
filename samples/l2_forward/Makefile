@@ -55,9 +55,9 @@ CXXFLAGS += -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
 CUDAFLAGS += -I/usr/local/cuda-8.0/samples/common/inc -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60 -rdc=true -I/usr/local/cuda-8.0/include -I$(DPDK_INC_DIR)
 
 CUDA_LINK_FLAGS += -dlink -I/usr/local/cuda-8.0/samples/common/inc -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60  -I/usr/local/cuda-8.0/include -I$(DPDK_INC_DIR)
-LDFLAGS += -L/usr/local/cuda-8.0/lib64
+LDFLAGS += -L/usr/local/cuda-8.0/lib64 -L$(DPDK_LIB_DIR)
 
-LIBS +=-lcudart -lcudadevrt -lcublas_device
+LIBS +=-lcudart -lcudadevrt -lcublas_device -ldpdk
 
 ALL_SRCS = $(wildcard ./*.cc ) 
                       
