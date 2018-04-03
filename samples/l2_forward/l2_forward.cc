@@ -1012,10 +1012,10 @@ public:
                     drop_pkt(std::move(pkt));
                 }
 
-                flow_key fk{ntoh(ip_h->dst_ip),
-                                        ntoh(ip_h->src_ip),
-                                        ntoh(udp_h->dst_port),
-                                        ntoh(udp_h->src_port)};
+                flow_key fk{ntohl(ip_h->dst_ip),
+                                        ntohl(ip_h->src_ip),
+                                        ntohs(udp_h->dst_port),
+                                        ntohs(udp_h->src_port)};
                 auto afi = _flow_table.find(fk);
                 if(afi == _flow_table.end()) {
 
@@ -1045,14 +1045,14 @@ public:
                     drop_pkt(std::move(pkt));
                 }
 
-                flow_key fk{ntoh(ip_h->dst_ip),
-                                        ntoh(ip_h->src_ip),
-                                        ntoh(tcp_h->dst_port),
-                                        ntoh(tcp_h->src_port)};
+                flow_key fk{ntohl(ip_h->dst_ip),
+                                        ntohl(ip_h->src_ip),
+                                        ntohs(tcp_h->dst_port),
+                                        ntohs(tcp_h->src_port)};
                 auto afi = _flow_table.find(fk);
                 if(afi == _flow_table.end()) {
 
-                    auto impl_lw_ptr =  new flow_operator(*this, *(_batch._cuda_mem_allocator.state_alloc()));
+                    auto impl_lw_ptr =  new flow_operator(*this);
                     auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
                     assert(succeed);
                     impl_lw_ptr->run_ips(std::move(pkt));
@@ -1523,7 +1523,13 @@ public:
     };
 
 struct flow_key{
+    	uint32_t saddr;
+    	uint32_t daddr;
+    	uint16_t sport;
+    	uint16_t dport;
+    	flow_key(uint32_t saddr,uint32_t daddr, uint16_t sport, uint16_t dport):saddr(saddr),daddr(daddr),sport(sport),dport(dport){
 
+    	}
     };
 public:
     static IPS* ips;
