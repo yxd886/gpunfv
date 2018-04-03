@@ -857,7 +857,10 @@ public:
                 processing_time.push_back(std::max(gpu_time,cpu_time/COMPUTE_RATIO));
                 cpu_processing_num.push_back(cpu_time);
             }*/
-
+            for(unsigned int i=0; i<_flows[index].size();i++){
+                std::cout<<_flows[index][i].packets[index].size()<<" ";
+            }
+            std::cout<<std::endl;
 
             for(unsigned int i=_flows[index].size();i>=0;i--){
                 float cpu_time=0;
