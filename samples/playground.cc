@@ -861,6 +861,7 @@ public:
                 std::cout<<_flows[index][i]->packets[index].size()<<" ";
             }
             std::cout<<std::endl;
+            return _flows[index].size();
 
             for(int i=_flows[index].size();i>=0;i--){
                 float cpu_time=0;
