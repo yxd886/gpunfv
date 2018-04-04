@@ -2191,7 +2191,7 @@ main(int argc, char **argv)
     port_conf.rxmode.jumbo_frame    = 0;
     port_conf.rxmode.hw_strip_crc   = 0;
     port_conf.rx_adv_conf.rss_conf.rss_key   = NULL;
-    port_conf.rx_adv_conf.rss_conf.rss_hf = ETH_RSS_IP;
+    port_conf.rx_adv_conf.rss_conf.rss_hf = ETH_RSS_IP|ETH_RSS_UDP|ETH_RSS_TCP;
     port_conf.txmode.mq_mode=ETH_MQ_TX_NONE;
 
 
