@@ -12,7 +12,7 @@
 #include "../../nf/aho-corasick/aho.h"
 
 
-#define GPU_BATCH_SIZE 2500
+extern uint64_t _batch_size;
 
 #define PRINT_TIME 0
 
@@ -140,7 +140,7 @@ public:
 
 
     cuda_mem_allocator(){
-        gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*GPU_BATCH_SIZE*40);
+        gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*_batch_size*40);
         gpu_malloc((void**)(&dev_state_batch_ptr),sizeof(ips_flow_state)*MAX_FLOW_NUM);
 
 
@@ -149,7 +149,7 @@ public:
     ~cuda_mem_allocator(){}
 
     PKT* gpu_pkt_batch_alloc(int size){
-        if(size>GPU_BATCH_SIZE*40){
+        if(size>_batch_size*40){
             return nullptr;
         }else{
             return dev_pkt_batch_ptr;
@@ -312,7 +312,7 @@ public:
             _f._pkt_counter++;
             packets[_f._batch.current_idx].push_back(std::move(pkt));
 
-            if(_f._pkt_counter>=GPU_BATCH_SIZE){
+            if(_f._pkt_counter>=_batch_size){
 
                  _f._pkt_counter=0;
                  _f._batch.current_idx=!_f._batch.current_idx;
@@ -651,7 +651,7 @@ public:
             //std::cout<<"end before sort"<<std::endl;
             started = steady_clock_type::now();
             int partition=0;
-            if(GPU_BATCH_SIZE!=1){
+            if(_batch_size!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
                 //partition=_flows[index].size()*5/6;

@@ -10,6 +10,9 @@
 
 #include "dpdk_config.hh"
 
+
+uint64_t _batch_size=1;
+
 uint16_t nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
 uint16_t nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 
@@ -165,6 +168,8 @@ void print_usage(const char *prgname){
         "  [--config (port,queue,lcore)[,(port,queue,lcore]]"
         "  [--enable-jumbo [--max-pkt-len PKTLEN]]\n"
         "  -p PORTMASK: hexadecimal bitmask of ports to configure\n"
+        "  -b GPU_BATCH_SIZE: set gpu_batch_size, default disable GPU"
+        "\n"
         "  -P : enable promiscuous mode\n"
         "  --config (port,queue,lcore): rx queues configuration\n"
         "  --eth-dest=X,MM:MM:MM:MM:MM:MM: optional, ethernet destination for port X\n"
@@ -193,17 +198,13 @@ int parse_max_pkt_len(const char *pktlen){
 }
 
 
-int parse_portmask(const char *portmask){
+int parse_batchsize(const char *portmask){
     char *end = NULL;
     unsigned long pm;
 
     /* parse hexadecimal string */
-    pm = strtoul(portmask, &end, 16);
-    if ((portmask[0] == '\0') || (end == NULL) || (*end != '\0'))
-        return -1;
+    pm = strtoul(portmask, &end, 10);
 
-    if (pm == 0)
-        return -1;
 
     return pm;
 }
@@ -310,6 +311,14 @@ int parse_args(int argc, char **argv){
         /* portmask */
         case 'p':
             enabled_port_mask = parse_portmask(optarg);
+            if (enabled_port_mask == 0) {
+                printf("invalid portmask\n");
+                print_usage(prgname);
+                return -1;
+            }
+            break;
+        case 'b':
+            _batch_size = parse_batchsize(optarg);
             if (enabled_port_mask == 0) {
                 printf("invalid portmask\n");
                 print_usage(prgname);
