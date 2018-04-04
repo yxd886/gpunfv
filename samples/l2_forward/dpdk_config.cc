@@ -209,6 +209,20 @@ int parse_batchsize(const char *portmask){
     return pm;
 }
 
+int parse_portmask(const char *portmask){
+    char *end = NULL;
+    unsigned long pm;
+
+    /* parse hexadecimal string */
+    pm = strtoul(portmask, &end, 16);
+    if ((portmask[0] == '\0') || (end == NULL) || (*end != '\0'))
+        return -1;
+
+    if (pm == 0)
+        return -1;
+
+    return pm;
+}
 
 int parse_config(const char *q_arg){
     char s[256];
