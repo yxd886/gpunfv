@@ -8,6 +8,8 @@
 #ifndef SAMPLES_L2_FORWARD_IPS_HH_
 #define SAMPLES_L2_FORWARD_IPS_HH_
 #include "../gpu_interface.hh"
+#include "../../nf/aho-corasick/fpp.h"
+#include "../../nf/aho-corasick/aho.h"
 
 
 #define GPU_BATCH_SIZE 2500
