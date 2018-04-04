@@ -49,7 +49,7 @@
 #define M_2048_ 2147483647
 
 #define ISSET(a, i) (a & (1 << i))
-#define MAX(a, b) (a > b ? a : b)
+
 //#define htons(n) (((((unsigned short)(n) & 0xFF)) << 8) | (((unsigned short)(n) & 0xFF00) >> 8))
 
 #define CPE2(val, msg, error, fault) \

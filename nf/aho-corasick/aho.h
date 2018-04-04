@@ -212,12 +212,12 @@ struct aho_pattern
     assert(pattern_fp != NULL);
 
     /* Get the number of patterns and do a sanity check */
-    fscanf(pattern_fp, "%d", num_patterns);
+    int ret=fscanf(pattern_fp, "%d", num_patterns);
     assert(*num_patterns >= 0 && *num_patterns <= AHO_MAX_PATTERNS);
     printf("\taho: num_patterns = %d\n", *num_patterns);
 
     /* Get the newline after num_patterns (otherwise getline() reads it) */
-    getline(&first_newline, &buf_size, pattern_fp);
+    ret=getline(&first_newline, &buf_size, pattern_fp);
 
     /* Initialize pattern pointers: input to getline() should ne NULL */
     patterns = (struct aho_pattern *) malloc(*num_patterns *
@@ -252,6 +252,7 @@ struct aho_pattern
     assert(pattern_file != NULL && num_patterns != NULL);
 
     int i, j;
+    int ret;
     struct aho_pattern *patterns;
 
     int dfa_load[AHO_MAX_DFA] = {0};
@@ -260,7 +261,7 @@ struct aho_pattern
     assert(pattern_fp != NULL);
 
     /* Get the number of patterns and do a sanity check */
-    fscanf(pattern_fp, "%d", num_patterns);
+    ret=fscanf(pattern_fp, "%d", num_patterns);
     assert(*num_patterns >= 0 && *num_patterns <= AHO_MAX_PATTERNS);
     printf("\taho: num_patterns = %d\n", *num_patterns);
 
@@ -275,13 +276,14 @@ struct aho_pattern
         int dfa_id;
         int len;
 
+
         /* Get the DFA ID of this pattern */
-        fscanf(pattern_fp, "%d", &dfa_id);
+        ret=fscanf(pattern_fp, "%d", &dfa_id);
         assert(dfa_id >= 0 && dfa_id < AHO_MAX_DFA);
         patterns[i].dfa_id = dfa_id;
 
         /* Get the length of this pattern */
-        fscanf(pattern_fp, "%d", &len);
+        ret=fscanf(pattern_fp, "%d", &len);
         assert(len >= 0 && len < AHO_MAX_PATTERN_LEN);
         patterns[i].len = len;
 
@@ -291,7 +293,7 @@ struct aho_pattern
         /* Get one byte at a time */
         for(j = 0; j < len; j++) {
             int cur_byte;
-            fscanf(pattern_fp, "%d", &cur_byte);
+            ret=fscanf(pattern_fp, "%d", &cur_byte);
             assert(cur_byte >= 0 && cur_byte <= 255);
             patterns[i].content[j] = (uint8_t) cur_byte;
         }
