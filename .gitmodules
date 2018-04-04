@@ -1,3 +1,4 @@
-[submodule "seastar"]
-	path = seastar
-	url = https://github.com/yxd886/seastar.git
+[submodule "dpdk"]
+	path = dpdk
+	url = https://github.com/yxd886/dpdk.git
+        branch = seastar_use
