@@ -2,7 +2,7 @@
 
 
 //GPUNFV system include file
-#include "l2_forward.hh"
+#include "dpdk_config.hh"
 #include "rte_packet.hh"
 
 
