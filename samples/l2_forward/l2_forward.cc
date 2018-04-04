@@ -1,19 +1,12 @@
-
-
-
 //GPUNFV system include file
 #include "dpdk_config.hh"
 #include "rte_packet.hh"
 #include "ips.hh"
 
-
 extern uint64_t timer_period;
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
 //user defined NF include file
-
-
-
 
 
 static void
@@ -90,7 +83,6 @@ l2fwd_main_loop(void)
     }
 }
 
-
 /* main processing loop */
 static int
 main_loop(__attribute__((unused)) void *dummy)
@@ -100,11 +92,7 @@ main_loop(__attribute__((unused)) void *dummy)
   return 0;
 }
 
-
-
 IPS * forwarder::ips = nullptr;
-
-
 
 int
 main(int argc, char **argv)
