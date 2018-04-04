@@ -207,7 +207,7 @@ struct port_statistics {
     uint64_t rx;
     uint64_t dropped;
 } __rte_cache_aligned;
-struct port_statistics statistics[RTE_MAX_ETHPORTS][10];
+
 
 
 struct mbuf_table {

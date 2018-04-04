@@ -54,6 +54,8 @@ uint64_t pre_total_rx;
 uint64_t pre_total_tx;
 uint64_t pre_total_drop;
 
+struct port_statistics statistics[RTE_MAX_ETHPORTS][10];
+
 void send_brust(uint8_t _port_id, uint8_t _queue_id, uint16_t lcore_id, rte_mbuf** pkt_buffer){
 
     statistics[_port_id][lcore_id].tx+=MAX_PKT_BURST;

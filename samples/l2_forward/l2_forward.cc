@@ -39,6 +39,7 @@ extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 extern uint64_t pre_total_rx;
 extern uint64_t pre_total_tx;
 extern uint64_t pre_total_drop;
+extern struct port_statistics statistics[RTE_MAX_ETHPORTS][10];
 
 
 
