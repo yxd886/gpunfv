@@ -154,7 +154,7 @@
                 nb_ports*nb_lcores*MAX_PKT_BURST +                                          \
                 nb_ports*n_tx_queue*RTE_TEST_TX_DESC_DEFAULT +                              \
                 nb_lcores*MEMPOOL_CACHE_SIZE),                                              \
-                (unsigned)8192)
+                (unsigned)81920)
 
 #define MAX_PKT_BURST     32
 #define BURST_TX_DRAIN_US 100 /* TX drain every ~100us */
