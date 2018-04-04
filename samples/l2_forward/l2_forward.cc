@@ -1697,8 +1697,8 @@ l2fwd_main_loop(void)
 
             nb_rx = rte_eth_rx_burst((uint8_t) portid, queueid,
                          pkts_burst, MAX_PKT_BURST);
-            if(nb_rx)
-            	std::cout<<"nb_rx  :"<<nb_rx<<" lcore_id: "<<lcore_id<<std::endl;
+           /* if(nb_rx)
+            	std::cout<<"nb_rx  :"<<nb_rx<<" lcore_id: "<<lcore_id<<std::endl;*/
 
             statistics[portid][lcore_id].rx+=nb_rx;
 
