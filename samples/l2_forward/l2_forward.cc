@@ -1,6 +1,8 @@
 
 #include "l2_forward.hh"
 #include "rte_packet.hh"
+#include "ips.hh"
+#include "cuda_mem.hh"
 
 static struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
