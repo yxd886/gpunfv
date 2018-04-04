@@ -313,27 +313,11 @@ struct lcore_conf {
 } __rte_cache_aligned;
 
 
+static struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
-#define GPU_BATCH_SIZE 2500
-
-#define PRINT_TIME 0
-
-#define COMPUTE_RATIO 100
-
-#define MAX_PKT_SIZE 1500
-
-#define MAX_FLOW_NUM 10000
-
-#define CORE_NUM 4
-
-struct ips_flow_state{
-
-    uint16_t _state[50];
-    int _dfa_id[50];
-    bool _alert[50];
-
-
-};
+uint64_t pre_total_rx;
+uint64_t pre_total_tx;
+uint64_t pre_total_drop;
 
 
 struct PKT{
@@ -342,4 +326,525 @@ struct PKT{
 };
 
 
+void send_brust(uint8_t _port_id, uint8_t _queue_id, uint16_t lcore_id, rte_mbuf** pkt_buffer){
+
+    statistics[_port_id][lcore_id].tx+=MAX_PKT_BURST;
+    int ret=rte_eth_tx_burst(_port_id,_queue_id,pkt_buffer,MAX_PKT_BURST);
+
+    if(ret<MAX_PKT_BURST){
+        for(int i=ret;i<MAX_PKT_BURST;i++){
+            rte_pktmbuf_free(buf_addr[i]);
+        }
+    }
+}
+
+
+
+uint16_t receive_burst(uint8_t _port_id, uint8_t _queue_id, uint16_t lcore_id, rte_mbuf** pkt_buffer){
+
+
+    uint16_t nb_rx = rte_eth_rx_burst(_port_id, _queue_id,
+            pkt_buffer, MAX_PKT_BURST);
+   /* if(nb_rx)
+        std::cout<<"nb_rx  :"<<nb_rx<<" lcore_id: "<<lcore_id<<std::endl;*/
+
+    statistics[_port_id][lcore_id].rx+=nb_rx;
+    return nb_rx;
+}
+
+
+
+static int
+check_lcore_params(void)
+{
+    uint8_t queue, lcore;
+    uint16_t i;
+    int socketid;
+
+    for (i = 0; i < nb_lcore_params; ++i) {
+        queue = lcore_params[i].queue_id;
+        if (queue >= MAX_RX_QUEUE_PER_PORT) {
+            printf("invalid queue number: %hhu\n", queue);
+            return -1;
+        }
+        lcore = lcore_params[i].lcore_id;
+        if (!rte_lcore_is_enabled(lcore)) {
+            printf("error: lcore %hhu is not enabled in lcore mask\n", lcore);
+            return -1;
+        }
+        if ((socketid = rte_lcore_to_socket_id(lcore) != 0) &&
+            (numa_on == 0)) {
+            printf("warning: lcore %hhu is on socket %d with numa off \n",
+                lcore, socketid);
+        }
+    }
+    return 0;
+}
+
+static int
+check_port_config(const unsigned nb_ports)
+{
+    unsigned portid;
+    uint16_t i;
+
+    for (i = 0; i < nb_lcore_params; ++i) {
+        portid = lcore_params[i].port_id;
+        if ((enabled_port_mask & (1 << portid)) == 0) {
+            printf("port %u is not enabled in port mask\n", portid);
+            return -1;
+        }
+        if (portid >= nb_ports) {
+            printf("port %u is not present on the board\n", portid);
+            return -1;
+        }
+    }
+    return 0;
+}
+
+static uint8_t
+get_port_n_rx_queues(const uint8_t port)
+{
+    int queue = -1;
+    uint16_t i;
+
+    for (i = 0; i < nb_lcore_params; ++i) {
+        if (lcore_params[i].port_id == port && lcore_params[i].queue_id > queue)
+            queue = lcore_params[i].queue_id;
+    }
+    return (uint8_t)(++queue);
+}
+
+static int
+init_lcore_rx_queues(void)
+{
+    uint16_t i, nb_rx_queue;
+    uint8_t lcore;
+
+    for (i = 0; i < nb_lcore_params; ++i) {
+        lcore = lcore_params[i].lcore_id;
+        nb_rx_queue = lcore_conf[lcore].n_rx_queue;
+        if (nb_rx_queue >= MAX_RX_QUEUE_PER_LCORE) {
+            printf("error: too many queues (%u) for lcore: %u\n",
+                (unsigned)nb_rx_queue + 1, (unsigned)lcore);
+            return -1;
+        } else {
+            lcore_conf[lcore].rx_queue_list[nb_rx_queue].port_id =
+                lcore_params[i].port_id;
+            lcore_conf[lcore].rx_queue_list[nb_rx_queue].queue_id =
+                lcore_params[i].queue_id;
+            lcore_conf[lcore].n_rx_queue++;
+        }
+    }
+    return 0;
+}
+
+/* display usage */
+static void
+print_usage(const char *prgname)
+{
+    printf ("%s [EAL options] -- -p PORTMASK -P"
+        "  [--config (port,queue,lcore)[,(port,queue,lcore]]"
+        "  [--enable-jumbo [--max-pkt-len PKTLEN]]\n"
+        "  -p PORTMASK: hexadecimal bitmask of ports to configure\n"
+        "  -P : enable promiscuous mode\n"
+        "  --config (port,queue,lcore): rx queues configuration\n"
+        "  --eth-dest=X,MM:MM:MM:MM:MM:MM: optional, ethernet destination for port X\n"
+        "  --no-numa: optional, disable numa awareness\n"
+        "  --ipv6: optional, specify it if running ipv6 packets\n"
+        "  --enable-jumbo: enable jumbo frame"
+        " which max packet len is PKTLEN in decimal (64-9600)\n"
+        "  --hash-entry-num: specify the hash entry number in hexadecimal to be setup\n",
+        prgname);
+}
+
+static int parse_max_pkt_len(const char *pktlen)
+{
+    char *end = NULL;
+    unsigned long len;
+
+    /* parse decimal string */
+    len = strtoul(pktlen, &end, 10);
+    if ((pktlen[0] == '\0') || (end == NULL) || (*end != '\0'))
+        return -1;
+
+    if (len == 0)
+        return -1;
+
+    return len;
+}
+
+static int
+parse_portmask(const char *portmask)
+{
+    char *end = NULL;
+    unsigned long pm;
+
+    /* parse hexadecimal string */
+    pm = strtoul(portmask, &end, 16);
+    if ((portmask[0] == '\0') || (end == NULL) || (*end != '\0'))
+        return -1;
+
+    if (pm == 0)
+        return -1;
+
+    return pm;
+}
+
+
+
+static int
+parse_config(const char *q_arg)
+{
+    char s[256];
+    const char *p, *p0 = q_arg;
+    char *end;
+    enum fieldnames {
+        FLD_PORT = 0,
+        FLD_QUEUE,
+        FLD_LCORE,
+        _NUM_FLD
+    };
+    unsigned long int_fld[_NUM_FLD];
+    char *str_fld[_NUM_FLD];
+    int i;
+    unsigned size;
+
+    nb_lcore_params = 0;
+
+    while ((p = strchr(p0,'(')) != NULL) {
+        ++p;
+        if((p0 = strchr(p,')')) == NULL)
+            return -1;
+
+        size = p0 - p;
+        if(size >= sizeof(s))
+            return -1;
+
+        snprintf(s, sizeof(s), "%.*s", size, p);
+        if (rte_strsplit(s, sizeof(s), str_fld, _NUM_FLD, ',') != _NUM_FLD)
+            return -1;
+        for (i = 0; i < _NUM_FLD; i++){
+            errno = 0;
+            int_fld[i] = strtoul(str_fld[i], &end, 0);
+            if (errno != 0 || end == str_fld[i] || int_fld[i] > 255)
+                return -1;
+        }
+        if (nb_lcore_params >= MAX_LCORE_PARAMS) {
+            printf("exceeded max number of lcore params: %hu\n",
+                nb_lcore_params);
+            return -1;
+        }
+        lcore_params_array[nb_lcore_params].port_id = (uint8_t)int_fld[FLD_PORT];
+        lcore_params_array[nb_lcore_params].queue_id = (uint8_t)int_fld[FLD_QUEUE];
+        lcore_params_array[nb_lcore_params].lcore_id = (uint8_t)int_fld[FLD_LCORE];
+        ++nb_lcore_params;
+    }
+    lcore_params = lcore_params_array;
+    return 0;
+}
+
+static void
+parse_eth_dest(const char *optarg)
+{
+    uint8_t portid;
+    char *port_end;
+    uint8_t c, *dest, peer_addr[6];
+
+    errno = 0;
+    portid = strtoul(optarg, &port_end, 10);
+    if (errno != 0 || port_end == optarg || *port_end++ != ',')
+        rte_exit(EXIT_FAILURE,
+        "Invalid eth-dest: %s", optarg);
+    if (portid >= RTE_MAX_ETHPORTS)
+        rte_exit(EXIT_FAILURE,
+        "eth-dest: port %d >= RTE_MAX_ETHPORTS(%d)\n",
+        portid, RTE_MAX_ETHPORTS);
+
+    if (cmdline_parse_etheraddr(NULL, port_end,
+        &peer_addr, sizeof(peer_addr)) < 0)
+        rte_exit(EXIT_FAILURE,
+        "Invalid ethernet address: %s\n",
+        port_end);
+    dest = (uint8_t *)&dest_eth_addr[portid];
+    for (c = 0; c < 6; c++)
+        dest[c] = peer_addr[c];
+    *(uint64_t *)(val_eth + portid) = dest_eth_addr[portid];
+}
+
+#define CMD_LINE_OPT_CONFIG "config"
+#define CMD_LINE_OPT_ETH_DEST "eth-dest"
+#define CMD_LINE_OPT_NO_NUMA "no-numa"
+#define CMD_LINE_OPT_IPV6 "ipv6"
+#define CMD_LINE_OPT_ENABLE_JUMBO "enable-jumbo"
+#define CMD_LINE_OPT_HASH_ENTRY_NUM "hash-entry-num"
+
+/* Parse the argument given in the command line of the application */
+static int
+parse_args(int argc, char **argv)
+{
+    int opt, ret;
+    char **argvopt;
+    int option_index;
+    char *prgname = argv[0];
+    static struct option lgopts[] = {
+        {CMD_LINE_OPT_CONFIG, 1, 0, 0},
+        {CMD_LINE_OPT_ETH_DEST, 1, 0, 0},
+        {CMD_LINE_OPT_NO_NUMA, 0, 0, 0},
+        {CMD_LINE_OPT_IPV6, 0, 0, 0},
+        {CMD_LINE_OPT_ENABLE_JUMBO, 0, 0, 0},
+        {CMD_LINE_OPT_HASH_ENTRY_NUM, 1, 0, 0},
+        {NULL, 0, 0, 0}
+    };
+
+    argvopt = argv;
+
+    while ((opt = getopt_long(argc, argvopt, "p:P",
+                lgopts, &option_index)) != EOF) {
+
+        switch (opt) {
+        /* portmask */
+        case 'p':
+            enabled_port_mask = parse_portmask(optarg);
+            if (enabled_port_mask == 0) {
+                printf("invalid portmask\n");
+                print_usage(prgname);
+                return -1;
+            }
+            break;
+        case 'P':
+            printf("Promiscuous mode selected\n");
+            promiscuous_on = 1;
+            break;
+
+        /* long options */
+        case 0:
+            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_CONFIG,
+                sizeof (CMD_LINE_OPT_CONFIG))) {
+                ret = parse_config(optarg);
+                if (ret) {
+                    printf("invalid config\n");
+                    print_usage(prgname);
+                    return -1;
+                }
+            }
+
+            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_ETH_DEST,
+                sizeof(CMD_LINE_OPT_CONFIG))) {
+                    parse_eth_dest(optarg);
+            }
+
+            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_NO_NUMA,
+                sizeof(CMD_LINE_OPT_NO_NUMA))) {
+                printf("numa is disabled \n");
+                numa_on = 0;
+            }
+
+            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_ENABLE_JUMBO,
+                sizeof (CMD_LINE_OPT_ENABLE_JUMBO))) {
+                struct option lenopts = {"max-pkt-len", required_argument, 0, 0};
+
+                printf("jumbo frame is enabled - disabling simple TX path\n");
+                port_conf.rxmode.jumbo_frame = 1;
+
+                /* if no max-pkt-len set, use the default value ETHER_MAX_LEN */
+                if (0 == getopt_long(argc, argvopt, "", &lenopts, &option_index)) {
+                    ret = parse_max_pkt_len(optarg);
+                    if ((ret < 64) || (ret > MAX_JUMBO_PKT_LEN)){
+                        printf("invalid packet length\n");
+                        print_usage(prgname);
+                        return -1;
+                    }
+                    port_conf.rxmode.max_rx_pkt_len = ret;
+                }
+                printf("set jumbo frame max packet length to %u\n",
+                        (unsigned int)port_conf.rxmode.max_rx_pkt_len);
+            }
+            break;
+
+        default:
+            print_usage(prgname);
+            return -1;
+        }
+    }
+
+    if (optind >= 0)
+        argv[optind-1] = prgname;
+
+    ret = optind-1;
+    optind = 0; /* reset getopt lib */
+    return ret;
+}
+
+static void
+print_ethaddr(const char *name, const struct ether_addr *eth_addr)
+{
+    char buf[ETHER_ADDR_FMT_SIZE];
+    ether_format_addr(buf, ETHER_ADDR_FMT_SIZE, eth_addr);
+    printf("%s%s", name, buf);
+}
+
+/*static void
+my_obj_init(struct rte_mempool *mp, __attribute__((unused)) void *arg,
+        void *obj, unsigned i)
+{
+    gpu_mem_map(obj,mp->elt_size);
+    //struct rte_mbuf* rte_pkt=(struct rte_mbuf*)obj;
+    //unsigned char *t =rte_pktmbuf_mtod(rte_pkt, unsigned char*);
+    //char* raw_packet = (char*)t;
+    //printf("obj_addr:%p\n",obj);
+   // printf("raw_packet_addr:%p\n",raw_packet);
+    //std::cout<<"sizeof bool:"<<sizeof(bool)<<std::endl;
+
+}*/
+
+
+static int
+init_mem(unsigned nb_mbuf)
+{
+    struct lcore_conf *qconf;
+    int socketid;
+    unsigned lcore_id;
+    char s[64];
+
+    for (lcore_id = 0; lcore_id < RTE_MAX_LCORE; lcore_id++) {
+        if (rte_lcore_is_enabled(lcore_id) == 0)
+            continue;
+
+        if (numa_on)
+            socketid = rte_lcore_to_socket_id(lcore_id);
+        else
+            socketid = 0;
+
+        if (socketid >= NB_SOCKETS) {
+            rte_exit(EXIT_FAILURE, "Socket %d of lcore %u is out of range %d\n",
+                socketid, lcore_id, NB_SOCKETS);
+        }
+        if (pktmbuf_pool[socketid] == NULL) {
+            snprintf(s, sizeof(s), "mbuf_pool_%d", socketid);
+            pktmbuf_pool[socketid] =
+                rte_pktmbuf_pool_create(s, nb_mbuf,
+                    MEMPOOL_CACHE_SIZE, 0,
+                    RTE_MBUF_DEFAULT_BUF_SIZE, socketid);
+            if (pktmbuf_pool[socketid] == NULL)
+                rte_exit(EXIT_FAILURE,
+                        "Cannot init mbuf pool on socket %d\n", socketid);
+            else{
+                printf("Allocated mbuf pool on socket %d\n", socketid);
+                //rte_mempool_obj_iter(pktmbuf_pool[socketid],my_obj_init,NULL);
+            }
+
+
+        }
+        qconf = &lcore_conf[lcore_id];
+        qconf->ipv4_lookup_struct = ipv4_l3fwd_lookup_struct[socketid];
+        qconf->ipv6_lookup_struct = ipv6_l3fwd_lookup_struct[socketid];
+    }
+    return 0;
+}
+
+/* Check the link status of all ports in up to 9s, and print them finally */
+static void
+check_all_ports_link_status(uint8_t port_num, uint32_t port_mask)
+{
+#define CHECK_INTERVAL 100 /* 100ms */
+#define MAX_CHECK_TIME 90 /* 9s (90 * 100ms) in total */
+    uint8_t portid, count, all_ports_up, print_flag = 0;
+    struct rte_eth_link link;
+
+    printf("\nChecking link status");
+    fflush(stdout);
+    for (count = 0; count <= MAX_CHECK_TIME; count++) {
+        all_ports_up = 1;
+        for (portid = 0; portid < port_num; portid++) {
+            if ((port_mask & (1 << portid)) == 0)
+                continue;
+            memset(&link, 0, sizeof(link));
+            rte_eth_link_get_nowait(portid, &link);
+            /* print link status if flag set */
+            if (print_flag == 1) {
+                if (link.link_status)
+                    printf("Port %d Link Up - speed %u "
+                        "Mbps - %s\n", (uint8_t)portid,
+                        (unsigned)link.link_speed,
+                (link.link_duplex == ETH_LINK_FULL_DUPLEX) ?
+                    ("full-duplex") : ("half-duplex\n"));
+                else
+                    printf("Port %d Link Down\n",
+                        (uint8_t)portid);
+                continue;
+            }
+            /* clear all_ports_up flag if any link down */
+            if (link.link_status == 0) {
+                all_ports_up = 0;
+                break;
+            }
+        }
+        /* after finally printing all link status, get out */
+        if (print_flag == 1)
+            break;
+
+        if (all_ports_up == 0) {
+            printf(".");
+            fflush(stdout);
+            rte_delay_ms(CHECK_INTERVAL);
+        }
+
+        /* set the print_flag if all ports up or timeout */
+        if (all_ports_up == 1 || count == (MAX_CHECK_TIME - 1)) {
+            print_flag = 1;
+            printf("done\n");
+        }
+    }
+}
+static void
+print_stats(void)
+{
+    uint64_t total_packets_dropped, total_packets_tx, total_packets_rx;
+    unsigned portid;
+
+    total_packets_dropped = 0;
+    total_packets_tx = 0;
+    total_packets_rx = 0;
+
+    const char clr[] = { 27, '[', '2', 'J', '\0' };
+    const char topLeft[] = { 27, '[', '1', ';', '1', 'H','\0' };
+
+        /* Clear screen and move to top left */
+    printf("%s%s", clr, topLeft);
+
+    printf("\nPort statistics ====================================");
+
+    for(unsigned i =0; i<RTE_MAX_LCORE; i++){
+        if (rte_lcore_is_enabled(i) == 0)
+            continue;
+        total_packets_dropped += statistics[portid][i].dropped;
+        total_packets_tx += statistics[portid][i].tx;
+        total_packets_rx += statistics[portid][i].rx;
+    }
+        /* skip disabled ports */
+
+
+    printf("\nStatistics for port %u ------------------------------"
+           "\nPackets sent: %24"PRIu64
+           "\nPackets received: %20"PRIu64
+           "\nPackets dropped: %21"PRIu64,
+           0,
+           total_packets_tx-pre_total_tx,
+           total_packets_rx-pre_total_rx,
+           total_packets_dropped-pre_total_drop);
+
+
+    pre_total_tx=total_packets_tx;
+    pre_total_drop=total_packets_dropped;
+    pre_total_rx=total_packets_rx;
+
+    printf("\nAggregate statistics ==============================="
+           "\nTotal packets sent: %18"PRIu64
+           "\nTotal packets received: %14"PRIu64
+           "\nTotal packets dropped: %15"PRIu64,
+           total_packets_tx,
+           total_packets_rx,
+           total_packets_dropped);
+    printf("\n====================================================\n");
+}
 #endif /* SAMPLES_L2_FORWARD_L2_FORWARD_HH_ */
