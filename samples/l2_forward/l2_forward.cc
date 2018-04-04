@@ -82,14 +82,14 @@
 #include <cmdline_parse_etheraddr.h>
 
 
-#include "/home/net/gpunfv/seastar/nf/aho-corasick/fpp.h"
-#include "/home/net/gpunfv/seastar/nf/aho-corasick/aho.h"
+#include "../../nf/aho-corasick/fpp.h"
+#include "../../nf/aho-corasick/aho.h"
 
 #include <helper_functions.h>
 #include <helper_cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_profiler_api.h>
-#include "/home/net/gpunfv/samples/playground.hh"
+#include "../gpu_interface.hh"
 #include <chrono>
 #include <thread>
 #include <iostream>
@@ -1082,8 +1082,6 @@ public:
     void send_pkt(rte_packet pkt){
 
         _send_buffer.push_back(pkt.get_packet());
-
-
         if(_send_buffer.size()==MAX_PKT_BURST){
         	statistics[_port_id][_lcore_id].tx+=MAX_PKT_BURST;
             rte_mbuf** buf_addr=&_send_buffer[0];

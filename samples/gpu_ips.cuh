@@ -13,8 +13,8 @@
 #include <netinet/in.h>
 
 #include "common.cuh"
-#include "../seastar/nf/aho-corasick/fpp.h"
-#include "../seastar/nf/aho-corasick/aho.hh"
+#include "../nf/aho-corasick/fpp.h"
+#include "../nf/aho-corasick/aho.hh"
 
 #define MAX_MATCH 8192
 #define MAX_PKT_SIZE 1500
