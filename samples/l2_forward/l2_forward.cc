@@ -1082,13 +1082,14 @@ public:
     void send_pkt(rte_packet pkt){
 
         _send_buffer.push_back(pkt.get_packet());
+        statistics[_port_id][_lcore_id].tx++;
 
         if(_send_buffer.size()==MAX_PKT_BURST){
             rte_mbuf** buf_addr=&_send_buffer[0];
             int ret=rte_eth_tx_burst(_port_id,_queue_id,buf_addr,MAX_PKT_BURST);
 
-            statistics[_port_id][_lcore_id].tx+=ret;
-            statistics[_port_id][_lcore_id].dropped+=MAX_PKT_BURST-ret;
+
+
 
             if(ret<MAX_PKT_BURST){
                 for(int i=ret;i<MAX_PKT_BURST;i++){
