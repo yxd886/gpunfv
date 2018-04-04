@@ -318,7 +318,7 @@ std::chrono::time_point<std::chrono::steady_clock> stoped;
 using namespace std::chrono;
 using steady_clock_type = std::chrono::steady_clock;
 
-#define GPU_BATCH_SIZE 1
+#define GPU_BATCH_SIZE 4000
 
 #define PRINT_TIME 0
 
@@ -1657,7 +1657,7 @@ l2fwd_main_loop(void)
 
     while (1) {
 
-    	std::cout<<"lcore id :"<<lcore_id<<std::endl;
+
 
         cur_tsc = rte_rdtsc();
         /*
@@ -1697,7 +1697,7 @@ l2fwd_main_loop(void)
 
             nb_rx = rte_eth_rx_burst((uint8_t) portid, queueid,
                          pkts_burst, MAX_PKT_BURST);
-            std::cout<<"nb_rx  :"<<nb_rx<<std::endl;
+            std::cout<<"nb_rx  :"<<nb_rx<<"lcore_id"<<lcore_id<<std::endl;
 
             statistics[portid][lcore_id].rx+=nb_rx;
 
