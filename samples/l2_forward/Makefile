@@ -43,7 +43,7 @@ else
         endif
     endif
 endif
-SEASTAR_FLAGS:=$(shell pkg-config --cflags --libs $(SEASTAR)/build/release/seastar.pc)
+
 
 CUDA_INC_DIR= /usr/local/cuda-8.0/samples/common/inc /usr/local/cuda-8.0/include
 
