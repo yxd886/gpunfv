@@ -318,7 +318,7 @@ std::chrono::time_point<std::chrono::steady_clock> stoped;
 using namespace std::chrono;
 using steady_clock_type = std::chrono::steady_clock;
 
-#define GPU_BATCH_SIZE 4000
+#define GPU_BATCH_SIZE 1
 
 #define PRINT_TIME 0
 
