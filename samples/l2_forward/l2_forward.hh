@@ -329,7 +329,7 @@ void send_brust(uint8_t _port_id, uint8_t _queue_id, uint16_t lcore_id, rte_mbuf
 
     if(ret<MAX_PKT_BURST){
         for(int i=ret;i<MAX_PKT_BURST;i++){
-            rte_pktmbuf_free(buf_addr[i]);
+            rte_pktmbuf_free(pkt_buffer[i]);
         }
     }
 }
