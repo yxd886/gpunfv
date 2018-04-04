@@ -333,8 +333,8 @@ int parse_args(int argc, char **argv){
             break;
         case 'b':
             _batch_size = parse_batchsize(optarg);
-            if (enabled_port_mask == 0) {
-                printf("invalid portmask\n");
+            if (_batch_size == 1) {
+                printf("invalid _batch_size\n");
                 print_usage(prgname);
                 return -1;
             }
