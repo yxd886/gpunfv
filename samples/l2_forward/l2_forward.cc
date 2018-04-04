@@ -4,6 +4,7 @@
 //GPUNFV system include file
 #include "dpdk_config.hh"
 #include "rte_packet.hh"
+#include "ips.hh"
 
 
 /* Send burst of packets on an output interface */
@@ -45,7 +46,7 @@ extern struct port_statistics statistics[RTE_MAX_ETHPORTS][10];
 
 
 //user defined NF include file
-#include "ips.hh"
+
 
 
 
