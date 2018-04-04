@@ -318,7 +318,7 @@ int parse_args(int argc, char **argv){
 
     argvopt = argv;
 
-    while ((opt = getopt_long(argc, argvopt, "p:P",
+    while ((opt = getopt_long(argc, argvopt, "p:b:P",
                 lgopts, &option_index)) != EOF) {
 
         switch (opt) {
