@@ -314,56 +314,25 @@ public:
 
         void run_ips(rte_packet pkt) {
 
-                //uint64_t test_len=mbufs_per_queue_tx*inline_mbuf_size+mbuf_cache_size+sizeof(struct rte_pktmbuf_pool_private);
 
-                //printf("pkt: %p, RX_ad: %p, TX_ad: %p, len: %ld, end_RX: %p, end_TX: %p",_ac.cur_packet().get_header<ether_hdr>(0),netstar_pools[1],netstar_pools[0],test_len,test_len+(char*)netstar_pools[1],test_len+(char*)netstar_pools[0]);
-                //assert(((char*)_ac.cur_packet().get_header<ether_hdr>(0)>=(char*)netstar_pools[1]&&(char*)_ac.cur_packet().get_header<ether_hdr>(0)<=test_len+(char*)netstar_pools[1])||((char*)_ac.cur_packet().get_header<ether_hdr>(0)>=(char*)netstar_pools[0]&&(char*)_ac.cur_packet().get_header<ether_hdr>(0)<=test_len+(char*)netstar_pools[0]));
+            //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
+            update_state(_f._batch.current_idx);
+                                   //update the flow state when receive the first pkt of this flow in this batch.
 
-                if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==true){
+            if(packets[_f._batch.current_idx].empty()){
+                _f._batch._flows[_f._batch.current_idx].push_back(this);
+            }
 
-                    //drop
-                    return _f.drop_pkt(std::move(pkt));
+            _f._pkt_counter++;
+            packets[_f._batch.current_idx].push_back(std::move(pkt));
 
-                 }
+            if(_f._pkt_counter>=GPU_BATCH_SIZE){
 
-                //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
-                update_state(_f._batch.current_idx);
-                                       //update the flow state when receive the first pkt of this flow in this batch.
+                 _f._pkt_counter=0;
+                 _f._batch.current_idx=!_f._batch.current_idx;
+                 _f._batch.schedule_task(!_f._batch.current_idx);
 
-                if(packets[_f._batch.current_idx].empty()){
-                    _f._batch._flows[_f._batch.current_idx].push_back(this);
-                }
-
-                _f._pkt_counter++;
-                packets[_f._batch.current_idx].push_back(std::move(pkt));
-
-                if(_f._pkt_counter>=GPU_BATCH_SIZE&&_f._batch.need_process==false){
-                     _f._batch.need_process=true;
-                     _f._pkt_counter=0;
-                     _f._batch.current_idx=!_f._batch.current_idx;
-
-
-                 }
-                if(_f._batch.need_process==true&&_f._batch.processing==false){
-                    //reach batch size schedule
-                    _f._batch.processing=true;
-                    //std::cout<<"schedule_task"<<std::endl;
-
-                    _f._batch.schedule_task(!_f._batch.current_idx);
-                    _f._batch.need_process=false;
-                    _f._batch.processing=false;
-                    return;
-
-
-
-                }else{
-                    return;
-                }
-                //return make_ready_future<af_action>(af_action::forward);
-
-
-
-
+             }
 
         }
 
@@ -675,8 +644,6 @@ public:
         ips_flow_state* gpu_states[2];
         PKT* dev_gpu_pkts;
         ips_flow_state* dev_gpu_states;
-        bool need_process;
-        bool processing;
         uint64_t current_idx;
         cudaStream_t stream;
         cuda_mem_allocator _cuda_mem_allocator;
@@ -686,7 +653,7 @@ public:
         int pre_partition;
 
 
-        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),need_process(false),processing(false),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0){
+        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0){
             create_stream(&stream);
 
         }
