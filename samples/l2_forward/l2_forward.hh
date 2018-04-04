@@ -802,13 +802,6 @@ print_stats(void)
     total_packets_tx = 0;
     total_packets_rx = 0;
 
-    const char clr[] = { 27, '[', '2', 'J', '\0' };
-    const char topLeft[] = { 27, '[', '1', ';', '1', 'H','\0' };
-
-        /* Clear screen and move to top left */
-    printf("%s%s", clr, topLeft);
-
-    printf("\nPort statistics ====================================");
 
     for(unsigned i =0; i<RTE_MAX_LCORE; i++){
         if (rte_lcore_is_enabled(i) == 0)
@@ -820,11 +813,7 @@ print_stats(void)
         /* skip disabled ports */
 
 
-    printf("\nStatistics for port %u ------------------------------"
-           "\nPackets sent: %24"PRIu64
-           "\nPackets received: %20"PRIu64
-           "\nPackets dropped: %21"PRIu64,
-           0,
+    printf("Packets sent rate: %8d Packets received rate: %8d Packets dropped: %8d\n",
            total_packets_tx-pre_total_tx,
            total_packets_rx-pre_total_rx,
            total_packets_dropped-pre_total_drop);
@@ -833,15 +822,6 @@ print_stats(void)
     pre_total_tx=total_packets_tx;
     pre_total_drop=total_packets_dropped;
     pre_total_rx=total_packets_rx;
-
-    printf("\nAggregate statistics ==============================="
-           "\nTotal packets sent: %18"PRIu64
-           "\nTotal packets received: %14"PRIu64
-           "\nTotal packets dropped: %15"PRIu64,
-           total_packets_tx,
-           total_packets_rx,
-           total_packets_dropped);
-    printf("\n====================================================\n");
 }
 
 
