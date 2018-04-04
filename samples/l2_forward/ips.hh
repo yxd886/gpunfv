@@ -21,6 +21,10 @@
 #define MAX_FLOW_NUM 10000
 
 
+struct PKT{
+
+    char pkt[MAX_PKT_SIZE];
+};
 
 class IPS{
 public:

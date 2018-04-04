@@ -320,10 +320,6 @@ uint64_t pre_total_tx;
 uint64_t pre_total_drop;
 
 
-struct PKT{
-
-    char pkt[MAX_PKT_SIZE];
-};
 
 
 void send_brust(uint8_t _port_id, uint8_t _queue_id, uint16_t lcore_id, rte_mbuf** pkt_buffer){
