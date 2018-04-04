@@ -1082,9 +1082,10 @@ public:
     void send_pkt(rte_packet pkt){
 
         _send_buffer.push_back(pkt.get_packet());
-        statistics[_port_id][_lcore_id].tx++;
+
 
         if(_send_buffer.size()==MAX_PKT_BURST){
+        	statistics[_port_id][_lcore_id].tx+=MAX_PKT_BURST;
             rte_mbuf** buf_addr=&_send_buffer[0];
             int ret=rte_eth_tx_burst(_port_id,_queue_id,buf_addr,MAX_PKT_BURST);
 
