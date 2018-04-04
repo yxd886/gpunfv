@@ -21,6 +21,12 @@
 #define MAX_FLOW_NUM 10000
 
 
+
+std::chrono::time_point<std::chrono::steady_clock> started;
+std::chrono::time_point<std::chrono::steady_clock> stoped;
+using namespace std::chrono;
+using steady_clock_type = std::chrono::steady_clock;
+
 struct PKT{
 
     char pkt[MAX_PKT_SIZE];
