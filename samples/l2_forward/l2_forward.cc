@@ -115,6 +115,7 @@ IPS * forwarder::ips = nullptr;
 int
 main(int argc, char **argv)
 {
+    unsigned lcore_id;
 
     dpdk_config(argc,argv);
     forwarder::ips=new IPS;
