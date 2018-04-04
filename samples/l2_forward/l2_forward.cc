@@ -7,7 +7,38 @@
 
 
 /* Send burst of packets on an output interface */
+extern uint16_t nb_rxd;
+extern uint16_t nb_txd;
 
+/* ethernet addresses of ports */
+extern uint64_t dest_eth_addr[RTE_MAX_ETHPORTS];
+extern ether_addr ports_eth_addr[RTE_MAX_ETHPORTS];
+
+extern __m128i val_eth[RTE_MAX_ETHPORTS];
+
+/* mask of enabled ports */
+extern uint32_t enabled_port_mask;
+extern int promiscuous_on; /**< Ports set in promiscuous mode off by default. */
+extern int numa_on; /**< NUMA is enabled by default. */
+
+extern uint64_t timer_period;
+
+extern struct lcore_params lcore_params_array[MAX_LCORE_PARAMS];
+extern struct lcore_params lcore_params_array_default[];
+
+extern struct lcore_params * lcore_params;
+extern uint16_t nb_lcore_params;
+
+extern struct rte_eth_conf port_conf;
+
+extern struct rte_mempool * pktmbuf_pool[NB_SOCKETS];
+extern struct  timeval    tv;
+
+extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
+
+extern uint64_t pre_total_rx;
+extern uint64_t pre_total_tx;
+extern uint64_t pre_total_drop;
 
 
 
