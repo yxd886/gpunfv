@@ -304,7 +304,7 @@ int parse_max_pkt_len(const char *pktlen);
 
 int parse_portmask(const char *portmask);
 
-
+int parse_batchsize(const char *portmask);
 
 int parse_config(const char *q_arg);
 
