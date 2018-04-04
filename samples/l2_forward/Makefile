@@ -72,6 +72,7 @@ SRCS =  $(ALL_SRCS)
 OBJS = $(SRCS:.cc=.o)
 CU_OBJS = $(CU_SRCS:.cu=.o)
 CU_LINK_OBJS = $(CU_SRCS:.cu=.l)
+SAMPLE_OBJS = l2_forward.o
 
 # The following variables are defined for sample examples.
 
@@ -81,7 +82,7 @@ CU_LINK_OBJS = $(CU_SRCS:.cu=.l)
 
 
 L2_FORWARD_EXEC = l2_forward
-L2_FORWARD_OBJS = l2_forward.o $(CU_OBJS) $(CU_LINK_OBJS)
+L2_FORWARD_OBJS = $(filter-out main.o $(filter-out l2_forward.o,$(SAMPLES_OBJS)),$(OBJS))  $(CU_OBJS) $(CU_LINK_OBJS)
 
 
 .PHONY: all clean tests protobuf
