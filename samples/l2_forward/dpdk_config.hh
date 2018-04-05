@@ -316,6 +316,7 @@ void parse_eth_dest(const char *optarg);
 #define CMD_LINE_OPT_IPV6 "ipv6"
 #define CMD_LINE_OPT_ENABLE_JUMBO "enable-jumbo"
 #define CMD_LINE_OPT_HASH_ENTRY_NUM "hash-entry-num"
+#define CMD_LINE_OPT_PRINT_TIME "print-time"
 
 /* Parse the argument given in the command line of the application */
 int parse_args(int argc, char **argv);

@@ -14,7 +14,7 @@
 
 extern uint64_t _batch_size;
 
-#define PRINT_TIME 0
+extern uint64_t print_time;
 
 #define COMPUTE_RATIO 100
 
@@ -632,7 +632,7 @@ public:
 
             stoped = steady_clock_type::now();
             auto elapsed = stoped - started;
-            if(PRINT_TIME)  printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            if(print_time)  printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
             started = steady_clock_type::now();
 
             if(_flows[!index].empty()==false){
@@ -655,21 +655,21 @@ public:
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
                 //partition=_flows[index].size()*5/6;
-                if(PRINT_TIME)std::cout<<"Total flow_num:"<<_flows[index].size()<<std::endl;
-                if(PRINT_TIME)printf("partition: %d\n",partition);
+                if(print_time)std::cout<<"Total flow_num:"<<_flows[index].size()<<std::endl;
+                if(print_time)printf("partition: %d\n",partition);
             }
             assert(partition!=-1);
 
             stoped = steady_clock_type::now();
             elapsed = stoped - started;
-            if(PRINT_TIME)printf("Scheduling time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            if(print_time)printf("Scheduling time: %f\n", static_cast<double>(elapsed.count() / 1.0));
             started = steady_clock_type::now();
 
             if(partition>0){
 
                 int max_pkt_num_per_flow=_flows[index][partition-1]->packets[index].size();
                 int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(PKT);
-                if(PRINT_TIME)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(PKT)<<std::endl;
+                if(print_time)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(PKT)<<std::endl;
                 int ngpu_states = partition * sizeof(ips_flow_state);
                 gpu_pkts[index] = (PKT*)malloc(ngpu_pkts);
                 gpu_states[index] = (ips_flow_state*)malloc(ngpu_states);
@@ -703,7 +703,7 @@ public:
                     gpu_sync(stream);
                     stoped = steady_clock_type::now();
                     elapsed = stoped - started;
-                    if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                     started = steady_clock_type::now();
 
 
@@ -720,7 +720,7 @@ public:
                     gpu_memset_async(dev_gpu_states,0, pre_ngpu_states,stream);
                     stoped = steady_clock_type::now();
                     elapsed = stoped - started;
-                    if(PRINT_TIME)  printf("Copyback time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    if(print_time)  printf("Copyback time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                     started = steady_clock_type::now();
 
                     // Unmap gpu_pkts and gpu_states
@@ -764,7 +764,7 @@ public:
 
                 stoped = steady_clock_type::now();
                 elapsed = stoped - started;
-                if(PRINT_TIME)printf("Batching time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                if(print_time)printf("Batching time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started = steady_clock_type::now();
 
                 gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
@@ -772,7 +772,7 @@ public:
 
                 stoped = steady_clock_type::now();
                 elapsed = stoped - started;
-                if(PRINT_TIME)printf("Memcpy to device time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                if(print_time)printf("Memcpy to device time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started = steady_clock_type::now();
 
                 //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
@@ -792,7 +792,7 @@ public:
                     gpu_sync(stream);
                     stoped = steady_clock_type::now();
                     elapsed = stoped - started;
-                    if(PRINT_TIME)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                     started = steady_clock_type::now();
 
                     for(int i = 0; i < pre_partition; i++){
@@ -808,7 +808,7 @@ public:
                     gpu_memset_async(dev_gpu_states,0, pre_ngpu_states,stream);
                     stoped = steady_clock_type::now();
                     elapsed = stoped - started;
-                    if(PRINT_TIME)  printf("Copyback time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    if(print_time)  printf("Copyback time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                     started = steady_clock_type::now();
 
                     // Unmap gpu_pkts and gpu_states
@@ -845,7 +845,7 @@ public:
 
             stoped = steady_clock_type::now();
             elapsed = stoped - started;
-            if(PRINT_TIME)printf("CPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            if(print_time)printf("CPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
             started = steady_clock_type::now();
 
 
@@ -870,12 +870,12 @@ public:
                 pre_cpu_processing_num=cpu_processing_num;
                 cpu_processing_num=cpu_time;
                 if(processing_time>=min_processing_time){
-                    if(PRINT_TIME)std::cout<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
+                    if(print_time)std::cout<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
                     if(i==0){
-                        if(PRINT_TIME)    std::cout<<"GPU_max_pkt: "<<0<<std::endl;
+                        if(print_time)    std::cout<<"GPU_max_pkt: "<<0<<std::endl;
                         return 0;
                     }else{
-                        if(PRINT_TIME)   std::cout<<"GPU_max_pkt: "<<_flows[index][i]->packets[index].size()<<std::endl;
+                        if(print_time)   std::cout<<"GPU_max_pkt: "<<_flows[index][i]->packets[index].size()<<std::endl;
                         return i+1;
                     }
                     //std::cout<<"    min_processing_time:"<<*result<<std::endl;
