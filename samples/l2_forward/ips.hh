@@ -704,8 +704,8 @@ public:
               memset(gpu_pkts[index], 0, ngpu_pkts);
               memset(gpu_states[index], 0, ngpu_states);
                 //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
-               // gpu_mem_map(gpu_pkts[index], ngpu_pkts);
-               // gpu_mem_map(gpu_states[index], ngpu_states);
+                gpu_mem_map(gpu_pkts[index], ngpu_pkts);
+                gpu_mem_map(gpu_states[index], ngpu_states);
                 started[lcore_id] = steady_clock_type::now();
 //#pragma omp parallel for
                 for(int i = 0; i < partition; i++){
