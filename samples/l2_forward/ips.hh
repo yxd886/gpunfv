@@ -709,7 +709,7 @@ public:
 
 
                     started = steady_clock_type::now();
-                    gpu_sync(stream);
+                    //gpu_sync(stream);
                     stoped = steady_clock_type::now();
                     elapsed = stoped - started;
                     if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
@@ -808,7 +808,7 @@ public:
 
 
                     started = steady_clock_type::now();
-                    gpu_sync(stream);
+                    //gpu_sync(stream);
                     stoped = steady_clock_type::now();
                     elapsed = stoped - started;
                     if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
