@@ -693,8 +693,8 @@ public:
                 int ngpu_states = partition * sizeof(ips_flow_state);
                 //gpu_pkts[index] = (PKT*)malloc(ngpu_pkts);
                // gpu_states[index] = (ips_flow_state*)malloc(ngpu_states);
-                gpu_malloc((void**)&gpu_pkts[index],ngpu_pkts);
-				gpu_malloc((void**)&gpu_states[index],ngpu_states);
+                gpu_malloc_host((void**)&gpu_pkts[index],ngpu_pkts);
+				gpu_malloc_host((void**)&gpu_states[index],ngpu_states);
 
 
                 assert(gpu_pkts[index]);
@@ -763,8 +763,8 @@ public:
                     // Unmap gpu_pkts and gpu_states
                   //  gpu_mem_unmap(gpu_pkts[!index]);
                  //   gpu_mem_unmap(gpu_states[!index]);
-                    gpu_free(gpu_pkts[!index]);
-                    gpu_free(gpu_states[!index]);
+                    gpu_free_host(gpu_pkts[!index]);
+                    gpu_free_host(gpu_states[!index]);
 
                     // Forward GPU packets[current_idx]
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
@@ -859,8 +859,8 @@ public:
                     // Unmap gpu_pkts and gpu_states
                   //  gpu_mem_unmap(gpu_pkts[!index]);
                   //  gpu_mem_unmap(gpu_states[!index]);
-                    gpu_free(gpu_pkts[!index]);
-                    gpu_free(gpu_states[!index]);
+                    gpu_free_host(gpu_pkts[!index]);
+                    gpu_free_host(gpu_states[!index]);
                     // Forward GPU packets[current_idx]
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
                         _flows[!index][i]->forward_pkts(!index);

@@ -178,6 +178,10 @@ void gpu_malloc(void** devPtr, size_t size){
 	checkCudaErrors(cudaMalloc(devPtr, size));
 }
 
+void gpu_malloc_host(void** devPtr, size_t size){
+	checkCudaErrors(cudaMallocHost(devPtr, size));
+}
+
 
 void gpu_memcpy_async_h2d(void* dst, const void*src, size_t count ,cudaStream_t stream=0){
 	checkCudaErrors(cudaMemcpyAsync(dst,src,count,cudaMemcpyHostToDevice,stream));
@@ -196,6 +200,11 @@ void gpu_memset_async(void * devPtr, int value, size_t count, cudaStream_t strea
 
 void gpu_free(void* devPtr){
 	checkCudaErrors(cudaFree(devPtr));
+}
+
+
+void gpu_free_host(void* devPtr){
+	checkCudaErrors(cudaFreeHost(devPtr));
 }
 
 
