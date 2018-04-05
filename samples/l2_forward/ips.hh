@@ -649,11 +649,11 @@ public:
             if(_flows[!index].empty()==false){
 
                 started[lcore_id] = steady_clock_type::now();
-                std::thread t1( [this,&index](){
-                    gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
-                    gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
-                });
-                t1.detach();
+
+                gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
+                gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
+
+
                 //gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
                 //gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
                 stoped[lcore_id] = steady_clock_type::now();
@@ -802,11 +802,11 @@ public:
                 elapsed = stoped[lcore_id] - started[lcore_id];
                 if(print_time)printf("Batching state time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
-                std::thread t2([this,&index,&ngpu_pkts,&ngpu_states](){
-                    gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
-                    gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
-                });
-                t2.detach();
+
+                gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
+                gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
+
+
                 //gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
                 //gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
                 //std::thread t1(batch_copy2device,dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream,dev_gpu_states,gpu_states[index],ngpu_states);
