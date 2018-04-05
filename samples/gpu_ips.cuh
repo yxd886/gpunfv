@@ -90,7 +90,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
 	
 			int count = st_arr[state].output.count;
 			ips_state->_alert[times] =(count != 0||ips_state->_alert[times]==true)?true:ips_state->_alert[times];
-			int inp = pkts[I].content[j];
+			int inp = pkts[j];
 			state = st_arr[state].G[inp]; 
 		}
 	ips_state->_state[times] = state;
@@ -109,7 +109,7 @@ __device__ void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state *state)
     int num_pkts = cb->num_pkts;
 
     for(i = 0; i < num_pkts; i += BATCH_SIZE) {
-        process_batch(dfa_arr, &pkts[i], state);
+        process_batch(dfa_arr, pkts[i].content, state);
 
     }
 }
