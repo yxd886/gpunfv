@@ -18,12 +18,13 @@
 
 #define MAX_MATCH 8192
 #define MAX_PKT_SIZE 1500
+#define DFA_NUM 50
 
 struct ips_flow_state{
 
-    uint16_t _state[50];
-    int _dfa_id[50];
-    bool _alert[50];
+    uint16_t _state[DFA_NUM];
+    int _dfa_id[DFA_NUM];
+    bool _alert[DFA_NUM];
 };
 struct PKT{
 
@@ -80,7 +81,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
     
     
 
-   	for(int times=0;times<50;times++){
+   	for(int times=0;times<DFA_NUM;times++){
    	
    	    int dfa_id = ips_state->_dfa_id[times]; 
    	    int state = ips_state->_state[times];

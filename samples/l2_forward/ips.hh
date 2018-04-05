@@ -22,6 +22,8 @@ extern uint64_t print_time;
 
 #define MAX_FLOW_NUM 10000
 
+#define DFA_NUM 50
+
 
 
 std::chrono::time_point<std::chrono::steady_clock> started;
@@ -126,9 +128,9 @@ public:
 
 struct ips_flow_state{
 
-    uint16_t _state[50];
-    int _dfa_id[50];
-    bool _alert[50];
+    uint16_t _state[DFA_NUM];
+    int _dfa_id[DFA_NUM];
+    bool _alert[DFA_NUM];
 
 
 };
@@ -323,7 +325,7 @@ public:
         }
 
        void init_automataState(struct ips_flow_state& state){
-             for(int i=0;i<50;i++){
+             for(int i=0;i<DFA_NUM;i++){
                  srand((unsigned)time(NULL));
                  state._state[i]=0;
                  state._alert[i]=false;
@@ -357,7 +359,7 @@ public:
            for(I = 0; I < BATCH_SIZE; I++) {
                int len = pkts[I].len;
 
-               for(int times=0;times<50;times++){
+               for(int times=0;times<DFA_NUM;times++){
 
                    int state = ips_state->_state[times];
                    int dfa_id = pkts[I].dfa_id[times];
