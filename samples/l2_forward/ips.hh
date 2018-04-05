@@ -642,9 +642,13 @@ public:
 
             if(_flows[!index].empty()==false){
 
-
+                started[lcore_id] = steady_clock_type::now();
                 gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
                 gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
+                stoped[lcore_id] = steady_clock_type::now();
+                auto elapsed = stoped[lcore_id] - started[lcore_id];
+                if(print_time)  printf("lcore_id: %d Memcpy device to host time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                started[lcore_id] = steady_clock_type::now();
 
             }
 
