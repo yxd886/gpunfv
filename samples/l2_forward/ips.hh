@@ -688,7 +688,7 @@ public:
                 gpu_mem_map(gpu_pkts[index], ngpu_pkts);
                 gpu_mem_map(gpu_states[index], ngpu_states);
                 started = steady_clock_type::now();
-#pragma omp parallel for
+//#pragma omp parallel for
                 for(int i = 0; i < partition; i++){
 
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
@@ -715,7 +715,7 @@ public:
                     if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                     started = steady_clock_type::now();
 
-#pragma omp parallel for
+//#pragma omp parallel for
                   //  {
                         for(int i = 0; i < pre_partition; i++){
                             //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
@@ -762,7 +762,7 @@ public:
 
                 started = steady_clock_type::now();
                 //batch the current state
-#pragma omp parallel for
+//#pragma omp parallel for
                 for(int i = 0; i < partition; i++){
                     //gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
 
