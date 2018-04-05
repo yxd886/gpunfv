@@ -113,18 +113,37 @@ void start_test() {
 
 __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_info, int flowDim, int nflows) {
 
+
+
+	__shared__ struct ips_flow_state gpu_ips_flow_state[32];
+	__shared__ char gpu_pkts [32][128];
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 	if(id >= nflows) return ;
 	char**pkts =pkt_batch + id * flowDim;
 	int i=0;
 	struct ips_flow_state state;
 	memcpy(&state,(struct ips_flow_state *)state_batch[id],sizeof(ips_flow_state));
+		for(int i= 0 ;i <DFA_NUM; i++){
+		gpu_ips_flow_state[id%32]._state[i]= (struct ips_flow_state *)state_batch[id]->_state[i];
+		gpu_ips_flow_state[id%32]._dfa_id[i] =(struct ips_flow_state *)state_batch[id]->_dfa_id[i];
+		gpu_ips_flow_state[id%32]._alert[i] = (struct ips_flow_state *)state_batch[id]->_alert[i];
+
+	}
 	for(i= 0; i < flowDim; i++) {
 	
 		if(pkts[i] == NULL) break;
-		ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);
-			}
-	memcpy((struct ips_flow_state *)state_batch[id],&state,sizeof(ips_flow_state));
+		//ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);
+		memcpy(gpu_pkts[id%32],pkts[i],pkt_len(pkts[i]));
+		
+		process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,pkts[i],&gpu_ips_flow_state[id%32]);		memcpy(pkts[i],gpu_pkts[id%32],pkt_len(pkts[i]));
+	}
+	for(int i= 0 ;i <DFA_NUM; i++){
+	
+		(struct ips_flow_state *)state_batch[id]->_state[i]= gpu_ips_flow_state[id%32]._state[i];
+		(struct ips_flow_state *)state_batch[id]->_dfa_id[i]= gpu_ips_flow_state[id%32]._dfa_id[i];
+		(struct ips_flow_state *)state_batch[id]->_alert[i] = gpu_ips_flow_state[id%32]._alert[i];
+
+	}
 
 }
 

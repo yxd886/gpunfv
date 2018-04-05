@@ -13,17 +13,18 @@
 #include <netinet/in.h>
 
 #include "common.cuh"
-#include "../seastar/nf/aho-corasick/fpp.h"
-#include "../seastar/nf/aho-corasick/aho.hh"
+#include "../nf/aho-corasick/fpp.h"
+#include "../nf/aho-corasick/aho.hh"
 
 #define MAX_MATCH 8192
 #define MAX_PKT_SIZE 1500
+#define DFA_NUM 50
 
 struct ips_flow_state{
 
-    uint16_t _state[50];
-    int _dfa_id[50];
-    bool _alert[50];
+    uint16_t _state[DFA_NUM];
+    int _dfa_id[DFA_NUM];
+    bool _alert[DFA_NUM];
 };
 struct PKT{
 
@@ -70,31 +71,29 @@ __global__ void childKernel(const struct aho_dfa *dfa_arr,
 }  
 
 __device__ void process_batch(const struct aho_dfa *dfa_arr,    
-   const struct aho_pkt *pkts, struct ips_flow_state *ips_state) {
-    int I, j;
-    I=0;
+   char *pkts, struct ips_flow_state *ips_state) {
+    int  j;
+    
    
-    int len = pkts[I].len;
+    int len = pkt_len(pkts);
     struct aho_state *st_arr = NULL;
         
     
     
 
-   	for(int times=0;times<50;times++){
+   	for(int times=0;times<DFA_NUM;times++){
    	
-   	    int dfa_id = pkts[I].dfa_id[times]; 
+   	    int dfa_id = ips_state->_dfa_id[times]; 
    	    int state = ips_state->_state[times];
    	    st_arr=dfa_arr[dfa_id].root; 
-
    	    ips_state->_state[times]=(state >= dfa_arr[dfa_id].num_used_states)?0:ips_state->_state[times];
-
    		for(j = 0; j < len; j++) {
-			int count = st_arr[state].output.count;	
+	
+			int count = st_arr[state].output.count;
 			ips_state->_alert[times] =(count != 0||ips_state->_alert[times]==true)?true:ips_state->_alert[times];
-			int inp = pkts[I].content[j];
+			int inp = pkts[j];
 			state = st_arr[state].G[inp]; 
 		}
-
 	ips_state->_state[times] = state;
    	}
 
@@ -111,7 +110,7 @@ __device__ void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state *state)
     int num_pkts = cb->num_pkts;
 
     for(i = 0; i < num_pkts; i += BATCH_SIZE) {
-        process_batch(dfa_arr, &pkts[i], state);
+        process_batch(dfa_arr, (char*)pkts[i].content, state);
 
     }
 }
@@ -120,11 +119,7 @@ __device__ void parse_pkt(char *pkt, struct ips_flow_state *state, struct aho_pk
 	
 
     uint32_t len = pkt_len(pkt);
-
-	aho_pkt->content	=(uint8_t*)malloc(len);
-    memcpy(aho_pkt->content,(uint8_t*)pkt,len);
-	
-    //aho_pkt->content=(uint8_t *)pkt;
+    aho_pkt->content=(uint8_t *)pkt;
     aho_pkt->dfa_id = state->_dfa_id;
     aho_pkt->len = len;
 }
