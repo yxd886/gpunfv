@@ -122,7 +122,7 @@ __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_i
 	char**pkts =pkt_batch + id * flowDim;
 	int i=0;
 	struct ips_flow_state state;
-	memcpy(&state,(struct ips_flow_state *)state_batch[id],sizeof(ips_flow_state));
+	//memcpy(&state,(struct ips_flow_state *)state_batch[id],sizeof(ips_flow_state));
 		for(int i= 0 ;i <DFA_NUM; i++){
 		gpu_ips_flow_state[id%32]._state[i]= ((struct ips_flow_state *)state_batch[id])->_state[i];
 		gpu_ips_flow_state[id%32]._dfa_id[i] =((struct ips_flow_state *)state_batch[id])->_dfa_id[i];
@@ -135,7 +135,7 @@ __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_i
 		//ips_detect(pkts[i], (struct ips_flow_state *)state_batch[id], (struct gpu_IPS *)extra_info);
 		memcpy(gpu_pkts[id%32],pkts[i],pkt_len(pkts[i]));
 		
-		process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,pkts[i],&gpu_ips_flow_state[id%32]);		memcpy(pkts[i],gpu_pkts[id%32],pkt_len(pkts[i]));
+		process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,gpu_pkts[id%32],&gpu_ips_flow_state[id%32]);		memcpy(pkts[i],gpu_pkts[id%32],pkt_len(pkts[i]));
 	}
 	for(int i= 0 ;i <DFA_NUM; i++){
 	
