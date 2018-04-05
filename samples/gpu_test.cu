@@ -139,21 +139,22 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
  
 		
 		//ips_detect((char*)pkts[i].pkt, &state_ptr[id], (struct gpu_IPS *)extra_info);
-		for(int j = 0; j < pkt_len(pkts[i].pkt);j++){
+		/*for(int j = 0; j < pkt_len(pkts[i].pkt);j++){
 		
 			gpu_pkt[id%32][j]=pkts[i].pkt[j];
 		
-		}
+		}*/
 		
-		
+		memcpy(gpu_pkt[id%32],pkts[i].pkt,pkt_len(pkts[i].pkt));
 		//process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,(char*)pkts[i].pkt,&gpu_ips_flow_state[id%32]);
 		process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,(char*)gpu_pkt[id%32],&gpu_ips_flow_state[id%32]);
 	
-		for(int j = 0; j < pkt_len(pkts[i].pkt);j++){
+		/*for(int j = 0; j < pkt_len(pkts[i].pkt);j++){
 		
 			pkts[i].pkt[j]=gpu_pkt[id%32][j];
 		
-		}
+		}*/
+		memcpy(pkts[i].pkt,gpu_pkt[id%32],pkt_len(pkts[i].pkt));
 	}
 	
 	for(int i= 0 ;i <50; i++){
