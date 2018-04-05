@@ -630,7 +630,12 @@ public:
         }
 
 
+        void batch_copy2device(PKT*dev_gpu_pkts,PKT* host_gpu_pkts,int ngpu_pkts, cudaStream stream, ips_flow_state*dev_gpu_states,ips_flow_state*host_gpu_states,int ngpu_states){
 
+            gpu_memcpy_async_h2d(dev_gpu_pkts,host_gpu_pkts,ngpu_pkts,stream);
+            gpu_memcpy_async_h2d(dev_gpu_states,host_gpu_states,ngpu_states,stream);
+
+        }
         void schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
@@ -792,9 +797,10 @@ public:
                 if(print_time)printf("Batching state time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
-                gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
-                gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
-
+                //gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
+                //gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
+                std::thread t1(batch_copy2device,dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream,dev_gpu_states,gpu_states[index],ngpu_states);
+                t1.detach();
                 stoped[lcore_id] = steady_clock_type::now();
                 elapsed = stoped[lcore_id] - started[lcore_id];
                 if(print_time)printf("lcore %d Memcpy to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
