@@ -531,7 +531,7 @@ void print_stats(void){
     uint64_t packets_dropped[10]={0};
 
 
-    printf("-------------------------------------------------------------------------------");
+    printf("-------------------------------------------------------------------------------\n");
     for(unsigned i =0; i<RTE_MAX_LCORE; i++){
         if (rte_lcore_is_enabled(i) == 0)
             continue;
@@ -557,7 +557,7 @@ void print_stats(void){
            total_packets_tx-pre_total_tx,
            total_packets_rx-pre_total_rx,
            total_packets_dropped-pre_total_drop);
-    printf("-------------------------------------------------------------------------------");
+    printf("-------------------------------------------------------------------------------\n");
 
 
     pre_total_tx=total_packets_tx;
