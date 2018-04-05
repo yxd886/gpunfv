@@ -691,18 +691,18 @@ public:
                 int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(PKT);
                 if(print_time)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(PKT)<<std::endl;
                 int ngpu_states = partition * sizeof(ips_flow_state);
-                //gpu_pkts[index] = (PKT*)malloc(ngpu_pkts);
-               // gpu_states[index] = (ips_flow_state*)malloc(ngpu_states);
-                gpu_malloc_host((void**)&gpu_pkts[index],ngpu_pkts);
-				gpu_malloc_host((void**)&gpu_states[index],ngpu_states);
+                gpu_pkts[index] = (PKT*)malloc(ngpu_pkts);
+                gpu_states[index] = (ips_flow_state*)malloc(ngpu_states);
+            //    gpu_malloc_host((void**)&gpu_pkts[index],ngpu_pkts);
+			//	gpu_malloc_host((void**)&gpu_states[index],ngpu_states);
 
 
                 assert(gpu_pkts[index]);
                 assert(gpu_states[index]);
 
                 // Clear and map gpu_pkts and gpu_states
-             // memset(gpu_pkts[index], 0, ngpu_pkts);
-             // memset(gpu_states[index], 0, ngpu_states);
+              memset(gpu_pkts[index], 0, ngpu_pkts);
+              memset(gpu_states[index], 0, ngpu_states);
                 //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
                // gpu_mem_map(gpu_pkts[index], ngpu_pkts);
                // gpu_mem_map(gpu_states[index], ngpu_states);
@@ -761,12 +761,12 @@ public:
                     started[lcore_id] = steady_clock_type::now();
 
                     // Unmap gpu_pkts and gpu_states
-                  //  gpu_mem_unmap(gpu_pkts[!index]);
-                 //   gpu_mem_unmap(gpu_states[!index]);
-                    gpu_free_host(gpu_pkts[!index]);
-                    gpu_free_host(gpu_states[!index]);
-                    gpu_pkts[!index]=nullptr;
-                    gpu_states[!index]=nullptr;
+                    gpu_mem_unmap(gpu_pkts[!index]);
+                    gpu_mem_unmap(gpu_states[!index]);
+                  //  gpu_free_host(gpu_pkts[!index]);
+                  //  gpu_free_host(gpu_states[!index]);
+                  //  gpu_pkts[!index]=nullptr;
+                  //  gpu_states[!index]=nullptr;
 
                     // Forward GPU packets[current_idx]
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
@@ -859,12 +859,12 @@ public:
                     started[lcore_id] = steady_clock_type::now();
 
                     // Unmap gpu_pkts and gpu_states
-                  //  gpu_mem_unmap(gpu_pkts[!index]);
-                  //  gpu_mem_unmap(gpu_states[!index]);
-                    gpu_free_host(gpu_pkts[!index]);
-                    gpu_free_host(gpu_states[!index]);
-                    gpu_pkts[!index]=nullptr;
-                    gpu_states[!index]=nullptr;
+                    gpu_mem_unmap(gpu_pkts[!index]);
+                    gpu_mem_unmap(gpu_states[!index]);
+               //     gpu_free_host(gpu_pkts[!index]);
+               //     gpu_free_host(gpu_states[!index]);
+              //      gpu_pkts[!index]=nullptr;
+              //      gpu_states[!index]=nullptr;
 
                     // Forward GPU packets[current_idx]
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
