@@ -553,7 +553,7 @@ void print_stats(void){
         /* skip disabled ports */
 
 
-    printf("Total Packets sent rate: %8d Packets received rate: %8d Packets dropped: %8d\n",
+    printf("Total    Packets sent rate: %8d Packets received rate: %8d Packets dropped: %8d\n",
            total_packets_tx-pre_total_tx,
            total_packets_rx-pre_total_rx,
            total_packets_dropped-pre_total_drop);
