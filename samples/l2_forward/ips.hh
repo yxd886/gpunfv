@@ -630,7 +630,7 @@ public:
         }
 
 
-        void batch_copy2device(PKT*dev_gpu_pkts,PKT* host_gpu_pkts,int ngpu_pkts, cudaStream stream, ips_flow_state*dev_gpu_states,ips_flow_state*host_gpu_states,int ngpu_states){
+        void batch_copy2device(PKT*dev_gpu_pkts,PKT* host_gpu_pkts,int ngpu_pkts, cudaStream_t stream, ips_flow_state*dev_gpu_states,ips_flow_state*host_gpu_states,int ngpu_states){
 
             gpu_memcpy_async_h2d(dev_gpu_pkts,host_gpu_pkts,ngpu_pkts,stream);
             gpu_memcpy_async_h2d(dev_gpu_states,host_gpu_states,ngpu_states,stream);
