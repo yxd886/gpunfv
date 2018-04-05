@@ -112,7 +112,7 @@ void start_test() {
 }
 
 __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows) {
-/*
+
 	__shared__ struct ips_flow_state gpu_ips_flow_state[32];
 
 	
@@ -147,7 +147,7 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
 		state_ptr[id]._alert[i] = gpu_ips_flow_state[id%32]._alert[i];
 
 	}
-*/
+
 	return;	
 	
 
