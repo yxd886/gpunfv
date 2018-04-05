@@ -701,8 +701,8 @@ public:
                 assert(gpu_states[index]);
 
                 // Clear and map gpu_pkts and gpu_states
-                memset(gpu_pkts[index], 0, ngpu_pkts);
-                memset(gpu_states[index], 0, ngpu_states);
+             // memset(gpu_pkts[index], 0, ngpu_pkts);
+             // memset(gpu_states[index], 0, ngpu_states);
                 //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
                // gpu_mem_map(gpu_pkts[index], ngpu_pkts);
                // gpu_mem_map(gpu_states[index], ngpu_states);
@@ -763,6 +763,8 @@ public:
                     // Unmap gpu_pkts and gpu_states
                   //  gpu_mem_unmap(gpu_pkts[!index]);
                  //   gpu_mem_unmap(gpu_states[!index]);
+                    gpu_free(gpu_pkts[!index]);
+                    gpu_free(gpu_states[!index]);
 
                     // Forward GPU packets[current_idx]
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
@@ -857,7 +859,8 @@ public:
                     // Unmap gpu_pkts and gpu_states
                   //  gpu_mem_unmap(gpu_pkts[!index]);
                   //  gpu_mem_unmap(gpu_states[!index]);
-
+                    gpu_free(gpu_pkts[!index]);
+                    gpu_free(gpu_states[!index]);
                     // Forward GPU packets[current_idx]
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
                         _flows[!index][i]->forward_pkts(!index);
