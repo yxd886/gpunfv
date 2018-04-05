@@ -693,8 +693,8 @@ public:
                 int ngpu_states = partition * sizeof(ips_flow_state);
                 //gpu_pkts[index] = (PKT*)malloc(ngpu_pkts);
                // gpu_states[index] = (ips_flow_state*)malloc(ngpu_states);
-                gpu_malloc(&gpu_pkts[index],ngpu_pkts);
-				gpu_malloc(&gpu_states[index],ngpu_states);
+                gpu_malloc((void**)&gpu_pkts[index],ngpu_pkts);
+				gpu_malloc((void**)&gpu_states[index],ngpu_states);
 
 
                 assert(gpu_pkts[index]);
