@@ -713,7 +713,8 @@ public:
                     if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                     started = steady_clock_type::now();
 
-#pragma omp parallel num_threads(10){
+//#pragma omp parallel num_threads(10)
+
                     for(int i = 0; i < pre_partition; i++){
                         //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
                         //assert(gpu_states[!index][i]._dfa_id<200);
@@ -725,7 +726,7 @@ public:
                     }
 
 
-                }
+
 
 
 
