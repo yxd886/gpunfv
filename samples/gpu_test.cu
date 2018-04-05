@@ -124,9 +124,9 @@ __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_i
 	struct ips_flow_state state;
 	memcpy(&state,(struct ips_flow_state *)state_batch[id],sizeof(ips_flow_state));
 		for(int i= 0 ;i <DFA_NUM; i++){
-		gpu_ips_flow_state[id%32]._state[i]= (struct ips_flow_state *)state_batch[id]->_state[i];
-		gpu_ips_flow_state[id%32]._dfa_id[i] =(struct ips_flow_state *)state_batch[id]->_dfa_id[i];
-		gpu_ips_flow_state[id%32]._alert[i] = (struct ips_flow_state *)state_batch[id]->_alert[i];
+		gpu_ips_flow_state[id%32]._state[i]= ((struct ips_flow_state *)state_batch[id])->_state[i];
+		gpu_ips_flow_state[id%32]._dfa_id[i] =((struct ips_flow_state *)state_batch[id])->_dfa_id[i];
+		gpu_ips_flow_state[id%32]._alert[i] = ((struct ips_flow_state *)state_batch[id])->_alert[i];
 
 	}
 	for(i= 0; i < flowDim; i++) {
@@ -139,9 +139,9 @@ __global__ void gpu_nf_logic(char** pkt_batch, char **state_batch, char *extra_i
 	}
 	for(int i= 0 ;i <DFA_NUM; i++){
 	
-		(struct ips_flow_state *)state_batch[id]->_state[i]= gpu_ips_flow_state[id%32]._state[i];
-		(struct ips_flow_state *)state_batch[id]->_dfa_id[i]= gpu_ips_flow_state[id%32]._dfa_id[i];
-		(struct ips_flow_state *)state_batch[id]->_alert[i] = gpu_ips_flow_state[id%32]._alert[i];
+		((struct ips_flow_state *)state_batch[id])->_state[i]= gpu_ips_flow_state[id%32]._state[i];
+		((struct ips_flow_state *)state_batch[id])->_dfa_id[i]= gpu_ips_flow_state[id%32]._dfa_id[i];
+		((struct ips_flow_state *)state_batch[id])->_alert[i] = gpu_ips_flow_state[id%32]._alert[i];
 
 	}
 
