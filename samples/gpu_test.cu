@@ -203,7 +203,7 @@ void gpu_free(void* devPtr){
 
 void create_stream(cudaStream_t* stream_ptr){
 
-	checkCudaErrors(cudaStreamCreate(stream_ptr));
+	checkCudaErrors(cudaStreamCreateWithFlags(stream_ptr,cudaStreamNonBlocking));
 }
 
 void destory_stream(cudaStream_t stream){
