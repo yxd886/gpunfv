@@ -22,7 +22,7 @@ extern uint64_t print_time;
 
 #define MAX_FLOW_NUM 10000
 
-#define DFA_NUM 10
+#define DFA_NUM 15
 
 
 
