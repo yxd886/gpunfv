@@ -797,7 +797,7 @@ public:
                 elapsed = stoped[lcore_id] - started[lcore_id];
                 if(print_time)printf("Batching state time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
-                std::async(std::launch::async, [this,&index,&ngpu_pkts,&ngpu_states,&stream](){
+                std::async(std::launch::async, [this,&index,&ngpu_pkts,&ngpu_states](){
                     gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
                     gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
                 });
