@@ -649,7 +649,7 @@ public:
             if(_flows[!index].empty()==false){
 
                 started[lcore_id] = steady_clock_type::now();
-                std::async(std::launch::async, [this,&index,&ngpu_pkts,&ngpu_states](){
+                std::async(std::launch::async, [this,&index](){
                     gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
                     gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
                 });
