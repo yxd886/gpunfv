@@ -120,7 +120,7 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
 
 	PKT*pkts =(PKT*)pkt_batch + id * flowDim;
 	struct ips_flow_state* state_ptr=(struct ips_flow_state*)state_batch;
-	memcpy(&gpu_ips_flow_state[id%32],&state_ptr[id],sizeof(ips_flow_state));
+	//memcpy(&gpu_ips_flow_state[id%32],&state_ptr[id],sizeof(ips_flow_state));
 	for(int i= 0 ;i <50; i++){
 		gpu_ips_flow_state[id%32]._state[i]= state_ptr[id]._state[i];
 		gpu_ips_flow_state[id%32]._dfa_id[i] = state_ptr[id]._dfa_id[i];
@@ -149,7 +149,7 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
 
 	}
 	
-	memcpy(&state_ptr[id],&gpu_ips_flow_state[id%32],sizeof(ips_flow_state));
+	//memcpy(&state_ptr[id],&gpu_ips_flow_state[id%32],sizeof(ips_flow_state));
 
 }
 
