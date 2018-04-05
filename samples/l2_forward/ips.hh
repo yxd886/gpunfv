@@ -765,6 +765,8 @@ public:
                  //   gpu_mem_unmap(gpu_states[!index]);
                     gpu_free_host(gpu_pkts[!index]);
                     gpu_free_host(gpu_states[!index]);
+                    gpu_pkts[!index]=nullptr;
+                    gpu_states[!index]=nullptr;
 
                     // Forward GPU packets[current_idx]
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
@@ -861,6 +863,9 @@ public:
                   //  gpu_mem_unmap(gpu_states[!index]);
                     gpu_free_host(gpu_pkts[!index]);
                     gpu_free_host(gpu_states[!index]);
+                    gpu_pkts[!index]=nullptr;
+                    gpu_states[!index]=nullptr;
+
                     // Forward GPU packets[current_idx]
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
                         _flows[!index][i]->forward_pkts(!index);
