@@ -713,18 +713,18 @@ public:
                     if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                     started = steady_clock_type::now();
 
-//#pragma omp parallel num_threads(10)
+#pragma omp parallel num_threads(10)
+                    {
+                        for(int i = 0; i < pre_partition; i++){
+                            //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
+                            //assert(gpu_states[!index][i]._dfa_id<200);
+                            rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(ips_flow_state));
 
-                    for(int i = 0; i < pre_partition; i++){
-                        //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
-                        //assert(gpu_states[!index][i]._dfa_id<200);
-                        rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(ips_flow_state));
-
-                        for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                            for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
+                                rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                            }
                         }
                     }
-
 
 
 
