@@ -687,7 +687,7 @@ public:
                 //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
                 gpu_mem_map(gpu_pkts[index], ngpu_pkts);
                 gpu_mem_map(gpu_states[index], ngpu_states);
-
+                started = steady_clock_type::now();
 #pragma omp parallel for
                 for(int i = 0; i < partition; i++){
 
@@ -696,7 +696,10 @@ public:
                         rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0)),_flows[index][i]->packets[index][j].len());
                     }
                 }
-
+                stoped = steady_clock_type::now();
+                elapsed = stoped - started;
+                if(print_time)printf("batch pkt time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                started = steady_clock_type::now();
 
 
 
@@ -712,7 +715,7 @@ public:
                     if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                     started = steady_clock_type::now();
 
-//#pragma omp parallel num_threads(10)
+#pragma omp parallel for
                   //  {
                         for(int i = 0; i < pre_partition; i++){
                             //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
@@ -757,8 +760,9 @@ public:
                     _flows[!index].clear();
                 }
 
-
+                started = steady_clock_type::now();
                 //batch the current state
+#pragma omp parallel for
                 for(int i = 0; i < partition; i++){
                     //gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
 
@@ -779,7 +783,7 @@ public:
 
                 stoped = steady_clock_type::now();
                 elapsed = stoped - started;
-                if(print_time)printf("Batching time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                if(print_time)printf("Batching state time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started = steady_clock_type::now();
 
                 gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
