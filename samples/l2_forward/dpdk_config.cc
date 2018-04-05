@@ -58,6 +58,11 @@ uint64_t pre_total_rx;
 uint64_t pre_total_tx;
 uint64_t pre_total_drop;
 
+
+uint64_t pre_rx[10];
+uint64_t pre_tx[10];
+uint64_t pre_dropped[10];
+
 struct port_statistics statistics[RTE_MAX_ETHPORTS][10];
 
 void send_brust(uint8_t _port_id, uint8_t _queue_id, uint16_t lcore_id, rte_mbuf** pkt_buffer){
@@ -521,22 +526,38 @@ void print_stats(void){
     total_packets_dropped = 0;
     total_packets_tx = 0;
     total_packets_rx = 0;
+    uint64_t packets_rx[10]={0};
+    uint64_t packets_tx[10]={0};
+    uint64_t packets_dropped[10]={0};
 
 
+    printf("-------------------------------------------------------------------------------");
     for(unsigned i =0; i<RTE_MAX_LCORE; i++){
         if (rte_lcore_is_enabled(i) == 0)
             continue;
         total_packets_dropped += statistics[portid][i].dropped;
         total_packets_tx += statistics[portid][i].tx;
         total_packets_rx += statistics[portid][i].rx;
+        packets_rx[i]=statistics[portid][i].rx-pre_rx[i];
+        packets_tx[i]=statistics[portid][i].tx-pre_tx[i];
+        packets_dropped[i]=statistics[portid][i].dropped-pre_dropped[i];
+        printf("lcore %d Packets sent rate: %8d Packets received rate: %8d Packets dropped: %8d\n",
+               i,
+               packets_tx[i],
+               packets_rx[i],
+               packets_dropped[i]);
+        pre_dropped[i]=statistics[portid][i].dropped;
+        pre_tx[i]=statistics[portid][i].tx;
+        pre_rx[i]=statistics[portid][i].rx;
     }
         /* skip disabled ports */
 
 
-    printf("Packets sent rate: %8d Packets received rate: %8d Packets dropped: %8d\n",
+    printf("Total Packets sent rate: %8d Packets received rate: %8d Packets dropped: %8d\n",
            total_packets_tx-pre_total_tx,
            total_packets_rx-pre_total_rx,
            total_packets_dropped-pre_total_drop);
+    printf("-------------------------------------------------------------------------------");
 
 
     pre_total_tx=total_packets_tx;
