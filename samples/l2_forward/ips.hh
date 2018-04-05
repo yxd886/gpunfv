@@ -10,6 +10,7 @@
 #include "../gpu_interface.hh"
 #include "../../nf/aho-corasick/fpp.h"
 #include "../../nf/aho-corasick/aho.h"
+#include <omp.h>
 
 
 extern uint64_t _batch_size;
@@ -688,6 +689,7 @@ public:
                 gpu_mem_map(gpu_states[index], ngpu_states);
 
 
+#pragma omp parallel for
                 for(int i = 0; i < partition; i++){
 
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
@@ -695,6 +697,9 @@ public:
                         rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0)),_flows[index][i]->packets[index][j].len());
                     }
                 }
+
+
+
 
 
                 //sync last batch's result and copy them back to host
@@ -708,7 +713,7 @@ public:
                     if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                     started = steady_clock_type::now();
 
-
+#pragma omp parallel for
                     for(int i = 0; i < pre_partition; i++){
                         //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
                         //assert(gpu_states[!index][i]._dfa_id<200);
@@ -718,6 +723,10 @@ public:
                             rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
                         }
                     }
+
+
+
+
                     gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
                     gpu_memset_async(dev_gpu_states,0, pre_ngpu_states,stream);
                     stoped = steady_clock_type::now();

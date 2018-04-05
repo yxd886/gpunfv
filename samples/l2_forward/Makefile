@@ -49,13 +49,13 @@ CUDA_INC_DIR= /usr/local/cuda-8.0/samples/common/inc /usr/local/cuda-8.0/include
 
 
 CXXFLAGS += -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
-	    -isystem $(DPDK_INC_DIR) -isystem /usr/local/cuda-8.0/samples/common/inc -isystem /usr/local/cuda-8.0/include
+	    -isystem $(DPDK_INC_DIR) -isystem /usr/local/cuda-8.0/samples/common/inc -isystem /usr/local/cuda-8.0/include -fopenmp
 
 	    
 CUDAFLAGS += -I/usr/local/cuda-8.0/samples/common/inc -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60 -rdc=true -I/usr/local/cuda-8.0/include -I$(DPDK_INC_DIR)
 
 CUDA_LINK_FLAGS += -dlink -I/usr/local/cuda-8.0/samples/common/inc -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60  -I/usr/local/cuda-8.0/include -I$(DPDK_INC_DIR)
-LDFLAGS += -L/usr/local/cuda-8.0/lib64 -L$(DPDK_LIB_DIR)
+LDFLAGS += -L/usr/local/cuda-8.0/lib64 -L$(DPDK_LIB_DIR) -fopenmp
 
 LIBS += -lcudart -lcudadevrt -lcublas_device -Wl,--no-whole-archive -std=gnu++1y -g -Wall -Werror -Wno-error=deprecated-declarations -fvisibility=hidden -pthread -I/home/net/gpunfv/seastar -U_FORTIFY_SOURCE -DHAVE_DPDK -I/home/net/gpunfv/seastar/build/dpdk/include -march=native  -Wno-error=literal-suffix -Wno-literal-suffix -Wno-invalid-offsetof -Wno-overloaded-virtual -Wno-maybe-uninitialized -Wl,--no-as-needed -laio -lboost_program_options -lboost_system -lboost_filesystem -lstdc++ -lm -lboost_thread -lcryptopp -lrt -lgnutls -lgnutlsxx -llz4 -lprotobuf -ldl -lgcc_s -lunwind -Wl,--whole-archive -lrte_pmd_vmxnet3_uio -lrte_pmd_i40e -lrte_pmd_ixgbe -lrte_pmd_e1000 -lrte_pmd_ring -lrte_pmd_bnxt -lrte_pmd_cxgbe -lrte_pmd_ena -lrte_pmd_enic -lrte_pmd_fm10k -lrte_pmd_nfp -lrte_pmd_qede -lrte_pmd_sfc_efx -lrte_hash -lrte_kvargs -lrte_mbuf -lrte_ethdev -lrte_eal -lrte_mempool -lrte_mempool_ring -lrte_ring -lrte_cmdline -lrte_cfgfile -Wl,--no-whole-archive -lrt -lm -ldl -lhwloc -lnuma -lpciaccess -lxml2 -lz
 
