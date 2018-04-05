@@ -109,7 +109,7 @@ __device__ void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state *state)
     int num_pkts = cb->num_pkts;
 
     for(i = 0; i < num_pkts; i += BATCH_SIZE) {
-        process_batch(dfa_arr, pkts[i].content, state);
+        process_batch(dfa_arr, (char*)pkts[i].content, state);
 
     }
 }
