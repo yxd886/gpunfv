@@ -689,7 +689,7 @@ public:
                 gpu_mem_map(gpu_states[index], ngpu_states);
 
 
-#pragma omp parallel for
+//#pragma omp parallel for
                 for(int i = 0; i < partition; i++){
 
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
