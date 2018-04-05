@@ -114,6 +114,7 @@ void start_test() {
 __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows) {
 	//printf("in gpu_nf_logic\n");
 	__shared__ struct ips_flow_state gpu_ips_flow_state[32];
+	__shared__ struct PKT gpu_PKT[32];
 	
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 	if(id >= nflows) return ;
@@ -138,8 +139,21 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
  
 		
 		//ips_detect((char*)pkts[i].pkt, &state_ptr[id], (struct gpu_IPS *)extra_info);
-		process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,(char*)pkts[i].pkt,&gpu_ips_flow_state[id%32]);
+		for(int i = 0; i < pkt_len(pkts[i].pkt);i++){
+		
+			gpu_PKT[id%32].pkt[i]=pkts[i].pkt[i];
+		
+		}
+		
+		
+		//process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,(char*)pkts[i].pkt,&gpu_ips_flow_state[id%32]);
+		process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,(char*)gpu_PKT[id%32].pkt,&gpu_ips_flow_state[id%32]);
 	
+		for(int i = 0; i < pkt_len(pkts[i].pkt);i++){
+		
+			pkts[i].pkt[i]=gpu_PKT[id%32].pkt[i];
+		
+		}
 	}
 	
 	for(int i= 0 ;i <50; i++){
