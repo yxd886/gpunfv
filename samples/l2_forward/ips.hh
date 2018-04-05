@@ -11,6 +11,7 @@
 #include "../../nf/aho-corasick/fpp.h"
 #include "../../nf/aho-corasick/aho.h"
 #include <omp.h>
+#include <future>
 
 
 extern uint64_t _batch_size;
@@ -796,11 +797,14 @@ public:
                 elapsed = stoped[lcore_id] - started[lcore_id];
                 if(print_time)printf("Batching state time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
-
+                async(launch::async, [this,&index](){
+                    gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
+                    gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
+                });
                 //gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
                 //gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
-                std::thread t1(batch_copy2device,dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream,dev_gpu_states,gpu_states[index],ngpu_states);
-                t1.detach();
+                //std::thread t1(batch_copy2device,dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream,dev_gpu_states,gpu_states[index],ngpu_states);
+                //t1.detach();
                 stoped[lcore_id] = steady_clock_type::now();
                 elapsed = stoped[lcore_id] - started[lcore_id];
                 if(print_time)printf("lcore %d Memcpy to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
