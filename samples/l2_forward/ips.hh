@@ -653,6 +653,12 @@ public:
                 started[lcore_id] = steady_clock_type::now();
 
                 gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
+
+                stoped[lcore_id] = steady_clock_type::now();
+                auto elapsed = stoped[lcore_id] - started[lcore_id];
+                if(print_time)  printf("lcore_id: %d Memcpy pkt device to host time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                started[lcore_id] = steady_clock_type::now();
+
                 gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
 
 
@@ -660,7 +666,7 @@ public:
                 //gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
                 stoped[lcore_id] = steady_clock_type::now();
                 auto elapsed = stoped[lcore_id] - started[lcore_id];
-                if(print_time)  printf("lcore_id: %d Memcpy device to host time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                if(print_time)  printf("lcore_id: %d Memcpy state device to host time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
             }
@@ -812,6 +818,12 @@ public:
                 started[lcore_id] = steady_clock_type::now();
 
                 gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
+
+                stoped[lcore_id] = steady_clock_type::now();
+                elapsed = stoped[lcore_id] - started[lcore_id];
+                if(print_time)printf("lcore %d Memcpy pkt to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                started[lcore_id] = steady_clock_type::now();
+
                 gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
 
 
@@ -821,7 +833,7 @@ public:
                 //t1.detach();
                 stoped[lcore_id] = steady_clock_type::now();
                 elapsed = stoped[lcore_id] - started[lcore_id];
-                if(print_time)printf("lcore %d Memcpy to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                if(print_time)printf("lcore %d Memcpy state to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
                 //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
