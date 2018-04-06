@@ -182,8 +182,8 @@ void gpu_malloc_host(void** devPtr, size_t size){
 	checkCudaErrors(cudaMallocHost(devPtr, size));
 }
 
-//#pragma GCC push_options
-//#pragma GCC optimize ("O0")
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 void gpu_memcpy_async_h2d(void* dst, const void*src, size_t count ,cudaStream_t stream=0){
 	checkCudaErrors(cudaMemcpyAsync(dst,src,count,cudaMemcpyHostToDevice,stream));
 }
@@ -192,7 +192,7 @@ void gpu_memcpy_async_d2h(void* dst, const void*src, size_t count, cudaStream_t 
 	checkCudaErrors(cudaMemcpyAsync(dst,src,count,cudaMemcpyDeviceToHost,stream));
 	
 }
-//#pragma GCC pop_options
+#pragma GCC pop_options
 
 void gpu_memset_async(void * devPtr, int value, size_t count, cudaStream_t stream = 0){
 
