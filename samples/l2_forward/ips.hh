@@ -649,8 +649,7 @@ public:
             started[lcore_id] = steady_clock_type::now();
 
             if(_flows[!index].empty()==false){
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
+
                 started[lcore_id] = steady_clock_type::now();
 
                 gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
@@ -661,7 +660,7 @@ public:
                 started[lcore_id] = steady_clock_type::now();
 
                 gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
-#pragma GCC pop_options
+
 
                 //gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
                 //gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
@@ -812,8 +811,7 @@ public:
                 dev_gpu_states=_cuda_mem_allocator.gpu_state_batch_alloc(ngpu_states/sizeof(ips_flow_state));
                 assert(dev_gpu_pkts!=nullptr&&dev_gpu_states!=nullptr);
 
-#pragma GCC push_options
-#pragma GCC optimize ("O0")
+
 
 
 
@@ -832,7 +830,7 @@ public:
 
                 gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
 
-#pragma GCC pop_options
+
                 //gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
                 //gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
                 //std::thread t1(batch_copy2device,dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream,dev_gpu_states,gpu_states[index],ngpu_states);
