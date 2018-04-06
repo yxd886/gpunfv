@@ -52,7 +52,7 @@ CXXFLAGS += -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
 	    -isystem $(DPDK_INC_DIR) -isystem /usr/local/cuda-8.0/samples/common/inc -isystem /usr/local/cuda-8.0/include -fopenmp
 
 	    
-CUDAFLAGS += -G -Xcompiler -Ofast -I/usr/local/cuda-8.0/samples/common/inc -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60 -rdc=true -I/usr/local/cuda-8.0/include -I$(DPDK_INC_DIR)
+CUDAFLAGS +=  -I/usr/local/cuda-8.0/samples/common/inc -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60 -rdc=true -I/usr/local/cuda-8.0/include -I$(DPDK_INC_DIR)
 
 CUDA_LINK_FLAGS += -dlink -I/usr/local/cuda-8.0/samples/common/inc -gencode arch=compute_60,code=sm_60 -gencode arch=compute_60,code=compute_60  -I/usr/local/cuda-8.0/include -I$(DPDK_INC_DIR)
 LDFLAGS += -L/usr/local/cuda-8.0/lib64 -L$(DPDK_LIB_DIR) -fopenmp
