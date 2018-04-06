@@ -222,7 +222,7 @@ checkCudaErrors(cudaStreamDestroy(stream));
 
 void create_event(cudaEvent_t* event_ptr){
 
-checkCudaErrors(cudaEventCreateWithFlags());
+checkCudaErrors(cudaEventCreateWithFlags(cudaEventDisableTiming));
 }
 
 
