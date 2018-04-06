@@ -655,7 +655,7 @@ public:
                 gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
 
                 stoped[lcore_id] = steady_clock_type::now();
-                auto elapsed = stoped[lcore_id] - started[lcore_id];
+                elapsed = stoped[lcore_id] - started[lcore_id];
                 if(print_time)  printf("lcore_id: %d Memcpy pkt device to host time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
