@@ -521,7 +521,7 @@ int init_mem(unsigned nb_mbuf){
 
 void print_stats(void){
     uint64_t total_packets_dropped, total_packets_tx, total_packets_rx;
-    unsigned portid;
+    unsigned portid=0;
 
     total_packets_dropped = 0;
     total_packets_tx = 0;
