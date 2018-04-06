@@ -24,7 +24,7 @@ extern uint64_t gpu_time;
 
 #define MAX_PKT_SIZE 1500
 
-#define MAX_FLOW_NUM 10000
+#define MAX_FLOW_NUM 20000
 
 #define DFA_NUM 15
 
