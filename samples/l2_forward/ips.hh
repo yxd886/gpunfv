@@ -644,6 +644,7 @@ public:
             stoped[lcore_id] = steady_clock_type::now();
             auto elapsed = stoped[lcore_id] - started[lcore_id];
             if(print_time)  printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            if(print_time)  printf("cuda_stream: %d, lcore: %d\n", (int)stream, lcore_id);
             started[lcore_id] = steady_clock_type::now();
 
             if(_flows[!index].empty()==false){
