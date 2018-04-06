@@ -13,7 +13,7 @@
 
 uint64_t _batch_size=1;
 uint64_t print_time = 0;
-
+uint64_t gpu_time = 0;
 uint16_t nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
 uint16_t nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 
@@ -377,6 +377,11 @@ int parse_args(int argc, char **argv){
                 sizeof(CMD_LINE_OPT_PRINT_TIME))) {
                   print_time=1;
             }
+            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_GPU_TIME,
+                sizeof(CMD_LINE_OPT_GPU_TIME))) {
+                  gpu_time=1;
+            }
+
 
             if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_ENABLE_JUMBO,
                 sizeof (CMD_LINE_OPT_ENABLE_JUMBO))) {
