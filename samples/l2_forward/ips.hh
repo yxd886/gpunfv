@@ -949,10 +949,10 @@ public:
                 if(processing_time>=min_processing_time){
                     if(print_time)std::cout<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
                     if(i==0){
-                        if(print_time)    std::cout<<"GPU_max_pkt: "<<0<<std::endl;
+                        if(print_time||gpu_time)    std::cout<<"GPU_max_pkt: "<<0<<std::endl;
                         return 0;
                     }else{
-                        if(print_time)   std::cout<<"GPU_max_pkt: "<<_flows[index][i]->packets[index].size()<<std::endl;
+                        if(print_time||gpu_time)   std::cout<<"GPU_max_pkt: "<<_flows[index][i]->packets[index].size()<<std::endl;
                         return i+1;
                     }
                     //std::cout<<"    min_processing_time:"<<*result<<std::endl;
