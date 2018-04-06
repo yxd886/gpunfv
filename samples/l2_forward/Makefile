@@ -48,7 +48,7 @@ endif
 CUDA_INC_DIR= /usr/local/cuda-8.0/samples/common/inc /usr/local/cuda-8.0/include
 
 
-CXXFLAGS += -std=gnu++11 -g3 -ggdb3 -march=native \
+CXXFLAGS += -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
 	    -isystem $(DPDK_INC_DIR) -isystem /usr/local/cuda-8.0/samples/common/inc -isystem /usr/local/cuda-8.0/include -fopenmp
 
 	    
