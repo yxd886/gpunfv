@@ -320,6 +320,7 @@ int parse_args(int argc, char **argv){
         {CMD_LINE_OPT_ENABLE_JUMBO, 0, 0, 0},
         {CMD_LINE_OPT_HASH_ENTRY_NUM, 1, 0, 0},
         {CMD_LINE_OPT_PRINT_TIME, 0, 0, 0},
+        {CMD_LINE_OPT_GPU_TIME, 0, 0, 0},
         {NULL, 0, 0, 0}
     };
 
