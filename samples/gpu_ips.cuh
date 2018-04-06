@@ -80,11 +80,11 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
         
     
     
-#pragma unroll (5)
+//#pragma unroll (5)
    	for(int times=0;times<DFA_NUM;times++){
    	
-   	    register int dfa_id = ips_state->_dfa_id[times]; 
-   	    register int state = ips_state->_state[times];
+   	    int dfa_id = ips_state->_dfa_id[times]; 
+   	    int state = ips_state->_state[times];
    	    st_arr=dfa_arr[dfa_id].root; 
    	    state=(state >= dfa_arr[dfa_id].num_used_states)?0:state;
    		for(j = 0; j < len; j++) {

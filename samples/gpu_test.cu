@@ -122,7 +122,7 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
 	PKT*pkts =(PKT*)pkt_batch + id * flowDim;
 	struct ips_flow_state* state_ptr=(struct ips_flow_state*)state_batch;
 
-#pragma unroll (5)
+//#pragma unroll (5)
 	for(int i= 0 ;i <DFA_NUM; i++){
 		gpu_ips_flow_state[id%32]._state[i]= state_ptr[id]._state[i];
 		gpu_ips_flow_state[id%32]._dfa_id[i] = state_ptr[id]._dfa_id[i];
