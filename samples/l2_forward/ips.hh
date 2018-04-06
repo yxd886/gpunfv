@@ -32,6 +32,7 @@ std::chrono::time_point<std::chrono::steady_clock> started[10];
 std::chrono::time_point<std::chrono::steady_clock> stoped[10];
 using namespace std::chrono;
 using steady_clock_type = std::chrono::steady_clock;
+extern cudaStram_t streams[10];
 
 struct PKT{
 
@@ -729,7 +730,7 @@ public:
 
 
                     started[lcore_id] = steady_clock_type::now();
-                    //gpu_sync(stream);
+                    gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
                     if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));

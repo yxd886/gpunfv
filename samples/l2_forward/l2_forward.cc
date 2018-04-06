@@ -6,6 +6,8 @@
 extern uint64_t timer_period;
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
+cudaStram_t streams[10]
+
 //user defined NF include file
 
 
