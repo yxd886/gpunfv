@@ -100,6 +100,18 @@ main(int argc, char **argv)
 {
     unsigned lcore_id;
 
+
+    cudaDeviceProp prop;
+    int dev;
+    cudaGetDevice(&dev);
+    cudaGetDeviceProperties(&prop,dev);
+    printf("deviceOverlap :%d\n",prop.deviceOverlap);
+    if(!prop.deviceOverlap)
+    {
+            printf("Device doesn't support overlap\n");
+            return 0;
+    }
+
     dpdk_config(argc,argv);
     forwarder::ips=new IPS;
     /* launch per-lcore init on every lcore */
