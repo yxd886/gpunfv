@@ -8,6 +8,7 @@
 
 extern uint64_t _batch_size;
 extern uint64_t print_time;
+extern uint64_t gpu_time;
 
 #define COMPUTE_RATIO 100
 #define MAX_PKT_SIZE 1500
@@ -520,7 +521,13 @@ public:
                 // Launch kernel
                 gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, 
                     (char *)(_flows[0][index]->_f._nf->info_for_gpu), max_pkt_num_per_flow, partition,stream);
-
+                if(gpu_time){
+                    gpu_sync(stream);
+                    stoped[lcore_id] = steady_clock_type::now();
+                    elapsed = stoped[lcore_id] - started[lcore_id];
+                    printf("lcore %d sync time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                    started[lcore_id] = steady_clock_type::now();
+                }
             } else {
                 if(_flows[!index].empty()==false){
                     started[lcore_id] = steady_clock_type::now();
