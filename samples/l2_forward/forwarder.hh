@@ -210,7 +210,7 @@ public:
 
         process_type type = process_type::hybernate;
         if(_lcore_id>=2 ){
-            printf("lore_id >2 :%d",_lcore_id);
+            //printf("lore_id >2 :%d",_lcore_id);
             type = process_type::cpu_only;
         }
         auto eth_h = pkt.get_header<ether_hdr>(0);
