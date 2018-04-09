@@ -113,41 +113,41 @@ void start_test() {
 
 __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows) {
 
-//	__shared__ struct ips_flow_state gpu_ips_flow_state[32];
+	__shared__ struct ips_flow_state gpu_ips_flow_state[32];
 
 	
-//	int id = threadIdx.x + blockDim.x * blockIdx.x;
-//	if(id >= nflows) return ;
+	int id = threadIdx.x + blockDim.x * blockIdx.x;
+	if(id >= nflows) return ;
 
-//	PKT*pkts =(PKT*)pkt_batch + id * flowDim;
-//	struct ips_flow_state* state_ptr=(struct ips_flow_state*)state_batch;
+	PKT*pkts =(PKT*)pkt_batch + id * flowDim;
+	struct ips_flow_state* state_ptr=(struct ips_flow_state*)state_batch;
 
 
-//	for(int i= 0 ;i <DFA_NUM; i++){
-//		gpu_ips_flow_state[id%32]._state[i]= state_ptr[id]._state[i];
-//		gpu_ips_flow_state[id%32]._dfa_id[i] = state_ptr[id]._dfa_id[i];
-//		gpu_ips_flow_state[id%32]._alert[i] = state_ptr[id]._alert[i];
+	for(int i= 0 ;i <DFA_NUM; i++){
+		gpu_ips_flow_state[id%32]._state[i]= state_ptr[id]._state[i];
+		gpu_ips_flow_state[id%32]._dfa_id[i] = state_ptr[id]._dfa_id[i];
+		gpu_ips_flow_state[id%32]._alert[i] = state_ptr[id]._alert[i];
 
-//	}
-	
-	
+	}
 	
 	
 	
-//	for(int i = 0; i < flowDim; i++) {
+	
+	
+	for(int i = 0; i < flowDim; i++) {
 
-//		if(pkts[i].pkt[0] =='0') break;
+		if(pkts[i].pkt[0] =='0') break;
  			
-//		process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,(char*)pkts[i].pkt,&gpu_ips_flow_state[id%32]);
+		process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,(char*)pkts[i].pkt,&gpu_ips_flow_state[id%32]);
 			
-//	}
+	}
 	
-//	for(int i= 0 ;i <DFA_NUM; i++){
-//		state_ptr[id]._state[i]= gpu_ips_flow_state[id%32]._state[i];
-//		state_ptr[id]._dfa_id[i]= gpu_ips_flow_state[id%32]._dfa_id[i];
-//		state_ptr[id]._alert[i] = gpu_ips_flow_state[id%32]._alert[i];
+	for(int i= 0 ;i <DFA_NUM; i++){
+		state_ptr[id]._state[i]= gpu_ips_flow_state[id%32]._state[i];
+		state_ptr[id]._dfa_id[i]= gpu_ips_flow_state[id%32]._dfa_id[i];
+		state_ptr[id]._alert[i] = gpu_ips_flow_state[id%32]._alert[i];
 
-//	}
+	}
 
 	return;	
 	
