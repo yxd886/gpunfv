@@ -182,7 +182,7 @@ public:
                      _f._batch.schedule_task(!_f._batch.current_idx);
                  }
             }else if(type == process_type::cpu_only){
-                process_pkt(&pkt,&_fs);
+                //process_pkt(&pkt,&_fs);
                 _f.send_pkt(std::move(pkt));
             }
 
