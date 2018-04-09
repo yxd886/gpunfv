@@ -63,6 +63,10 @@ public:
         _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id){
 
     }
+    enum process_type{
+        hybernate,
+        cpu_only
+    };
 
     struct query_key {
         uint64_t v1;
@@ -159,22 +163,29 @@ public:
             }
         }
 
-        void run_nf(rte_packet pkt) {
+        void run_nf(rte_packet pkt,process_type type) {
             //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
             update_state(_f._batch.current_idx);
                                    //update the flow state when receive the first pkt of this flow in this batch.
-            if(packets[_f._batch.current_idx].empty()){
-                _f._batch._flows[_f._batch.current_idx].push_back(this);
+
+            if(likely(type==process_type::hybernate)){
+                if(packets[_f._batch.current_idx].empty()){
+                    _f._batch._flows[_f._batch.current_idx].push_back(this);
+                }
+
+                _f._pkt_counter++;
+                packets[_f._batch.current_idx].push_back(std::move(pkt));
+
+                if(_f._pkt_counter>=_batch_size){
+                     _f._pkt_counter=0;
+                     _f._batch.current_idx=!_f._batch.current_idx;
+                     _f._batch.schedule_task(!_f._batch.current_idx);
+                 }
+            }else if(type == process_type::cpu_only){
+                process_pkt(&pkt,&_fs);
+                _f.send_pkt(std::move(pkt));
             }
 
-            _f._pkt_counter++;
-            packets[_f._batch.current_idx].push_back(std::move(pkt));
-
-            if(_f._pkt_counter>=_batch_size){
-                 _f._pkt_counter=0;
-                 _f._batch.current_idx=!_f._batch.current_idx;
-                 _f._batch.schedule_task(!_f._batch.current_idx);
-             }
         }
 
     };
@@ -196,6 +207,11 @@ public:
 
 
     void dispath_flow(rte_packet pkt){
+
+        process_type type = process_type::hybernate;
+        if(_lcore_id>=2 ){
+            type = process_type::cpu_only;
+        }
         auto eth_h = pkt.get_header<ether_hdr>(0);
         if(!eth_h) {
             drop_pkt(std::move(pkt));
@@ -242,10 +258,10 @@ public:
                     auto impl_lw_ptr =  new flow_operator(*this);
                     auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
                     assert(succeed);
-                    impl_lw_ptr->run_nf(std::move(pkt));
+                    impl_lw_ptr->run_nf(std::move(pkt),type);
                 }
                 else {
-                    afi->second->run_nf(std::move(pkt));
+                    afi->second->run_nf(std::move(pkt),type);
                 }
 
                 return;
@@ -273,10 +289,10 @@ public:
                     auto impl_lw_ptr =  new flow_operator(*this);
                     auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
                     assert(succeed);
-                    impl_lw_ptr->run_nf(std::move(pkt));
+                    impl_lw_ptr->run_nf(std::move(pkt),type);
                 }
                 else {
-                    afi->second->run_nf(std::move(pkt));
+                    afi->second->run_nf(std::move(pkt),type);
                 }
 
                 return;
