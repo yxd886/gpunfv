@@ -12,7 +12,7 @@
 #include "../../nf/aho-corasick/aho.h"
 
 
-#define DFA_NUM 15
+#define DFA_NUM 50
 
 struct ips_flow_state{
     uint16_t _state[DFA_NUM];
