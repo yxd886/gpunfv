@@ -141,9 +141,7 @@ public:
                         /* This state matches some patterns: copy the pattern IDs
                         *  to the output */
                         int offset = mp_list[I].num_match;
-                        memcpy(&mp_list[I].ptrn_id[offset], 
-                            st_arr[state].out_arr, count * sizeof(uint16_t));
-                        mp_list[I].num_match += count;
+                        mp_list[I].num_match ++;
                         ips_state->_alert[times]=true;
                         ips_state->_state[times]=0;
 
