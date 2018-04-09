@@ -434,7 +434,7 @@ public:
                 //sync last batch's result and copy them back to host
                 if(_flows[!index].empty()==false){
                     started[lcore_id] = steady_clock_type::now();
-                    //gpu_sync(stream);
+                    gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
                     if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
