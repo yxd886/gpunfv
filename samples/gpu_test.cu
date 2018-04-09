@@ -122,6 +122,7 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
 	PKT*pkts =(PKT*)pkt_batch + id * flowDim;
 	struct ips_flow_state* state_ptr=(struct ips_flow_state*)state_batch;
 
+//#pragma unroll (5)
 	for(int i= 0 ;i <DFA_NUM; i++){
 		gpu_ips_flow_state[id%32]._state[i]= state_ptr[id]._state[i];
 		gpu_ips_flow_state[id%32]._dfa_id[i] = state_ptr[id]._dfa_id[i];
@@ -182,7 +183,8 @@ void gpu_malloc_host(void** devPtr, size_t size){
 	checkCudaErrors(cudaMallocHost(devPtr, size));
 }
 
-
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 void gpu_memcpy_async_h2d(void* dst, const void*src, size_t count ,cudaStream_t stream=0){
 	checkCudaErrors(cudaMemcpyAsync(dst,src,count,cudaMemcpyHostToDevice,stream));
 }
@@ -191,7 +193,7 @@ void gpu_memcpy_async_d2h(void* dst, const void*src, size_t count, cudaStream_t 
 	checkCudaErrors(cudaMemcpyAsync(dst,src,count,cudaMemcpyDeviceToHost,stream));
 	
 }
-
+#pragma GCC pop_options
 
 void gpu_memset_async(void * devPtr, int value, size_t count, cudaStream_t stream = 0){
 
@@ -219,3 +221,10 @@ void destory_stream(cudaStream_t stream){
 
 checkCudaErrors(cudaStreamDestroy(stream));
 }
+
+void create_event(cudaEvent_t* event_ptr){
+
+checkCudaErrors(cudaEventCreateWithFlags(event_ptr,cudaEventDisableTiming));
+}
+
+

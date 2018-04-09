@@ -13,7 +13,7 @@
 
 uint64_t _batch_size=1;
 uint64_t print_time = 0;
-
+uint64_t gpu_time = 0;
 uint16_t nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
 uint16_t nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 
@@ -320,6 +320,7 @@ int parse_args(int argc, char **argv){
         {CMD_LINE_OPT_ENABLE_JUMBO, 0, 0, 0},
         {CMD_LINE_OPT_HASH_ENTRY_NUM, 1, 0, 0},
         {CMD_LINE_OPT_PRINT_TIME, 0, 0, 0},
+        {CMD_LINE_OPT_GPU_TIME, 0, 0, 0},
         {NULL, 0, 0, 0}
     };
 
@@ -377,6 +378,11 @@ int parse_args(int argc, char **argv){
                 sizeof(CMD_LINE_OPT_PRINT_TIME))) {
                   print_time=1;
             }
+            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_GPU_TIME,
+                sizeof(CMD_LINE_OPT_GPU_TIME))) {
+                  gpu_time=1;
+            }
+
 
             if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_ENABLE_JUMBO,
                 sizeof (CMD_LINE_OPT_ENABLE_JUMBO))) {
@@ -521,7 +527,7 @@ int init_mem(unsigned nb_mbuf){
 
 void print_stats(void){
     uint64_t total_packets_dropped, total_packets_tx, total_packets_rx;
-    unsigned portid;
+    unsigned portid=0;
 
     total_packets_dropped = 0;
     total_packets_tx = 0;

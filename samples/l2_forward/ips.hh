@@ -11,12 +11,14 @@
 #include "../../nf/aho-corasick/fpp.h"
 #include "../../nf/aho-corasick/aho.h"
 
+
 #define DFA_NUM 15
 
 struct ips_flow_state{
     uint16_t _state[DFA_NUM];
     int _dfa_id[DFA_NUM];
     bool _alert[DFA_NUM];
+
 };
 
 class IPS{
@@ -155,6 +157,7 @@ public:
             }
         }
     }
+
 
     void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state* state) {
         int i, j;

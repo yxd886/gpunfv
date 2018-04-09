@@ -80,13 +80,13 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
         
     
     
-
+//#pragma unroll (5)
    	for(int times=0;times<DFA_NUM;times++){
    	
    	    int dfa_id = ips_state->_dfa_id[times]; 
    	    int state = ips_state->_state[times];
    	    st_arr=dfa_arr[dfa_id].root; 
-   	    ips_state->_state[times]=(state >= dfa_arr[dfa_id].num_used_states)?0:ips_state->_state[times];
+   	    state=(state >= dfa_arr[dfa_id].num_used_states)?0:state;
    		for(j = 0; j < len; j++) {
 	
 			int count = st_arr[state].output.count;
