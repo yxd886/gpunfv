@@ -18,7 +18,7 @@
 
 #define MAX_MATCH 8192
 #define MAX_PKT_SIZE 1500
-#define DFA_NUM 15
+#define DFA_NUM 50
 
 struct ips_flow_state{
 
