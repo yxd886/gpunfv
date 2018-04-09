@@ -1,7 +1,7 @@
 //GPUNFV system include file
 #include "dpdk_config.hh"
 #include "rte_packet.hh"
-#include "ips.hh"
+#include "forwarder.hh"
 
 extern uint64_t timer_period;
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
@@ -92,7 +92,7 @@ main_loop(__attribute__((unused)) void *dummy)
   return 0;
 }
 
-IPS * forwarder::ips = nullptr;
+NF *forwarder::_nf = nullptr;
 
 int
 main(int argc, char **argv)
@@ -100,7 +100,7 @@ main(int argc, char **argv)
     unsigned lcore_id;
 
     dpdk_config(argc,argv);
-    forwarder::ips=new IPS;
+    forwarder::_nf = new NF;
     /* launch per-lcore init on every lcore */
     rte_eal_mp_remote_launch(main_loop, NULL, CALL_MASTER);
     RTE_LCORE_FOREACH_SLAVE(lcore_id) {
