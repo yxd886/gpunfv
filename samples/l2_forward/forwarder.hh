@@ -423,6 +423,11 @@ public:
                 gpu_mem_map(gpu_states[index], ngpu_states);
                 started[lcore_id] = steady_clock_type::now();
 //#pragma omp parallel for
+                if(gpu_time){
+
+                    started[lcore_id] = steady_clock_type::now();
+                }
+
                 for(int i = 0; i < partition; i++){
 
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
@@ -430,6 +435,13 @@ public:
                         rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0)),_flows[index][i]->packets[index][j].len());
                     }
                 }
+                if(gpu_time){
+                    stoped[lcore_id] = steady_clock_type::now();
+                    elapsed = stoped[lcore_id] - started[lcore_id];
+                    printf("cpu batch pkt time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    started[lcore_id] = steady_clock_type::now();
+                }
+
                 stoped[lcore_id] = steady_clock_type::now();
                 elapsed = stoped[lcore_id] - started[lcore_id];
                 if(print_time)printf("batch pkt time: %f\n", static_cast<double>(elapsed.count() / 1.0));
@@ -511,14 +523,14 @@ public:
                     gpu_sync(stream);
                 started[lcore_id] = steady_clock_type::now();
                 }
-                //gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
-                for(int i = 0; i < partition; i++){
+                gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
+               /* for(int i = 0; i < partition; i++){
 
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
 
                         gpu_memcpy_async_h2d(dev_gpu_pkts[i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0)),_flows[index][i]->packets[index][j].len(),stream);
                     }
-                }
+                }*/
 
                 if(gpu_time){
                     gpu_sync(stream);
