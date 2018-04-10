@@ -17,8 +17,8 @@
 #include "../nf/aho-corasick/aho.hh"
 
 #define MAX_MATCH 8192
-#define MAX_PKT_SIZE 1500
-#define DFA_NUM 15
+#define MAX_PKT_SIZE 64
+#define DFA_NUM 50
 
 struct ips_flow_state{
 

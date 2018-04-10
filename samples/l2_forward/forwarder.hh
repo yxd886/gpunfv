@@ -11,7 +11,7 @@ extern uint64_t print_time;
 extern uint64_t gpu_time;
 
 #define COMPUTE_RATIO 100
-#define MAX_PKT_SIZE 1500
+#define MAX_PKT_SIZE 64
 #define MAX_FLOW_NUM 20000
 
 std::chrono::time_point<std::chrono::steady_clock> started[10];
@@ -210,7 +210,7 @@ public:
     void dispath_flow(rte_packet pkt){
 
         process_type type = process_type::hybernate;
-        if(_lcore_id>=3 ){
+        if(_lcore_id>=2 ){
             //printf("lore_id >2 :%d",_lcore_id);
             type = process_type::cpu_only;
         }
@@ -493,14 +493,8 @@ public:
                     gpu_sync(stream);
                 started[lcore_id] = steady_clock_type::now();
                 }
+
                 gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
-               /* for(int i = 0; i < partition; i++){
-
-                    for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
-
-                        gpu_memcpy_async_h2d(dev_gpu_pkts[i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0)),_flows[index][i]->packets[index][j].len(),stream);
-                    }
-                }*/
 
                 if(gpu_time){
                     gpu_sync(stream);
