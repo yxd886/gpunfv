@@ -370,15 +370,7 @@ public:
 
             if(_flows[!index].empty()==false){
 
-                started[lcore_id] = steady_clock_type::now();
 
-                gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
-                gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
-
-                stoped[lcore_id] = steady_clock_type::now();
-                elapsed = stoped[lcore_id] - started[lcore_id];
-                if(print_time)  printf("lcore_id: %d Memcpy device to host time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
-                started[lcore_id] = steady_clock_type::now();
             }
 
             //for(unsigned int i=0;i<_flows[index].size();i=i+1){
@@ -423,10 +415,6 @@ public:
                 gpu_mem_map(gpu_states[index], ngpu_states);
                 started[lcore_id] = steady_clock_type::now();
 //#pragma omp parallel for
-                if(gpu_time){
-
-                    started[lcore_id] = steady_clock_type::now();
-                }
 
                 for(int i = 0; i < partition; i++){
 
@@ -434,12 +422,6 @@ public:
 
                         rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0)),_flows[index][i]->packets[index][j].len());
                     }
-                }
-                if(gpu_time){
-                    stoped[lcore_id] = steady_clock_type::now();
-                    elapsed = stoped[lcore_id] - started[lcore_id];
-                    printf("cpu batch pkt time: %f\n", static_cast<double>(elapsed.count() / 1.0));
-                    started[lcore_id] = steady_clock_type::now();
                 }
 
                 stoped[lcore_id] = steady_clock_type::now();
@@ -566,10 +548,23 @@ public:
                     printf("lcore %d sync time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
                 }
+
+                started[lcore_id] = steady_clock_type::now();
+
+                gpu_memcpy_async_d2h(gpu_pkts[index],dev_gpu_pkts,pre_ngpu_pkts,stream);
+                gpu_memcpy_async_d2h(gpu_states[index],dev_gpu_states,pre_ngpu_states,stream);
+
+                stoped[lcore_id] = steady_clock_type::now();
+                elapsed = stoped[lcore_id] - started[lcore_id];
+                if(print_time)  printf("lcore_id: %d Memcpy device to host time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                started[lcore_id] = steady_clock_type::now();
+
+
+
             } else {
                 if(_flows[!index].empty()==false){
                     started[lcore_id] = steady_clock_type::now();
-                    //gpu_sync(stream);
+                    gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
                     if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
