@@ -210,7 +210,7 @@ public:
     void dispath_flow(rte_packet pkt){
 
         process_type type = process_type::hybernate;
-        if(_lcore_id>=2 ){
+        if(_lcore_id>=3 ){
             //printf("lore_id >2 :%d",_lcore_id);
             type = process_type::cpu_only;
         }
@@ -396,8 +396,8 @@ public:
                 assert(gpu_states[index]);
 
                 // Clear and map gpu_pkts and gpu_states
-              memset(gpu_pkts[index], 0, ngpu_pkts);
-              memset(gpu_states[index], 0, ngpu_states);
+                memset(gpu_pkts[index], 0, ngpu_pkts);
+                memset(gpu_states[index], 0, ngpu_states);
                 //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
                 gpu_mem_map(gpu_pkts[index], ngpu_pkts);
                 gpu_mem_map(gpu_states[index], ngpu_states);
