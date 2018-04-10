@@ -358,10 +358,15 @@ public:
         void schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-            stoped[lcore_id] = steady_clock_type::now();
-            auto elapsed = stoped[lcore_id] - started[lcore_id];
-            if(print_time)  printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
-            started[lcore_id] = steady_clock_type::now();
+            if(print_time){
+
+                stoped[lcore_id] = steady_clock_type::now();
+                auto elapsed = stoped[lcore_id] - started[lcore_id];
+                printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                started[lcore_id] = steady_clock_type::now();
+
+            }
+
 
             if(_flows[!index].empty()==false){
 
@@ -370,8 +375,6 @@ public:
                 gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
                 gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
 
-                //gpu_memcpy_async_d2h(gpu_pkts[!index],dev_gpu_pkts,pre_ngpu_pkts,stream);
-                //gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
                 stoped[lcore_id] = steady_clock_type::now();
                 auto elapsed = stoped[lcore_id] - started[lcore_id];
                 if(print_time)  printf("lcore_id: %d Memcpy device to host time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
@@ -504,7 +507,19 @@ public:
                 if(print_time)printf("Batching state time: %f\n", static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
+                if(gpu_time){
+                    gpu_sync(stream);
+                started[lcore_id] = steady_clock_type::now();
+                }
                 gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
+
+                if(gpu_time){
+                    gpu_sync(stream);
+                    stoped[lcore_id] = steady_clock_type::now();
+                    elapsed = stoped[lcore_id] - started[lcore_id];
+                    printf("lcore %d copy pkt to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                    started[lcore_id] = steady_clock_type::now();
+                }
                 gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
 
                 //gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
@@ -521,8 +536,8 @@ public:
                 // Launch kernel
                 if(gpu_time){
                 	gpu_sync(stream);
-                }
                 started[lcore_id] = steady_clock_type::now();
+                }
                 gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, 
                     (char *)(_flows[0][index]->_f._nf->info_for_gpu), max_pkt_num_per_flow, partition,stream);
                 if(gpu_time){
