@@ -632,13 +632,13 @@ public:
 
             for(int i=_flows[index].size();i>=0;i--){
                 float cpu_time=0;
-                float gpu_time=0;
+                float _gpu_time=0;
                 if(i>0)
-                    gpu_time=_flows[index][i-1]->packets[index].size();
+                    _gpu_time=_flows[index][i-1]->packets[index].size();
                 for(unsigned int j=i;j<_flows[index].size();j++){
                     cpu_time+=_flows[index][j]->packets[index].size();
                 }
-                processing_time=std::max(gpu_time,cpu_time/COMPUTE_RATIO);
+                processing_time=std::max(_gpu_time,cpu_time/COMPUTE_RATIO);
                 pre_cpu_processing_num=cpu_processing_num;
                 cpu_processing_num=cpu_time;
                 if(processing_time>=min_processing_time){
