@@ -366,18 +366,6 @@ public:
             started[lcore_id] = steady_clock_type::now();
 
 
-
-
-            if(_flows[!index].empty()==false){
-
-
-            }
-
-            //for(unsigned int i=0;i<_flows[index].size();i=i+1){
-                //std::cout<<_flows[index][i]->packets[index].size()<<" ";
-            //}
-            //std::cout<<"end before sort"<<std::endl;
-            started[lcore_id] = steady_clock_type::now();
             int partition=0;
             if(_batch_size!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
