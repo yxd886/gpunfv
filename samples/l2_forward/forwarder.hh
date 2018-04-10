@@ -358,14 +358,14 @@ public:
         void schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-            if(print_time){
 
-                stoped[lcore_id] = steady_clock_type::now();
-                auto elapsed = stoped[lcore_id] - started[lcore_id];
-                printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
-                started[lcore_id] = steady_clock_type::now();
 
-            }
+            stoped[lcore_id] = steady_clock_type::now();
+            auto elapsed = stoped[lcore_id] - started[lcore_id];
+            if(print_time) printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            started[lcore_id] = steady_clock_type::now();
+
+
 
 
             if(_flows[!index].empty()==false){
@@ -376,7 +376,7 @@ public:
                 gpu_memcpy_async_d2h(gpu_states[!index],dev_gpu_states,pre_ngpu_states,stream);
 
                 stoped[lcore_id] = steady_clock_type::now();
-                auto elapsed = stoped[lcore_id] - started[lcore_id];
+                elapsed = stoped[lcore_id] - started[lcore_id];
                 if(print_time)  printf("lcore_id: %d Memcpy device to host time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
             }
