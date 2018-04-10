@@ -12,7 +12,7 @@ extern uint64_t gpu_time;
 
 #define COMPUTE_RATIO 100
 #define MAX_PKT_SIZE 1500
-#define MAX_FLOW_NUM 10000
+#define MAX_FLOW_NUM 20000
 
 std::chrono::time_point<std::chrono::steady_clock> started[10];
 std::chrono::time_point<std::chrono::steady_clock> stoped[10];
