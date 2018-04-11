@@ -165,7 +165,7 @@ public:
             }
         }
 
-        void run_nf(rte_packet pkt,process_type type) {
+        void per_flow_enqueue(rte_packet pkt,process_type type) {
             //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
             update_state(_f._batch.current_idx);
                                    //update the flow state when receive the first pkt of this flow in this batch.
@@ -178,11 +178,11 @@ public:
                 _f._pkt_counter++;
                 packets[_f._batch.current_idx].push_back(std::move(pkt));
 
-                if(_f._pkt_counter>=_batch_size){
+                /*if(_f._pkt_counter>=_batch_size){
                      _f._pkt_counter=0;
                      _f._batch.current_idx=!_f._batch.current_idx;
                      _f._batch.schedule_task(!_f._batch.current_idx);
-                 }
+                 }*/
             }else if(type == process_type::cpu_only){
                 process_pkt(&pkt,&_fs);
                 _f.send_pkt(std::move(pkt));
@@ -261,11 +261,16 @@ public:
                     auto impl_lw_ptr =  new flow_operator(*this);
                     auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
                     assert(succeed);
-                    impl_lw_ptr->run_nf(std::move(pkt),type);
+                    impl_lw_ptr->per_flow_enqueue(std::move(pkt),type);
                 }
                 else {
-                    afi->second->run_nf(std::move(pkt),type);
+                    afi->second->per_flow_enqueue(std::move(pkt),type);
                 }
+                if(_pkt_counter>=_batch_size){
+                     _pkt_counter=0;
+                     _batch.current_idx=!_batch.current_idx;
+                     _batch.schedule_task(!_batch.current_idx);
+                 }
 
                 return;
             }
@@ -292,11 +297,17 @@ public:
                     auto impl_lw_ptr =  new flow_operator(*this);
                     auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
                     assert(succeed);
-                    impl_lw_ptr->run_nf(std::move(pkt),type);
+                    impl_lw_ptr->per_flow_enqueue(std::move(pkt),type);
+
                 }
                 else {
-                    afi->second->run_nf(std::move(pkt),type);
+                    afi->second->per_flow_enqueue(std::move(pkt),type);
                 }
+                if(_pkt_counter>=_batch_size){
+                     _pkt_counter=0;
+                     _batch.current_idx=!_batch.current_idx;
+                     _batch.schedule_task(!_batch.current_idx);
+                 }
 
                 return;
             }
