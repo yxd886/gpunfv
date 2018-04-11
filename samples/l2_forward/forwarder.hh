@@ -382,7 +382,7 @@ public:
             if(_batch_size!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
-                partition=_flows[index].size()*19/20;
+                //partition=_flows[index].size()*19/20;
                 if(print_time)std::cout<<"Total flow_num:"<<_flows[index].size()<<std::endl;
                 if(print_time)printf("partition: %d\n",partition);
             }
