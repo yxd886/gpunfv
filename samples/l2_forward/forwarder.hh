@@ -17,6 +17,8 @@ extern uint64_t gpu_time;
 
 std::chrono::time_point<std::chrono::steady_clock> started[10];
 std::chrono::time_point<std::chrono::steady_clock> stoped[10];
+std::chrono::time_point<std::chrono::steady_clock> simple_started[10];
+std::chrono::time_point<std::chrono::steady_clock> simple_stoped[10];
 using namespace std::chrono;
 using steady_clock_type = std::chrono::steady_clock;
 
@@ -372,6 +374,12 @@ public:
             //schedule the task, following is the strategy offload all to GPU
 
 
+            simple_stoped[lcore_id] = steady_clock_type::now();
+            auto simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+            printf("Simple Enqueuing time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
+            simple_started[lcore_id] = steady_clock_type::now();
+
+
             stoped[lcore_id] = steady_clock_type::now();
             auto elapsed = stoped[lcore_id] - started[lcore_id];
             if(print_time) printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
@@ -618,6 +626,14 @@ public:
             elapsed = stoped[lcore_id] - started[lcore_id];
             if(print_time)printf("lcore: %d,CPU processing time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
             started[lcore_id] = steady_clock_type::now();
+
+            simple_stoped[lcore_id] = steady_clock_type::now();
+            simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+            printf("Task schedule time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
+            simple_started[lcore_id] = steady_clock_type::now();
+
+
+
         }
 
         uint64_t get_partition(uint64_t index){
