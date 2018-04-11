@@ -423,7 +423,7 @@ public:
                     gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
-                    if(print_time)  printf("lcore: %d, Sync time: %f\n",_lcore_id, static_cast<double>(elapsed.count() / 1.0));
+                    if(print_time)  printf("lcore: %d, Sync time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 //#pragma omp parallel for
                   //  {
