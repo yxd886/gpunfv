@@ -641,6 +641,7 @@ public:
             float min_processing_time=10000000;
             float cpu_processing_num=0;
             float pre_cpu_processing_num=0;
+            return _flows[index].size();
 
             for(int i=_flows[index].size();i>=0;i--){
                 float cpu_time=0;
