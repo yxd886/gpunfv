@@ -12,7 +12,8 @@ extern uint64_t gpu_time;
 
 #define COMPUTE_RATIO 100
 #define MAX_PKT_SIZE 64
-#define MAX_FLOW_NUM 20000
+#define MAX_FLOW_NUM 40000
+#define MAX_GPU_THREAD 3
 
 std::chrono::time_point<std::chrono::steady_clock> started[10];
 std::chrono::time_point<std::chrono::steady_clock> stoped[10];
@@ -210,7 +211,7 @@ public:
     void dispath_flow(rte_packet pkt){
 
         process_type type = process_type::hybernate;
-        if(_lcore_id>=2 ){
+        if(_lcore_id>=MAX_GPU_THREAD ){
             //printf("lore_id >2 :%d",_lcore_id);
             type = process_type::cpu_only;
         }
