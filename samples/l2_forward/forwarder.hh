@@ -441,7 +441,7 @@ public:
                     gpu_memset_async(dev_gpu_states,0, pre_ngpu_states,stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
-                    if(print_time)  printf("Copyback time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    if(print_time)  printf("lcore: %d,Copyback time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 
                     // Unmap gpu_pkts and gpu_states
@@ -486,7 +486,7 @@ public:
 
                 stoped[lcore_id] = steady_clock_type::now();
                 elapsed = stoped[lcore_id] - started[lcore_id];
-                if(print_time)printf("Batching state time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                if(print_time)printf("lcore: %d,Batching state time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
                 if(gpu_time){
@@ -551,7 +551,7 @@ public:
                     gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
-                    if(print_time)  printf("Sync time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    if(print_time)  printf("lcore: %d,Sync time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 
                     for(int i = 0; i < pre_partition; i++){
@@ -567,7 +567,7 @@ public:
                     gpu_memset_async(dev_gpu_states,0, pre_ngpu_states,stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
-                    if(print_time)  printf("Copyback time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                    if(print_time)  printf("lcore: %d,Copyback time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 
                     // Unmap gpu_pkts and gpu_states
@@ -604,7 +604,7 @@ public:
 
             stoped[lcore_id] = steady_clock_type::now();
             elapsed = stoped[lcore_id] - started[lcore_id];
-            if(print_time)printf("CPU processing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            if(print_time)printf("lcore: %d,CPU processing time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
             started[lcore_id] = steady_clock_type::now();
         }
 
