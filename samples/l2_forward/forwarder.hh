@@ -9,6 +9,7 @@
 extern uint64_t _batch_size;
 extern uint64_t print_time;
 extern uint64_t gpu_time;
+extern uint64_t print_simple_time;
 
 #define COMPUTE_RATIO 100
 #define MAX_PKT_SIZE 64
@@ -380,11 +381,13 @@ public:
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
 
+            if(print_simple_time){
+                simple_stoped[lcore_id] = steady_clock_type::now();
+                auto simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+                printf("Simple Enqueuing time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
+                simple_started[lcore_id] = steady_clock_type::now();
+            }
 
-            simple_stoped[lcore_id] = steady_clock_type::now();
-            auto simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
-            printf("Simple Enqueuing time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
-            simple_started[lcore_id] = steady_clock_type::now();
 
 
             stoped[lcore_id] = steady_clock_type::now();
@@ -634,10 +637,13 @@ public:
             if(print_time)printf("lcore: %d,CPU processing time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
             started[lcore_id] = steady_clock_type::now();
 
-            simple_stoped[lcore_id] = steady_clock_type::now();
-            simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
-            printf("Task schedule time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
-            simple_started[lcore_id] = steady_clock_type::now();
+            if(print_simple_time){
+                simple_stoped[lcore_id] = steady_clock_type::now();
+                auto simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+                printf("Task schedule time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
+                simple_started[lcore_id] = steady_clock_type::now();
+
+            }
 
 
 
