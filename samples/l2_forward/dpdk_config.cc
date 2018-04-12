@@ -30,7 +30,7 @@ uint32_t enabled_port_mask = 0;
 int promiscuous_on = 0; /**< Ports set in promiscuous mode off by default. */
 int numa_on = 0; /**< NUMA is enabled by default. */
 
-uint64_t timer_period = 20;
+uint64_t timer_period = 1;
 uint64_t schedule_period = 100; //   1/schedule_period second to trigger timer
 
 struct lcore_params lcore_params_array[MAX_LCORE_PARAMS];
