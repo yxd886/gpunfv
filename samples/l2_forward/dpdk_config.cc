@@ -382,7 +382,7 @@ int parse_args(int argc, char **argv){
                 sizeof(CMD_LINE_OPT_PRINT_TIME))) {
                   print_time=1;
             }
-            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_PRINT_TIME,
+            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_PRINT_SIMPLE_TIME,
                 sizeof(CMD_LINE_OPT_PRINT_SIMPLE_TIME))) {
                   print_simple_time=1;
             }
