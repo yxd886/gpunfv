@@ -4,6 +4,7 @@
 #include "forwarder.hh"
 
 extern uint64_t timer_period;
+extern uint64_t schedule_period;
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
 
@@ -17,7 +18,7 @@ l2fwd_main_loop(void)
     unsigned lcore_id;
     unsigned i, portid, nb_rx, send, queueid;
     struct lcore_conf *qconf;
-    uint64_t cur_tsc,diff_tsc,prev_tsc,timer_tsc;
+    uint64_t cur_tsc,diff_tsc,prev_tsc,timer_tsc,schedule_timer_tsc;
 
 
     lcore_id = rte_lcore_id();
@@ -25,6 +26,7 @@ l2fwd_main_loop(void)
 
     prev_tsc = rte_rdtsc();
     timer_tsc=0;
+    schedule_timer_tsc=0;
 
     if (qconf->n_rx_queue == 0) {
 
@@ -38,18 +40,13 @@ l2fwd_main_loop(void)
 
 
         cur_tsc = rte_rdtsc();
-        /*
-         * TX burst queue drain
-         */
+
         diff_tsc = cur_tsc - prev_tsc;
 
-        /* if timer is enabled */
-
-            /* advance the timer */
         timer_tsc += diff_tsc;
-        //printf("timer_period: %18"PRIu64"\n",timer_period);
+        schedule_timer_tsc+=diff_tsc;
 
-        /* if timer has reached its timeout */
+        /* if print timer has reached its timeout */
         if (unlikely(timer_tsc >= timer_period)) {
 
             /* do this only on master core */
@@ -59,6 +56,14 @@ l2fwd_main_loop(void)
 
             }
             timer_tsc = 0;
+        }
+
+        /* if schedule timer has reached its timeout */
+        if (unlikely(schedule_timer_tsc >= schedule_period)) {
+
+            flow_forwarder.time_trigger_schedule();
+                /* reset the timer */
+            schedule_timer_tsc = 0;
         }
 
         prev_tsc = cur_tsc;

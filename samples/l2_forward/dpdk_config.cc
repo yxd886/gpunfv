@@ -29,6 +29,7 @@ int promiscuous_on = 0; /**< Ports set in promiscuous mode off by default. */
 int numa_on = 0; /**< NUMA is enabled by default. */
 
 uint64_t timer_period = 1;
+uint64_t schedule_period = 100; //   1/schedule_period second to trigger timer
 
 struct lcore_params lcore_params_array[MAX_LCORE_PARAMS];
 struct lcore_params lcore_params_array_default[] = {
@@ -608,6 +609,7 @@ void dpdk_config(int argc, char** argv){
         *(uint64_t *)(val_eth + portid) = dest_eth_addr[portid];
     }
     timer_period =rte_get_timer_hz();
+    schedule_period = rte_get_timer_hz()/schedule_period;
 
     /* parse application arguments (after the EAL ones) */
     ret = parse_args(argc, argv);
