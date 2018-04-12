@@ -52,6 +52,7 @@ l2fwd_main_loop(void)
 
             /* do this only on master core */
             if (lcore_id == 0) {
+                exit(-1);
                 print_stats();
                 /* reset the timer */
 
