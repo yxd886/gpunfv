@@ -5,6 +5,7 @@
 
 extern uint64_t timer_period;
 extern uint64_t schedule_period;
+extern uint64_t schedule_timer_tsc;
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
 
@@ -18,7 +19,7 @@ l2fwd_main_loop(void)
     unsigned lcore_id;
     unsigned i, portid, nb_rx, send, queueid;
     struct lcore_conf *qconf;
-    uint64_t cur_tsc,diff_tsc,prev_tsc,timer_tsc,schedule_timer_tsc;
+    uint64_t cur_tsc,diff_tsc,prev_tsc,timer_tsc;
 
 
     lcore_id = rte_lcore_id();

@@ -17,6 +17,7 @@ uint64_t print_simple_time = 0;
 uint64_t gpu_time = 0;
 uint16_t nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
 uint16_t nb_txd = RTE_TEST_TX_DESC_DEFAULT;
+uint64_t schedule_timer_tsc = 0;
 
 /* ethernet addresses of ports */
 uint64_t dest_eth_addr[RTE_MAX_ETHPORTS];
