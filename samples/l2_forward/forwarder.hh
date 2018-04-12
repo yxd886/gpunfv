@@ -10,6 +10,7 @@ extern uint64_t _batch_size;
 extern uint64_t print_time;
 extern uint64_t gpu_time;
 extern uint64_t print_simple_time;
+extern uint64_t schedule_timer_tsc;
 
 #define COMPUTE_RATIO 100
 #define MAX_PKT_SIZE 64
@@ -380,7 +381,7 @@ public:
         void schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-
+            schedule_timer_tsc = 0;
             if(print_simple_time){
                 simple_stoped[lcore_id] = steady_clock_type::now();
                 auto simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
