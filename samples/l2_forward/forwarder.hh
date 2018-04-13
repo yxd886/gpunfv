@@ -748,9 +748,11 @@ public:
                 cpu_time = compute_cpu_time(cpu_pkt_num);
                 processing_time=std::max(_gpu_time,cpu_time);
                 pre_cpu_processing_num=cpu_processing_num;
-                cpu_processing_num=cpu_time;
+                cpu_processing_num=cpu_pkt_num;
                 if(processing_time>=min_processing_time){
                     if(print_time)std::cout<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
+                    if(print_time)std::cout<<"caculated cpu processed time: "<<cpu_time<<std::endl;
+                    if(print_time)std::cout<<"caculated gpu processed time: "<<_gpu_time<<std::endl;
                     if(i==0){
                         if(print_time||gpu_time)    std::cout<<"GPU_max_pkt: "<<0<<std::endl;
                         return 0;
