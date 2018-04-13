@@ -16,6 +16,7 @@ extern uint64_t schedule_timer_tsc;
 #define MAX_PKT_SIZE 64
 #define MAX_FLOW_NUM 40000
 #define MAX_GPU_THREAD 5
+#define THREADPERBLOCK  256
 
 std::chrono::time_point<std::chrono::steady_clock> started[10];
 std::chrono::time_point<std::chrono::steady_clock> stoped[10];
@@ -66,7 +67,7 @@ static void batch_copy2device(PKT*dev_gpu_pkts,PKT* host_gpu_pkts,int ngpu_pkts,
 class forwarder {
 public:
     forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id) :_pkt_counter(0),
-        _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id){
+        _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id),_profileing(true){
 
     }
     enum process_type{
@@ -378,6 +379,34 @@ public:
             destory_stream(stream);
         }
 
+        void compute_parameter(){
+
+            cudaDeviceProp deviceProp;
+            cudaGetDeviceProperties(&deviceProp, 0);
+            _parameters.multi_processor_num = deviceProp.multiProcessorCount;
+            _parameters.thread_per_block = THREADPERBLOCK;
+            _parameters.cpu_process_rate = _profile_elements.cpu_process_time/_profile_elements.cpu_total_pkt_num;
+            _parameters.gpu_copy_rate = _profile_elements.gpu_copy_time/_profile_elements.gpu_total_pkt_num;
+            int stage = (_profile_elements.gpu_flow_num/_parameters.multi_processor_num/_parameters.thread_per_block)+1;
+            _parameters.gpu_process_rate = _profile_elements.gpu_process_time/(_profile_elements.max_pkt_num_gpu_flow*stage);
+
+
+            _profileing = false;
+
+        }
+
+        double compute_gpu_time(uint64_t flow_num, uint64_t pkt_num, uint64_t max_pkt_per_flow){
+            int stage = (flow_num/_parameters.multi_processor_num/_parameters.thread_per_block)+1;
+
+            double process_time = stage*max_pkt_per_flow*_parameters.gpu_process_rate;
+            double copy_time = pkt_num *_parameters.gpu_copy_rate;
+            return process_time+copy_time;
+        }
+
+        double compute_cpu_time(uint64_t pkt_num){
+            return _parameters.cpu_process_rate*pkt_num;
+        }
+
         void schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
@@ -520,21 +549,23 @@ public:
                 if(print_time)printf("lcore: %d,Batching state time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
-                if(gpu_time){
+                if(gpu_time||_profileing){
                     gpu_sync(stream);
-                started[lcore_id] = steady_clock_type::now();
+                    started[lcore_id] = steady_clock_type::now();
                 }
 
                 gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
+                gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
 
-                if(gpu_time){
+                if(gpu_time||_profileing){
                     gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
                     printf("lcore %d copy pkt to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
+                    _profile_elements.gpu_copy_time = static_cast<double>(elapsed.count() / 1.0);
                 }
-                gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
+
 
                 //gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
                 //gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
@@ -548,7 +579,7 @@ public:
                 //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
                 /////////////////////////////////////////////
                 // Launch kernel
-                if(gpu_time){
+                if(gpu_time||_profileing){
                 	gpu_sync(stream);
                 started[lcore_id] = steady_clock_type::now();
                 }
@@ -556,12 +587,13 @@ public:
                     (char *)(_flows[0][index]->_f._nf->info_for_gpu), max_pkt_num_per_flow, partition,stream);
 
                 if(print_time)  printf("lcore_id: %d gpu launced just now\n", lcore_id);
-                if(gpu_time){
+                if(gpu_time||_profileing){
                     gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
                     printf("lcore %d sync time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
+                    _profile_elements.gpu_process_time = static_cast<double>(elapsed.count() / 1.0);
                 }
 
                 started[lcore_id] = steady_clock_type::now();
@@ -637,6 +669,10 @@ public:
             elapsed = stoped[lcore_id] - started[lcore_id];
             if(print_time)printf("lcore: %d,CPU processing time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
             started[lcore_id] = steady_clock_type::now();
+            if(_profileing){
+                _profile_elements.cpu_process_time = static_cast<double>(elapsed.count() / 1.0);
+                compute_parameter();
+            }
 
             if(print_simple_time){
                 simple_stoped[lcore_id] = steady_clock_type::now();
@@ -652,20 +688,37 @@ public:
 
         uint64_t get_partition(uint64_t index){
             float processing_time=0;
-            float min_processing_time=10000000;
+            float min_processing_time=10000000000;
             float cpu_processing_num=0;
             float pre_cpu_processing_num=0;
-            return _flows[index].size();
+            //return _flows[index].size();
+            if(_profileing){
+
+                _profile_elements.gpu_flow_num = _flows[index].size()/2;
+                _profile_elements.max_pkt_num_gpu_flow = _flows[index][_flows[index].size()/2-1]->packets[index].size();
+
+                for(unsigned int j=_profile_elements.gpu_flow_num;j<_flows[index].size();j++){
+                        _profile_elements.cpu_total_pkt_num+=_flows[index][j]->packets[index].size();
+                    }
+                _profile_elements.gpu_total_pkt_num = _batch_size - _profile_elements.cpu_total_pkt_num ;
+                return _profile_elements.gpu_flow_num;
+            }
 
             for(int i=_flows[index].size();i>=0;i--){
                 float cpu_time=0;
                 float _gpu_time=0;
+                int cpu_pkt_num=0;
+                int _gpu_pkt_num=0;
+                int _gpu_max_num=0;
                 if(i>0)
-                    _gpu_time=_flows[index][i-1]->packets[index].size();
+                    _gpu_max_num=_flows[index][i-1]->packets[index].size();
                 for(unsigned int j=i;j<_flows[index].size();j++){
-                    cpu_time+=_flows[index][j]->packets[index].size();
+                    cpu_pkt_num+=_flows[index][j]->packets[index].size();
                 }
-                processing_time=std::max(_gpu_time,cpu_time/COMPUTE_RATIO);
+                _gpu_pkt_num = _batch_size - cpu_pkt_num;
+                _gpu_time = compute_gpu_time(i,_gpu_pkt_num,_gpu_max_num);
+                cpu_time = compute_cpu_time(cpu_pkt_num);
+                processing_time=std::max(_gpu_time,cpu_time);
                 pre_cpu_processing_num=cpu_processing_num;
                 cpu_processing_num=cpu_time;
                 if(processing_time>=min_processing_time){
@@ -718,6 +771,24 @@ public:
               && lhs.dport == rhs.dport;
         }
     };
+    struct profile_elements{
+
+        uint64_t gpu_flow_num;
+        uint64_t max_pkt_num_gpu_flow;
+        uint64_t cpu_total_pkt_num;
+        uint64_t gpu_total_pkt_num;
+        double gpu_copy_time;
+        double gpu_process_time;
+        double cpu_process_time;
+    };
+
+    struct parameters{
+        int multi_processor_num;
+        int thread_per_block;
+        double cpu_process_rate;
+        double gpu_process_rate;
+        double gpu_copy_rate;
+    };
 
 public:
     static NF* _nf;
@@ -726,6 +797,9 @@ public:
     uint16_t _port_id;
     uint16_t _queue_id;
     uint16_t _lcore_id;
+    bool _profileing;
+    profile_elements _profile_elements;
+    parameters _parameters;
     std::vector<rte_mbuf*> _send_buffer;
     std::unordered_map<flow_key,flow_operator*,HashFunc,EqualKey> _flow_table;
 };
