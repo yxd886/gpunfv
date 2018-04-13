@@ -420,6 +420,10 @@ public:
 
         }
 
+        void adjust_cpu_process_rate(){
+            _parameters.cpu_process_rate = _profile_elements.cpu_process_time/_profile_elements.cpu_total_pkt_num;
+        }
+
         double compute_gpu_time(uint64_t flow_num, uint64_t pkt_num, uint64_t max_pkt_per_flow){
             int stage = (flow_num/_parameters.multi_processor_num/_parameters.thread_per_block)+1;
 
@@ -698,6 +702,8 @@ public:
                 _profile_elements.cpu_process_time = static_cast<double>(elapsed.count() / 1.0);
                 compute_parameter();
             }
+            _profile_elements.cpu_process_time = static_cast<double>(elapsed.count() / 1.0);
+            adjust_cpu_process_rate();
 
             if(print_simple_time){
                 simple_stoped[lcore_id] = steady_clock_type::now();
@@ -753,6 +759,7 @@ public:
                     if(print_time)std::cout<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
                     if(print_time)std::cout<<"caculated cpu processed time: "<<cpu_time<<std::endl;
                     if(print_time)std::cout<<"caculated gpu processed time: "<<_gpu_time<<std::endl;
+                    _profile_elements.cpu_total_pkt_num = cpu_pkt_num;
                     if(i==0){
                         if(print_time||gpu_time)    std::cout<<"GPU_max_pkt: "<<0<<std::endl;
                         return 0;
