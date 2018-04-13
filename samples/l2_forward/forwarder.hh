@@ -67,7 +67,7 @@ static void batch_copy2device(PKT*dev_gpu_pkts,PKT* host_gpu_pkts,int ngpu_pkts,
 class forwarder {
 public:
     forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id) :_pkt_counter(0),
-        _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id),_profileing(true){
+        _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id){
 
     }
     enum process_type{
@@ -355,6 +355,26 @@ public:
     }
 
     class batch {
+
+        struct profile_elements{
+
+            uint64_t gpu_flow_num;
+            uint64_t max_pkt_num_gpu_flow;
+            uint64_t cpu_total_pkt_num;
+            uint64_t gpu_total_pkt_num;
+            double gpu_copy_time;
+            double gpu_process_time;
+            double cpu_process_time;
+        };
+
+        struct parameters{
+            int multi_processor_num;
+            int thread_per_block;
+            double cpu_process_rate;
+            double gpu_process_rate;
+            double gpu_copy_rate;
+        };
+
     public:
         std::vector<flow_operator*> _flows[2];
         PKT* gpu_pkts[2];
@@ -370,7 +390,12 @@ public:
         int pre_partition;
         unsigned lcore_id;
 
-        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0){
+
+        bool _profileing;
+        profile_elements _profile_elements;
+        parameters _parameters;
+
+        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true){
             create_stream(&stream);
             lcore_id = rte_lcore_id();
         }
@@ -771,24 +796,7 @@ public:
               && lhs.dport == rhs.dport;
         }
     };
-    struct profile_elements{
 
-        uint64_t gpu_flow_num;
-        uint64_t max_pkt_num_gpu_flow;
-        uint64_t cpu_total_pkt_num;
-        uint64_t gpu_total_pkt_num;
-        double gpu_copy_time;
-        double gpu_process_time;
-        double cpu_process_time;
-    };
-
-    struct parameters{
-        int multi_processor_num;
-        int thread_per_block;
-        double cpu_process_rate;
-        double gpu_process_rate;
-        double gpu_copy_rate;
-    };
 
 public:
     static NF* _nf;
@@ -797,9 +805,6 @@ public:
     uint16_t _port_id;
     uint16_t _queue_id;
     uint16_t _lcore_id;
-    bool _profileing;
-    profile_elements _profile_elements;
-    parameters _parameters;
     std::vector<rte_mbuf*> _send_buffer;
     std::unordered_map<flow_key,flow_operator*,HashFunc,EqualKey> _flow_table;
 };
