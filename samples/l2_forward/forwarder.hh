@@ -213,7 +213,7 @@ public:
     const uint16_t ip_packet_len_max = 65535;
 
     void time_trigger_schedule(){
-
+        if (_pkt_counter==0) return;
         _pkt_counter=0;
         _batch.current_idx=!_batch.current_idx;
         _batch.schedule_task(!_batch.current_idx);
