@@ -729,16 +729,19 @@ public:
                 return _profile_elements.gpu_flow_num;
             }
 
+            float cpu_time=0;
+            float _gpu_time=0;
+            int cpu_pkt_num=0;
+            int _gpu_pkt_num=0;
+            int _gpu_max_num=0;
             for(int i=_flows[index].size();i>=0;i--){
-                float cpu_time=0;
-                float _gpu_time=0;
-                int cpu_pkt_num=0;
-                int _gpu_pkt_num=0;
-                int _gpu_max_num=0;
+
                 if(i>0)
                     _gpu_max_num=_flows[index][i-1]->packets[index].size();
-                for(unsigned int j=i;j<_flows[index].size();j++){
-                    cpu_pkt_num+=_flows[index][j]->packets[index].size();
+                if(i ==_flows[index].size() ){
+                    cpu_pkt_num = 0;
+                }else{
+                    cpu_pkt_num+=_flows[index][i]->packets[index].size();
                 }
                 _gpu_pkt_num = _batch_size - cpu_pkt_num;
                 _gpu_time = compute_gpu_time(i,_gpu_pkt_num,_gpu_max_num);
