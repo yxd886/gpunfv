@@ -451,7 +451,7 @@ public:
 
             stoped[lcore_id] = steady_clock_type::now();
             auto elapsed = stoped[lcore_id] - started[lcore_id];
-            if(print_time) printf("Enqueuing time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            if(print_time) printf("lcore %d,Enqueuing time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
             started[lcore_id] = steady_clock_type::now();
 
 
@@ -460,14 +460,14 @@ public:
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
                 //partition=_flows[index].size();
-                if(print_time)std::cout<<"Total flow_num:"<<_flows[index].size()<<std::endl;
-                if(print_time)printf("partition: %d\n",partition);
+                if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"Total flow_num:"<<_flows[index].size()<<std::endl;
+                if(print_time)printf("lcore %d,partition: %d\n",lcore_id, partition);
             }
             assert(partition!=-1);
 
             stoped[lcore_id] = steady_clock_type::now();
             elapsed = stoped[lcore_id] - started[lcore_id];
-            if(print_time)printf("Scheduling time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+            if(print_time)printf("lcore %d ,Scheduling time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
             started[lcore_id] = steady_clock_type::now();
 
             if(partition>0) {
@@ -503,7 +503,7 @@ public:
 
                 stoped[lcore_id] = steady_clock_type::now();
                 elapsed = stoped[lcore_id] - started[lcore_id];
-                if(print_time)printf("batch pkt time: %f\n", static_cast<double>(elapsed.count() / 1.0));
+                if(print_time)printf("lcore %d batch pkt time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
                 //sync last batch's result and copy them back to host
@@ -756,15 +756,15 @@ public:
                 pre_cpu_processing_num=cpu_processing_num;
                 cpu_processing_num=cpu_pkt_num;
                 if(processing_time>=min_processing_time){
-                    if(print_time)std::cout<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
-                    if(print_time)std::cout<<"caculated cpu processed time: "<<cpu_time<<std::endl;
-                    if(print_time)std::cout<<"caculated gpu processed time: "<<_gpu_time<<std::endl;
+                    if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
+                    if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"caculated cpu processed time: "<<cpu_time<<std::endl;
+                    if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"caculated gpu processed time: "<<_gpu_time<<std::endl;
                     _profile_elements.cpu_total_pkt_num = cpu_pkt_num;
                     if(i==0){
-                        if(print_time||gpu_time)    std::cout<<"GPU_max_pkt: "<<0<<std::endl;
+                        if(print_time||gpu_time)    std::cout<<"lcore_id: "<<lcore_id<<"GPU_max_pkt: "<<0<<std::endl;
                         return 0;
                     }else{
-                        if(print_time||gpu_time)   std::cout<<"GPU_max_pkt: "<<_flows[index][i]->packets[index].size()<<std::endl;
+                        if(print_time||gpu_time)   std::cout<<"lcore_id: "<<lcore_id<<"GPU_max_pkt: "<<_flows[index][i]->packets[index].size()<<std::endl;
                         return i+1;
                     }
                     //std::cout<<"    min_processing_time:"<<*result<<std::endl;
