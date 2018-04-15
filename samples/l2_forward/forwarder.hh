@@ -725,7 +725,7 @@ public:
             float min_processing_time=10000000000;
             float cpu_processing_num=0;
             float pre_cpu_processing_num=0;
-            return _flows[index].size();
+            //return _flows[index].size();
             if(_profileing){
 
                 _profile_elements.gpu_flow_num = _flows[index].size()/2;
