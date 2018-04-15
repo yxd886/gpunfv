@@ -65,6 +65,7 @@ l2fwd_main_loop(void)
 
         	  schedule_timer_tsc = 0;
         	  /* reset the timer */
+        	  printf("lcore_id: %d, trigger\n",lcore_id);
         	  flow_forwarder.time_trigger_schedule();
 
 
