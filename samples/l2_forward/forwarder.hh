@@ -471,6 +471,7 @@ public:
             if(_batch_size!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
                 partition=get_partition(index);
+                if(print_time)printf("lcore %d,partition: %d\n",lcore_id, partition);
                 partition=_flows[index].size();
                 if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"Total flow_num:"<<_flows[index].size()<<std::endl;
                 if(print_time)printf("lcore %d,partition: %d\n",lcore_id, partition);
