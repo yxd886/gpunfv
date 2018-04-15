@@ -5,7 +5,7 @@
 
 extern uint64_t timer_period;
 extern uint64_t schedule_period;
-extern uint64_t schedule_timer_tsc;
+extern uint64_t schedule_timer_tsc[10];
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
 
@@ -27,7 +27,7 @@ l2fwd_main_loop(void)
 
     prev_tsc = rte_rdtsc();
     timer_tsc=0;
-    schedule_timer_tsc=0;
+    schedule_timer_tsc[lcore_id]=0;
 
     if (qconf->n_rx_queue == 0) {
 
@@ -45,7 +45,7 @@ l2fwd_main_loop(void)
         diff_tsc = cur_tsc - prev_tsc;
 
         timer_tsc += diff_tsc;
-        schedule_timer_tsc+=diff_tsc;
+        schedule_timer_tsc[lcore_id]+=diff_tsc;
 
         /* if print timer has reached its timeout */
         if (unlikely(timer_tsc >= timer_period)) {
@@ -61,11 +61,11 @@ l2fwd_main_loop(void)
         }
 
         /* if schedule timer has reached its timeout */
-        if (unlikely(schedule_timer_tsc >= schedule_period)) {
+        if (unlikely(schedule_timer_tsc[lcore_id] >= schedule_period)) {
 
-        	  schedule_timer_tsc = 0;
+        	  schedule_timer_tsc[lcore_id] = 0;
         	  /* reset the timer */
-        	  printf("lcore_id: %d, trigger\n",lcore_id);
+
         	  flow_forwarder.time_trigger_schedule();
 
 

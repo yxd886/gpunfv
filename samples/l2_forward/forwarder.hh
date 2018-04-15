@@ -10,7 +10,7 @@ extern uint64_t _batch_size;
 extern uint64_t print_time;
 extern uint64_t gpu_time;
 extern uint64_t print_simple_time;
-extern uint64_t schedule_timer_tsc;
+extern uint64_t schedule_timer_tsc[10];
 
 
 #define COMPUTE_RATIO 100
@@ -217,6 +217,7 @@ public:
         if (_pkt_counter==0) return;
         _pkt_counter=0;
         _batch.current_idx=!_batch.current_idx;
+        printf("lcore_id: %d, trigger\n",_lcore_id);
         _batch.schedule_task(!_batch.current_idx);
 
     }
@@ -444,7 +445,7 @@ public:
         void schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-        	 schedule_timer_tsc = 0;
+        	 schedule_timer_tsc[lcore_id] = 0;
         	if(_profile_num<100){
         		_profile_num++;
         	}else{
