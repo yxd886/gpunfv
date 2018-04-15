@@ -428,15 +428,13 @@ public:
             double process_time = stage*max_pkt_per_flow*_parameters.gpu_process_rate;
             double copy_time = pkt_num *_parameters.gpu_copy_rate;
 
-            if(print_time)printf("lcore: %d,GPU rate: %f\n", lcore_id,_parameters.gpu_process_rate);
+
 
             return process_time+copy_time;
         }
 
         double compute_cpu_time(uint64_t pkt_num){
 
-        	if(print_time)printf("lcore: %d,CPU rate: %f\n", lcore_id,_parameters.cpu_process_rate);
-        	if(print_time)printf("lcore: %d,CPU pkt_processed: %f\n", lcore_id,pkt_num);
             return _parameters.cpu_process_rate*pkt_num;
 
 
@@ -768,9 +766,13 @@ public:
                 pre_cpu_processing_num=cpu_processing_num;
                 cpu_processing_num=cpu_pkt_num;
                 if(processing_time>=min_processing_time){
+
                     if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
                     if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"caculated cpu processed time: "<<cpu_time<<std::endl;
                     if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"caculated gpu processed time: "<<_gpu_time<<std::endl;
+                	if(print_time)printf("lcore: %d,CPU rate: %f\n", lcore_id,_parameters.cpu_process_rate);
+                    if(print_time)printf("lcore: %d,GPU rate: %f\n", lcore_id,_parameters.gpu_process_rate);
+
 
                     if(i==0){
                         if(print_time||gpu_time)    std::cout<<"lcore_id: "<<lcore_id<<"GPU_max_pkt: "<<0<<std::endl;
