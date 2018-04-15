@@ -427,11 +427,19 @@ public:
 
             double process_time = stage*max_pkt_per_flow*_parameters.gpu_process_rate;
             double copy_time = pkt_num *_parameters.gpu_copy_rate;
+
+            if(print_time)printf("lcore: %d,GPU rate: %f\n", lcore_id,_parameters.gpu_process_rate);
+
             return process_time+copy_time;
         }
 
         double compute_cpu_time(uint64_t pkt_num){
+
+        	if(print_time)printf("lcore: %d,CPU rate: %f\n", lcore_id,_parameters.cpu_process_rate);
+        	if(print_time)printf("lcore: %d,CPU pkt_processed: %f\n", lcore_id,pkt_num);
             return _parameters.cpu_process_rate*pkt_num;
+
+
         }
 
         void schedule_task(uint64_t index){
@@ -701,6 +709,7 @@ public:
             stoped[lcore_id] = steady_clock_type::now();
             elapsed = stoped[lcore_id] - started[lcore_id];
             if(print_time)printf("lcore: %d,CPU processing time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+
             started[lcore_id] = steady_clock_type::now();
             if(_profileing){
                 _profile_elements.cpu_process_time = static_cast<double>(elapsed.count() / 1.0);
@@ -729,7 +738,7 @@ public:
             if(_profileing){
 
                 _profile_elements.gpu_flow_num = _flows[index].size()/2;
-                _profile_elements.max_pkt_num_gpu_flow = _flows[index][_flows[index].size()/2-1]->packets[index].size();
+                _profile_elements.max_pkt_num_gpu_flow = _flows[index][_flows[index].size()/2]->packets[index].size();
 
                 for(unsigned int j=_profile_elements.gpu_flow_num;j<_flows[index].size();j++){
                         _profile_elements.cpu_total_pkt_num+=_flows[index][j]->packets[index].size();
