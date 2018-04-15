@@ -10,7 +10,7 @@ extern uint64_t _batch_size;
 extern uint64_t print_time;
 extern uint64_t gpu_time;
 extern uint64_t print_simple_time;
-extern uint64_t schedule_timer_tsc;
+
 
 #define COMPUTE_RATIO 100
 #define MAX_PKT_SIZE 64
@@ -392,10 +392,11 @@ public:
 
 
         bool _profileing;
+        int _profile_num;
         profile_elements _profile_elements;
         parameters _parameters;
 
-        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true){
+        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true),_profile_num(0){
             create_stream(&stream);
             lcore_id = rte_lcore_id();
         }
@@ -414,9 +415,6 @@ public:
             _parameters.gpu_copy_rate = _profile_elements.gpu_copy_time/_profile_elements.gpu_total_pkt_num;
             int stage = (_profile_elements.gpu_flow_num/_parameters.multi_processor_num/_parameters.thread_per_block)+1;
             _parameters.gpu_process_rate = _profile_elements.gpu_process_time/(_profile_elements.max_pkt_num_gpu_flow*stage);
-
-
-            _profileing = false;
 
         }
 
@@ -439,7 +437,13 @@ public:
         void schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-            schedule_timer_tsc = 0;
+
+        	if(_profile_num<100){
+        		_profile_num++;
+        	}else{
+        		_profileing = false;
+        	}
+
             if(print_simple_time){
                 simple_stoped[lcore_id] = steady_clock_type::now();
                 auto simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
@@ -702,8 +706,7 @@ public:
                 _profile_elements.cpu_process_time = static_cast<double>(elapsed.count() / 1.0);
                 compute_parameter();
             }
-            _profile_elements.cpu_process_time = static_cast<double>(elapsed.count() / 1.0);
-            adjust_cpu_process_rate();
+
 
             if(print_simple_time){
                 simple_stoped[lcore_id] = steady_clock_type::now();
@@ -759,7 +762,7 @@ public:
                     if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
                     if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"caculated cpu processed time: "<<cpu_time<<std::endl;
                     if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"caculated gpu processed time: "<<_gpu_time<<std::endl;
-                    _profile_elements.cpu_total_pkt_num = cpu_pkt_num;
+
                     if(i==0){
                         if(print_time||gpu_time)    std::cout<<"lcore_id: "<<lcore_id<<"GPU_max_pkt: "<<0<<std::endl;
                         return 0;

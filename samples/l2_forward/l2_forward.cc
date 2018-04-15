@@ -63,9 +63,11 @@ l2fwd_main_loop(void)
         /* if schedule timer has reached its timeout */
         if (unlikely(schedule_timer_tsc >= schedule_period)) {
 
-            flow_forwarder.time_trigger_schedule();
-                /* reset the timer */
-            schedule_timer_tsc = 0;
+        	  schedule_timer_tsc = 0;
+        	  /* reset the timer */
+        	  flow_forwarder.time_trigger_schedule();
+
+
         }
 
         prev_tsc = cur_tsc;
