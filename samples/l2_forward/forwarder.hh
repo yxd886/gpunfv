@@ -736,6 +736,7 @@ public:
             if(_profileing){
 
                 _profile_elements.gpu_flow_num = _flows[index].size()/2;
+                _profile_elements.cpu_total_pkt_num = 0;
                 _profile_elements.max_pkt_num_gpu_flow = _flows[index][_flows[index].size()/2]->packets[index].size();
 
                 for(unsigned int j=_profile_elements.gpu_flow_num;j<_flows[index].size();j++){
