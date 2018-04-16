@@ -465,7 +465,7 @@ public:
             simple_stoped[lcore_id] = steady_clock_type::now();
             auto simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
 
-            //_profile_elements.cpu_enqueue_time = static_cast<double>(simple_elapsed.count() / 1.0);
+            if(_profileing) _profile_elements.cpu_enqueue_time = static_cast<double>(simple_elapsed.count() / 1.0);
             //adjust_enqueue_rate();
             if(print_simple_time) printf("Simple Enqueuing time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
             simple_started[lcore_id] = steady_clock_type::now();
