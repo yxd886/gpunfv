@@ -136,7 +136,7 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
 	
 	for(int i = 0; i < flowDim; i++) {
 
-		if(pkts[i].pkt[0] =='0') break;
+		if(pkts[i].pkt[0] ==0) break;
  			
 		process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,(char*)pkts[i].pkt,&gpu_ips_flow_state[id%32]);
 			
