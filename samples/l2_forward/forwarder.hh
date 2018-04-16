@@ -751,7 +751,7 @@ public:
                 std::cout<<" "<<_flows[index][i]->packets[index].size()<<" ";
             }
             std::cout<<std::endl;*/
-            //return _flows[index].size();
+            return _flows[index].size();
             if(_profileing){
 
                 _profile_elements.gpu_flow_num = _flows[index].size()/2;
