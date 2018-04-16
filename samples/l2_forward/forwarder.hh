@@ -747,10 +747,10 @@ public:
             float min_processing_time=10000000000;
             float cpu_processing_num=0;
             float pre_cpu_processing_num=0;
-            for(int i = 0; i<(int)_flows[index].size();i++){
+            /*for(int i = 0; i<(int)_flows[index].size();i++){
                 std::cout<<" "<<_flows[index][i]->packets[index].size()<<" ";
             }
-            std::cout<<std::endl;
+            std::cout<<std::endl;*/
             return _flows[index].size();
             if(_profileing){
 
