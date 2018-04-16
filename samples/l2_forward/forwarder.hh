@@ -747,6 +747,10 @@ public:
             float min_processing_time=10000000000;
             float cpu_processing_num=0;
             float pre_cpu_processing_num=0;
+            for(int i = 0; i<(int)_flows[index].size();i++){
+                std::cout<<" "<<_flows[index][i]->packets[index].size()<<" ";
+            }
+            std::cout<<std::endl;
             return _flows[index].size();
             if(_profileing){
 
@@ -754,7 +758,7 @@ public:
                 _profile_elements.cpu_total_pkt_num = 0;
                 _profile_elements.max_pkt_num_gpu_flow = _flows[index][_flows[index].size()/2]->packets[index].size();
 
-                for(unsigned int j=_profile_elements.gpu_flow_num;j<_flows[index].size();j++){
+                for(int j=_profile_elements.gpu_flow_num;j<(int)_flows[index].size();j++){
                         _profile_elements.cpu_total_pkt_num+=_flows[index][j]->packets[index].size();
                     }
                 _profile_elements.gpu_total_pkt_num = _batch_size - _profile_elements.cpu_total_pkt_num ;
