@@ -730,13 +730,13 @@ public:
             }
 
 
-            if(print_simple_time){
-                simple_stoped[lcore_id] = steady_clock_type::now();
-                auto simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
-                printf("Task schedule time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
-                simple_started[lcore_id] = steady_clock_type::now();
 
-            }
+            simple_stoped[lcore_id] = steady_clock_type::now();
+            simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+            if(print_simple_time)    printf("Task schedule time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
+            simple_started[lcore_id] = steady_clock_type::now();
+
+
 
 
 
