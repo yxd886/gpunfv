@@ -367,12 +367,14 @@ public:
             double gpu_copy_time;
             double gpu_process_time;
             double cpu_process_time;
+            double cpu_enqueue_time;
         };
 
         struct parameters{
             int multi_processor_num;
             int thread_per_block;
             double cpu_process_rate;
+            double cpu_enqueue_rate;
             double gpu_process_rate;
             double gpu_copy_rate;
         };
@@ -417,6 +419,7 @@ public:
             _parameters.gpu_copy_rate = _profile_elements.gpu_copy_time/_profile_elements.gpu_total_pkt_num;
             int stage = (_profile_elements.gpu_flow_num/_parameters.multi_processor_num/_parameters.thread_per_block)+1;
             _parameters.gpu_process_rate = _profile_elements.gpu_process_time/(_profile_elements.max_pkt_num_gpu_flow*stage);
+            _parameters.cpu_enqueue_rate = _profile_elements.cpu_enqueue_time/_batch_size;
 
         }
 
@@ -437,7 +440,7 @@ public:
 
         double compute_cpu_time(uint64_t pkt_num){
 
-            return _parameters.cpu_process_rate*pkt_num;
+            return _parameters.cpu_process_rate*pkt_num+_batch_size*_parameters.cpu_enqueue_rate;
 
 
         }
@@ -452,10 +455,12 @@ public:
         		_profileing = false;
         	}
 
-            if(print_simple_time){
+            if(print_simple_time||_profileing){
                 simple_stoped[lcore_id] = steady_clock_type::now();
                 auto simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
-                printf("Simple Enqueuing time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
+
+                _profile_elements.cpu_enqueue_time = simple_elapsed;
+                if(print_simple_time) printf("Simple Enqueuing time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
                 simple_started[lcore_id] = steady_clock_type::now();
             }
 
