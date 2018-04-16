@@ -11,6 +11,7 @@ extern uint64_t print_time;
 extern uint64_t gpu_time;
 extern uint64_t print_simple_time;
 extern uint64_t schedule_timer_tsc[10];
+extern uint64_t schedule;
 
 
 #define COMPUTE_RATIO 100
@@ -751,7 +752,7 @@ public:
                 std::cout<<" "<<_flows[index][i]->packets[index].size()<<" ";
             }
             std::cout<<std::endl;*/
-            return _flows[index].size();
+            if(!schedule) return _flows[index].size();
             if(_profileing){
 
                 _profile_elements.gpu_flow_num = _flows[index].size()/2;

@@ -319,6 +319,7 @@ void parse_eth_dest(const char *optarg);
 #define CMD_LINE_OPT_PRINT_TIME "print-time"
 #define CMD_LINE_OPT_PRINT_SIMPLE_TIME "simple-time"
 #define CMD_LINE_OPT_GPU_TIME "gpu-time"
+#define CMD_LINE_OPT_SCHEDULE "schedule"
 
 /* Parse the argument given in the command line of the application */
 int parse_args(int argc, char **argv);

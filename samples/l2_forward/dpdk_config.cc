@@ -12,6 +12,7 @@
 
 
 uint64_t _batch_size=1;
+uint64_t schedule = 0;
 uint64_t print_time = 0;
 uint64_t print_simple_time = 0;
 uint64_t gpu_time = 0;
@@ -325,6 +326,7 @@ int parse_args(int argc, char **argv){
         {CMD_LINE_OPT_PRINT_TIME, 0, 0, 0},
         {CMD_LINE_OPT_PRINT_SIMPLE_TIME, 0, 0, 0},
         {CMD_LINE_OPT_GPU_TIME, 0, 0, 0},
+        {CMD_LINE_OPT_SCHEDULE,0,0,0},
         {NULL, 0, 0, 0}
     };
 
@@ -389,6 +391,10 @@ int parse_args(int argc, char **argv){
             if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_GPU_TIME,
                 sizeof(CMD_LINE_OPT_GPU_TIME))) {
                   gpu_time=1;
+            }
+            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_SCHEDULE,
+                sizeof(CMD_LINE_OPT_SCHEDULE))) {
+                  schedule=1;
             }
 
 
