@@ -786,8 +786,9 @@ public:
                     if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"cpu_pkts_processed: "<<pre_cpu_processing_num<<std::endl;
                     if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"caculated cpu processed time: "<<cpu_time<<std::endl;
                     if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"caculated gpu processed time: "<<_gpu_time<<std::endl;
-                	if(print_time)printf("lcore: %d,CPU rate: %f\n", lcore_id,_parameters.cpu_process_rate);
+                    if(print_time)printf("lcore: %d,CPU rate: %f\n", lcore_id,_parameters.cpu_process_rate);
                     if(print_time)printf("lcore: %d,GPU rate: %f\n", lcore_id,_parameters.gpu_process_rate);
+                    if(print_time)printf("lcore: %d,enqueue rate: %f\n", lcore_id,_parameters.cpu_enqueue_rate);
 
 
                     if(i==0){
