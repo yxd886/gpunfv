@@ -180,7 +180,7 @@ void gpu_malloc(void** devPtr, size_t size){
 }
 
 void gpu_malloc_host(void** devPtr, size_t size){
-	checkCudaErrors(cudaMallocHost(devPtr, size));
+	checkCudaErrors(cudaHostAlloc(devPtr, size,cudaHostAllocMapped));
 }
 
 

@@ -404,10 +404,24 @@ public:
         batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true),_profile_num(0){
             create_stream(&stream);
             lcore_id = rte_lcore_id();
+            gpu_malloc_host((void**)(&gpu_pkts[0]),sizeof(PKT)*_batch_size*40);
+            gpu_malloc_host((void**)(&gpu_pkts[1]),sizeof(PKT)*_batch_size*40);
+            gpu_malloc_host((void**)(&gpu_states[0]),sizeof(nf_flow_state)*MAX_FLOW_NUM);
+            gpu_malloc_host((void**)(&gpu_states[1]),sizeof(nf_flow_state)*MAX_FLOW_NUM);
+
+            memset(gpu_pkts[0], 0, sizeof(PKT)*_batch_size*40);
+            memset(gpu_pkts[1], 0, sizeof(PKT)*_batch_size*40);
+            memset(gpu_states[0], 0, sizeof(nf_flow_state)*MAX_FLOW_NUM);
+            memset(gpu_states[1], 0, sizeof(nf_flow_state)*MAX_FLOW_NUM);
+
         }
 
         ~batch(){
             destory_stream(stream);
+        }
+        void reset_batch(uint64_t index){
+            memset(gpu_pkts[index], 0, sizeof(PKT)*_batch_size*40);
+            memset(gpu_states[index], 0, sizeof(nf_flow_state)*MAX_FLOW_NUM);
         }
 
         void compute_parameter(){
@@ -511,11 +525,12 @@ public:
                 assert(gpu_states[index]);
 
                 // Clear and map gpu_pkts and gpu_states
-                memset(gpu_pkts[index], 0, ngpu_pkts);
-                memset(gpu_states[index], 0, ngpu_states);
+                //memset(gpu_pkts[index], 0, ngpu_pkts);
+                //memset(gpu_states[index], 0, ngpu_states);
+                reset_batch(index);
                 //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
-                gpu_mem_map(gpu_pkts[index], ngpu_pkts);
-                gpu_mem_map(gpu_states[index], ngpu_states);
+                //gpu_mem_map(gpu_pkts[index], ngpu_pkts);
+                //gpu_mem_map(gpu_states[index], ngpu_states);
                 started[lcore_id] = steady_clock_type::now();
 //#pragma omp parallel for
 
