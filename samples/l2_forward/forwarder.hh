@@ -516,8 +516,8 @@ public:
                 int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(PKT);
                 if(print_time)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(PKT)<<std::endl;
                 int ngpu_states = partition * sizeof(nf_flow_state);
-                gpu_pkts[index] = (PKT*)malloc(ngpu_pkts);
-                gpu_states[index] = (nf_flow_state*)malloc(ngpu_states);
+                //gpu_pkts[index] = (PKT*)malloc(ngpu_pkts);
+                //gpu_states[index] = (nf_flow_state*)malloc(ngpu_states);
             //    gpu_malloc_host((void**)&gpu_pkts[index],ngpu_pkts);
             //  gpu_malloc_host((void**)&gpu_states[index],ngpu_states);
 
