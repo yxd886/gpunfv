@@ -589,8 +589,8 @@ public:
                     if(print_time)  printf("lcore: %d,Copyback time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 
-                    memset(gpu_pkts[!index],0, pre_ngpu_pkts*sizeof(PKT));
-                    memset(gpu_states[!index],0, pre_ngpu_states*sizeof(nf_flow_state));
+                    memset(gpu_pkts[!index],0, pre_ngpu_pkts);
+                    memset(gpu_states[!index],0, pre_ngpu_states);
 
 
                     stoped[lcore_id] = steady_clock_type::now();
@@ -766,8 +766,8 @@ public:
                     started[lcore_id] = steady_clock_type::now();
 
 
-                    memset(gpu_pkts[!index],0, pre_ngpu_pkts*sizeof(PKT));
-                    memset(gpu_states[!index],0, pre_ngpu_states*sizeof(nf_flow_state));
+                    memset(gpu_pkts[!index],0, pre_ngpu_pkts);
+                    memset(gpu_states[!index],0, pre_ngpu_states);
 
 
                     stoped[lcore_id] = steady_clock_type::now();
