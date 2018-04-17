@@ -555,18 +555,17 @@ public:
                     elapsed = stoped[lcore_id] - started[lcore_id];
                     if(print_time)  printf("lcore: %d, Sync time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
-//#pragma omp parallel for
-                  //  {
-                        for(int i = 0; i < pre_partition; i++){
-                            //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
-                            //assert(gpu_states[!index][i]._dfa_id<200);
-                            rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(nf_flow_state));
 
-                         //   for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                         //       rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
-                         //   }
-                        }
-                  //  }
+                    for(int i = 0; i < pre_partition; i++){
+                        //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
+                        //assert(gpu_states[!index][i]._dfa_id<200);
+                        rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(nf_flow_state));
+
+                     //   for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
+                     //       rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                     //   }
+                    }
+
                     gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
                     gpu_memset_async(dev_gpu_states,0, pre_ngpu_states,stream);
                     stoped[lcore_id] = steady_clock_type::now();
@@ -598,11 +597,12 @@ public:
                         free(gpu_states[!index]);
                     }*/
                     _flows[!index].clear();
+                    stoped[lcore_id] = steady_clock_type::now();
+                    elapsed = stoped[lcore_id] - started[lcore_id];
+                    if(print_time)  printf("lcore: %d,forward pkts time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                    started[lcore_id] = steady_clock_type::now();
                 }
-                stoped[lcore_id] = steady_clock_type::now();
-                elapsed = stoped[lcore_id] - started[lcore_id];
-                if(print_time)  printf("lcore: %d,forward pkts time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
-                started[lcore_id] = steady_clock_type::now();
+
 
 
                 //batch the current state
@@ -737,6 +737,10 @@ public:
                         free(gpu_states[!index]);
                     }*/
                     _flows[!index].clear();
+                    stoped[lcore_id] = steady_clock_type::now();
+                    elapsed = stoped[lcore_id] - started[lcore_id];
+                    if(print_time)  printf("lcore: %d,forward pkts time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                    started[lcore_id] = steady_clock_type::now();
                 }
             }
 
