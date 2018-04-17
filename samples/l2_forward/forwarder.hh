@@ -468,7 +468,7 @@ public:
 
             if(_profileing) _profile_elements.cpu_enqueue_time = static_cast<double>(simple_elapsed.count() / 1.0);
             //adjust_enqueue_rate();
-            if(print_simple_time) printf("Simple Enqueuing time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
+            if(print_simple_time) printf("locre: %d,Simple Enqueuing time: %f\n", lcore_id,static_cast<double>(simple_elapsed.count() / 1.0));
             simple_started[lcore_id] = steady_clock_type::now();
 
 
@@ -580,6 +580,10 @@ public:
                     }
                     _flows[!index].clear();
                 }
+                stoped[lcore_id] = steady_clock_type::now();
+                elapsed = stoped[lcore_id] - started[lcore_id];
+                if(print_time)  printf("lcore: %d,forward pkts time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                started[lcore_id] = steady_clock_type::now();
 
                 started[lcore_id] = steady_clock_type::now();
                 //batch the current state
@@ -734,7 +738,7 @@ public:
 
             simple_stoped[lcore_id] = steady_clock_type::now();
             simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
-            if(print_simple_time)    printf("Task schedule time: %f\n", static_cast<double>(simple_elapsed.count() / 1.0));
+            if(print_simple_time)    printf("lcore: %d, Task schedule time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
             simple_started[lcore_id] = steady_clock_type::now();
 
 
