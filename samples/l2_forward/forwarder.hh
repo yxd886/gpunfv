@@ -510,6 +510,8 @@ public:
             if(print_time)printf("lcore %d ,Scheduling time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
             started[lcore_id] = steady_clock_type::now();
 
+
+            simple_stoped[lcore_id] = steady_clock_type::now();
             simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
             if(print_simple_time)    printf("lcore: %d, simple schedule time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
@@ -550,7 +552,7 @@ public:
                 if(print_time)printf("lcore %d batch pkt time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
-
+                simple_stoped[lcore_id] = steady_clock_type::now();
                 simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
                 if(print_simple_time)    printf("lcore: %d, simple batch pkt time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
@@ -563,6 +565,8 @@ public:
                     if(print_time)  printf("lcore: %d, Sync time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 
+
+                    simple_stoped[lcore_id] = steady_clock_type::now();
                     simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
                     if(print_simple_time)    printf("lcore: %d, simple sync time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
@@ -583,7 +587,7 @@ public:
                     if(print_time)  printf("lcore: %d,Copyback time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 
-
+                    simple_stoped[lcore_id] = steady_clock_type::now();
                     simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
                     if(print_simple_time)    printf("lcore: %d, simple copyback time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
@@ -616,7 +620,7 @@ public:
                     if(print_time)  printf("lcore: %d,forward pkts time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 
-
+                    simple_stoped[lcore_id] = steady_clock_type::now();
                     simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
                     if(print_simple_time)    printf("lcore: %d, simple forward pkt time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
                 }
@@ -645,7 +649,7 @@ public:
                 if(print_time)printf("lcore: %d,Batching state time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
-
+                simple_stoped[lcore_id] = steady_clock_type::now();
                 simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
                 if(print_simple_time)    printf("lcore: %d, simple batching states time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
@@ -664,6 +668,7 @@ public:
                     printf("lcore %d copy pkt to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 
+                    simple_stoped[lcore_id] = steady_clock_type::now();
                     simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
                     if(print_simple_time)    printf("lcore: %d, simple copy pkt to device time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
@@ -679,7 +684,7 @@ public:
                 elapsed = stoped[lcore_id] - started[lcore_id];
                 if(print_time)printf("lcore %d Memcpy to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
 
-
+                simple_stoped[lcore_id] = steady_clock_type::now();
                 simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
                 if(print_simple_time)    printf("lcore: %d, simple Memcpy to device time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
@@ -719,6 +724,7 @@ public:
                 if(print_time)  printf("lcore_id: %d Memcpy device to host time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
+                simple_stoped[lcore_id] = steady_clock_type::now();
                 simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
                 if(print_simple_time)    printf("lcore: %d, simple memcpy device to host time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
@@ -789,6 +795,7 @@ public:
             if(print_time)printf("lcore: %d,CPU processing time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
             started[lcore_id] = steady_clock_type::now();
 
+            simple_stoped[lcore_id] = steady_clock_type::now();
             simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
             if(print_simple_time)    printf("lcore: %d, simple cpu processing time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
