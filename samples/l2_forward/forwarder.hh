@@ -575,8 +575,8 @@ public:
                     started[lcore_id] = steady_clock_type::now();
 
                     // Unmap gpu_pkts and gpu_states
-                    gpu_mem_unmap(gpu_pkts[!index]);
-                    gpu_mem_unmap(gpu_states[!index]);
+                    //gpu_mem_unmap(gpu_pkts[!index]);
+                   // gpu_mem_unmap(gpu_states[!index]);
                   //  gpu_free_host(gpu_pkts[!index]);
                   //  gpu_free_host(gpu_states[!index]);
                   //  gpu_pkts[!index]=nullptr;
@@ -591,12 +591,12 @@ public:
                         _flows[!index][i]->forward_pkts(!index);
                     }
 
-                    if(gpu_pkts[!index]){
+                   /* if(gpu_pkts[!index]){
                         free(gpu_pkts[!index]);
                     }
                     if(gpu_states[!index]){
                         free(gpu_states[!index]);
-                    }
+                    }*/
                     _flows[!index].clear();
                 }
                 stoped[lcore_id] = steady_clock_type::now();
@@ -712,8 +712,8 @@ public:
                     started[lcore_id] = steady_clock_type::now();
 
                     // Unmap gpu_pkts and gpu_states
-                    gpu_mem_unmap(gpu_pkts[!index]);
-                    gpu_mem_unmap(gpu_states[!index]);
+                    //gpu_mem_unmap(gpu_pkts[!index]);
+                    //gpu_mem_unmap(gpu_states[!index]);
                //     gpu_free_host(gpu_pkts[!index]);
                //     gpu_free_host(gpu_states[!index]);
               //      gpu_pkts[!index]=nullptr;
@@ -724,12 +724,12 @@ public:
                         _flows[!index][i]->forward_pkts(!index);
                     }
 
-                    if(gpu_pkts[!index]){
+                  /*  if(gpu_pkts[!index]){
                         free(gpu_pkts[!index]);
                     }
                     if(gpu_states[!index]){
                         free(gpu_states[!index]);
-                    }
+                    }*/
                     _flows[!index].clear();
                 }
             }
