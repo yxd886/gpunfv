@@ -587,10 +587,12 @@ public:
 
                     gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
                     gpu_memset_async(dev_gpu_states,0, pre_ngpu_states,stream);
+
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
                     if(print_time)  printf("lcore: %d,Copyback time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
+
 
                     simple_stoped[lcore_id] = steady_clock_type::now();
                     simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
@@ -757,6 +759,16 @@ public:
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
                     if(print_time)  printf("lcore: %d,Copyback time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
+                    started[lcore_id] = steady_clock_type::now();
+
+
+                    memset(gpu_pkts[!index],0, pre_ngpu_pkts*sizeof(PKT));
+                    memset(gpu_states[!index],0, pre_ngpu_states*sizeof(nf_flow_state));
+
+
+                    stoped[lcore_id] = steady_clock_type::now();
+                    elapsed = stoped[lcore_id] - started[lcore_id];
+                    if(print_time)  printf("lcore: %d,memset time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 
                     // Unmap gpu_pkts and gpu_states
