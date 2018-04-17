@@ -533,11 +533,7 @@ public:
                 //memset(gpu_pkts[index], 0, ngpu_pkts);
                 //memset(gpu_states[index], 0, ngpu_states);
                 started[lcore_id] = steady_clock_type::now();
-                reset_batch(index);
-                stoped[lcore_id] = steady_clock_type::now();
-                elapsed = stoped[lcore_id] - started[lcore_id];
-                if(print_time)printf("lcore %d reset time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
-                started[lcore_id] = steady_clock_type::now();
+
                 //printf("gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
                 //gpu_mem_map(gpu_pkts[index], ngpu_pkts);
                 //gpu_mem_map(gpu_states[index], ngpu_states);
@@ -593,6 +589,14 @@ public:
                     if(print_time)  printf("lcore: %d,Copyback time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 
+                    memset(gpu_pkts[!index],0, pre_ngpu_pkts*sizeof(PKT));
+                    memset(gpu_states[!index],0, pre_ngpu_states*sizeof(nf_flow_state));
+
+
+                    stoped[lcore_id] = steady_clock_type::now();
+                    elapsed = stoped[lcore_id] - started[lcore_id];
+                    if(print_time)  printf("lcore: %d,memset time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                    started[lcore_id] = steady_clock_type::now();
 
                     simple_stoped[lcore_id] = steady_clock_type::now();
                     simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
