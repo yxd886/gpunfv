@@ -510,6 +510,9 @@ public:
             if(print_time)printf("lcore %d ,Scheduling time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
             started[lcore_id] = steady_clock_type::now();
 
+            simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+            if(print_simple_time)    printf("lcore: %d, simple schedule time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
+
             if(partition>0) {
 
                 int max_pkt_num_per_flow=_flows[index][partition-1]->packets[index].size();
@@ -547,6 +550,10 @@ public:
                 if(print_time)printf("lcore %d batch pkt time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
+
+                simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+                if(print_simple_time)    printf("lcore: %d, simple batch pkt time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
+
                 //sync last batch's result and copy them back to host
                 if(_flows[!index].empty()==false){
                     started[lcore_id] = steady_clock_type::now();
@@ -555,6 +562,9 @@ public:
                     elapsed = stoped[lcore_id] - started[lcore_id];
                     if(print_time)  printf("lcore: %d, Sync time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
+
+                    simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+                    if(print_simple_time)    printf("lcore: %d, simple sync time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
                     for(int i = 0; i < pre_partition; i++){
                         //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
@@ -572,6 +582,10 @@ public:
                     elapsed = stoped[lcore_id] - started[lcore_id];
                     if(print_time)  printf("lcore: %d,Copyback time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
+
+
+                    simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+                    if(print_simple_time)    printf("lcore: %d, simple copyback time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
                     // Unmap gpu_pkts and gpu_states
                     //gpu_mem_unmap(gpu_pkts[!index]);
@@ -601,6 +615,10 @@ public:
                     elapsed = stoped[lcore_id] - started[lcore_id];
                     if(print_time)  printf("lcore: %d,forward pkts time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
+
+
+                    simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+                    if(print_simple_time)    printf("lcore: %d, simple forward pkt time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
                 }
 
 
@@ -627,6 +645,10 @@ public:
                 if(print_time)printf("lcore: %d,Batching state time: %f\n",lcore_id, static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
+
+                simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+                if(print_simple_time)    printf("lcore: %d, simple batching states time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
+
                 if(gpu_time||_profileing){
                     gpu_sync(stream);
                     started[lcore_id] = steady_clock_type::now();
@@ -641,6 +663,10 @@ public:
                     elapsed = stoped[lcore_id] - started[lcore_id];
                     printf("lcore %d copy pkt to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
+
+                    simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+                    if(print_simple_time)    printf("lcore: %d, simple copy pkt to device time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
+
                     _profile_elements.gpu_copy_time = static_cast<double>(elapsed.count() / 1.0);
                 }
 
@@ -653,6 +679,9 @@ public:
                 elapsed = stoped[lcore_id] - started[lcore_id];
                 if(print_time)printf("lcore %d Memcpy to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
 
+
+                simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+                if(print_simple_time)    printf("lcore: %d, simple Memcpy to device time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
                 //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
                 /////////////////////////////////////////////
@@ -667,7 +696,7 @@ public:
 
                 stoped[lcore_id] = steady_clock_type::now();
                 elapsed = stoped[lcore_id] - started[lcore_id];
-                printf("lcore %d gpu launch time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                if(print_time) printf("lcore %d gpu launch time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
                 if(print_time)  printf("lcore_id: %d gpu launced just now\n", lcore_id);
@@ -690,6 +719,8 @@ public:
                 if(print_time)  printf("lcore_id: %d Memcpy device to host time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
+                simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+                if(print_simple_time)    printf("lcore: %d, simple memcpy device to host time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
 
             } else {
@@ -756,8 +787,11 @@ public:
             stoped[lcore_id] = steady_clock_type::now();
             elapsed = stoped[lcore_id] - started[lcore_id];
             if(print_time)printf("lcore: %d,CPU processing time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
-
             started[lcore_id] = steady_clock_type::now();
+
+            simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
+            if(print_simple_time)    printf("lcore: %d, simple cpu processing time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
+
             if(_profileing){
                 _profile_elements.cpu_process_time = static_cast<double>(elapsed.count() / 1.0);
                 compute_parameter();
