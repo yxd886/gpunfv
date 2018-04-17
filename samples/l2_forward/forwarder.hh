@@ -566,6 +566,10 @@ public:
                   //  gpu_free_host(gpu_states[!index]);
                   //  gpu_pkts[!index]=nullptr;
                   //  gpu_states[!index]=nullptr;
+                    stoped[lcore_id] = steady_clock_type::now();
+                    elapsed = stoped[lcore_id] - started[lcore_id];
+                    if(print_time)  printf("lcore: %d,batch unmap time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                    started[lcore_id] = steady_clock_type::now();
 
                     // Forward GPU packets[current_idx]
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
@@ -585,7 +589,7 @@ public:
                 if(print_time)  printf("lcore: %d,forward pkts time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                 started[lcore_id] = steady_clock_type::now();
 
-                started[lcore_id] = steady_clock_type::now();
+
                 //batch the current state
 //#pragma omp parallel for
                 for(int i = 0; i < partition; i++){
