@@ -166,7 +166,7 @@ public:
                             return make_ready_future<>();
                         }
                     });*/
-                    IPS::init_automataState(_fs);
+                    NF::init_automataState(_fs);
                 }
             }
         }
