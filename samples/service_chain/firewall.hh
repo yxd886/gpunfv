@@ -42,7 +42,7 @@ public:
 class Firewall {
 	vector<Rule> rules;
 public:
-	void *info_for_gpu;
+	Firewall *info_for_gpu;
 
 	Firewall() : info_for_gpu(0) {
 		uint32_t n = 1000;
@@ -65,12 +65,11 @@ public:
 
 	inline void nf_init() {
 		assert(rules.size());
-
-		info_for_gpu = init_firewall_info(rules.size(), &rules[0]);
+		info_for_gpu = (Firewall *)gpu_init(rules.size(), &rules[0]);
 	}
 
 	// Convert 4 integers to a network byte order ip address
-	inline uint32_t i2ip(uint8_t s0, uint8_t s1, uint8_t s2, uint8_t s3) {
+	inline static uint32_t i2ip(uint8_t s0, uint8_t s1, uint8_t s2, uint8_t s3) {
 		uint32_t res;
 		uint8_t *p = (uint8_t *) &res;
 
@@ -82,7 +81,7 @@ public:
 		return res;
 	}
 
-	inline void init_automataState(firewall_flow_state &state) {
+	inline static void init_automataState(firewall_flow_state &state) {
 		state.match_no = 0;
 		state.drop_no = 0;
 		state.pass_no = 0;
@@ -90,9 +89,7 @@ public:
 		state.counter = 0;
 	}
 
-	inline void nf_logic(void *pkt, firewall_flow_state *state) {	// specify nf logic function
-	    process(pkt, state);
-	}
+	inline void nf_logic(void *pkt, firewall_flow_state *state); 
 
 private:
 	inline void process(void *packet, firewall_flow_state* state) {

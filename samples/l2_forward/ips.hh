@@ -15,18 +15,31 @@
 
 #define DFA_NUM 50
 
-struct ips_flow_state{
+struct ips_flow_state {
     uint16_t _state[DFA_NUM];
     int _dfa_id[DFA_NUM];
     bool _alert[DFA_NUM];
 
 };
 
-class IPS{
+class IPS {
 public:
     struct aho_dfa dfa_arr[AHO_MAX_DFA];
     struct stat_t *stats;
     IPS *info_for_gpu;
+
+    inline void init_automataState(struct ips_flow_state& state){
+        for(int i = 0; i < DFA_NUM; i++){
+            srand((unsigned)time(NULL));
+            state._state[i] = 0;
+            state._alert[i] = false;
+            state._dfa_id[i] = rand() % AHO_MAX_DFA;
+        }
+    }
+
+    inline void nf_logic(void *pkt, struct ips_flow_state* state) {   
+        ips_detect(pkt, state);
+    }
 
     IPS(){
         int num_patterns, i;
@@ -53,7 +66,7 @@ public:
         /* Initialize the shared DFAs */
         for(i = 0; i < AHO_MAX_DFA; i++) {
             //printf("Initializing DFA %d\n", i);
-            printf("i=%d\n",i);
+            //printf("i=%d\n",i);
             aho_init(&dfa_arr[i], i);
         }
 
@@ -99,16 +112,6 @@ public:
         int num_match;
         uint16_t ptrn_id[MAX_MATCH];
     };
-
-    static void init_automataState(struct ips_flow_state& state){
-        for(int i=0;i<DFA_NUM;i++){
-            srand((unsigned)time(NULL));
-            state._state[i]=0;
-            state._alert[i]=false;
-            state._dfa_id[i]=rand()%AHO_MAX_DFA;
-        }
-        //std::cout<<"init_automataState_dfa_id:"<<state._dfa_id<<std::endl;
-    }
 
     void parse_pkt(void *pkt, struct ips_flow_state* state,struct aho_pkt*  aho_pkt){
         uint16_t len = packetParser::get_size(pkt);
@@ -200,8 +203,6 @@ public:
         free(pkts->content);
         free(pkts);
    }
-
-   inline void nf_logic(void *rte_pkt, struct ips_flow_state* state);
 
 };
 

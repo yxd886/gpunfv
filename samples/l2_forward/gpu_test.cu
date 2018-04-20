@@ -4,12 +4,17 @@
 #include <cassert>
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
-#include "ips.cuh"
+#include "nf.cuh"
 
 using namespace std;
 
 #define THREADPERBLOCK	256
 #define SHARE_MEM_SIZE  512
+#define MAX_PKT_SIZE 64
+
+struct PKT{
+	char pkt[MAX_PKT_SIZE];
+};
 
 __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows) {
 
@@ -23,12 +28,12 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
 	struct ips_flow_state* state_ptr=(struct ips_flow_state*)state_batch;
 
 
-	for(int i= 0 ;i <DFA_NUM; i++){
-		gpu_ips_flow_state[id%32]._state[i]= state_ptr[id]._state[i];
-		gpu_ips_flow_state[id%32]._dfa_id[i] = state_ptr[id]._dfa_id[i];
-		gpu_ips_flow_state[id%32]._alert[i] = state_ptr[id]._alert[i];
+	// for(int i= 0 ;i <DFA_NUM; i++){
+	// 	gpu_ips_flow_state[id%32]._state[i]= state_ptr[id]._state[i];
+	// 	gpu_ips_flow_state[id%32]._dfa_id[i] = state_ptr[id]._dfa_id[i];
+	// 	gpu_ips_flow_state[id%32]._alert[i] = state_ptr[id]._alert[i];
 
-	}
+	// }
 	
 	
 	for(int i = 0; i < flowDim; i++) {
@@ -42,16 +47,16 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
 				break;
 		}
  			
-		process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,(char*)pkts[i].pkt,&gpu_ips_flow_state[id%32]);
-			
+		//NF::nf_logic((char*)pkts[i].pkt, &gpu_ips_flow_state[id%32], ((struct gpu_IPS *)extra_info)->dfa_arr);
+		NF::nf_logic((char*)pkts[i].pkt, &state_ptr[id], ((struct gpu_IPS *)extra_info)->dfa_arr);
 	}
 	
-	for(int i= 0 ;i <DFA_NUM; i++){
-		state_ptr[id]._state[i]= gpu_ips_flow_state[id%32]._state[i];
-		state_ptr[id]._dfa_id[i]= gpu_ips_flow_state[id%32]._dfa_id[i];
-		state_ptr[id]._alert[i] = gpu_ips_flow_state[id%32]._alert[i];
+	// for(int i= 0 ;i <DFA_NUM; i++){
+	// 	state_ptr[id]._state[i]= gpu_ips_flow_state[id%32]._state[i];
+	// 	state_ptr[id]._dfa_id[i]= gpu_ips_flow_state[id%32]._dfa_id[i];
+	// 	state_ptr[id]._alert[i] = gpu_ips_flow_state[id%32]._alert[i];
 
-	}
+	// }
 
 	return;	
 	

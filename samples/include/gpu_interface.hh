@@ -1,9 +1,16 @@
 #ifndef GPU_INTERFACE_HH
 #define GPU_INTERFACE_HH
 
+// NF-related interface
+void *init_firewall_info(size_t size, void * data);
+void *init_service_chain_info(void *d1, void * d2);
+
+// non NF-related interface
+
 void gpu_launch(char *pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows,cudaStream_t stream);
 void gpu_sync(cudaStream_t stream);
-void *gpu_init(unsigned size, void *ptr);
+
+void *gpu_malloc_set(size_t size, void *data);
 
 void gpu_mem_map(void *ptr, size_t size);
 void gpu_mem_unmap(void *ptr);

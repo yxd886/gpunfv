@@ -7,6 +7,7 @@
 #include <cassert>
 
 #include "../include/packet_parser.cuh"
+#include "../include/gpu_interface.hh"
 
 using namespace std;
 
@@ -34,20 +35,26 @@ class Rules {
 public:	
 	uint32_t size;
 	Rule *rules;
-	uint32_t data_size;
+	//uint32_t data_size;
 
-	__host__ Rules(uint32_t s, void *r) : size(s), rules((Rule *)r) {
-		data_size = sizeof(Rule) * size;
+	__host__ Rules(size_t s, void *r) : size(s) {
+		uint32_t real_data_size = sizeof(Rule) * size;
+
+		// Copy real data to gpu and set the device pointer
+		rules = (Rule *)gpu_malloc_set(real_data_size, r);
 	}
 
-	__host__ void **data() {
-		return (void **)&rules;
-	}
-
-	__device__ inline Rule& operator[](uint32_t idx) {
+	__device__ inline Rule& operator[](size_t idx) {
 		return rules[idx];
 	}
 };
+
+void *init_firewall_info(size_t size, void *data) {
+	Rules info(size, data);
+
+	// Copy Infos to gpu
+	 return gpu_malloc_set(sizeof(info), &info);
+}
 
 class Firewall {
 public:
@@ -72,7 +79,9 @@ public:
 		state.counter = 0;
 	}
 
-	__device__ inline static void nf_logic(void *pkt, firewall_flow_state *state, Rules *rules); 
+	__device__ inline static void nf_logic(void *pkt, firewall_flow_state *state, Rules *rules) {
+		process(pkt, state, rules);
+	} 
 
 private:
 	__device__ inline static void process(void *packet, firewall_flow_state* state, Rules *rules) {
@@ -106,7 +115,7 @@ private:
 		else {
 			assert(0 && "Unsupported protocol.");
 		}
-		
+	
 		state->counter++;
 
 		bool drop;
@@ -132,7 +141,7 @@ private:
 			
 			if(temp.dport == ANY_PORT ? false : !(temp.dport == d_port))
 				continue;
-			
+
 			// Perfect match
 			state->match_no++;
 
@@ -142,7 +151,7 @@ private:
 				drop = true;
 			else
 				assert(0 && "Unexpected action id");
-			
+		
 			break;
 		}
 

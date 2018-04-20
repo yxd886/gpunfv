@@ -130,7 +130,7 @@ aho_add_pattern(struct aho_dfa *dfa, struct aho_pattern *pattern, int index)
 
         /* Print when states consume around 30 MB */
         if(dfa->num_used_states % 10000 == 0) {
-            printf("\taho: DFA %d states = %d\n", dfa->id, dfa->num_used_states);
+            //printf("\taho: DFA %d states = %d\n", dfa->id, dfa->num_used_states);
         }
 
         st_arr[state].G[pattern->content[j]] = dfa->num_used_states;
@@ -317,7 +317,7 @@ void aho_preprocess_dfa(struct aho_dfa *dfa)
 {
     static int tot_states = 0;      /* Total states across all DFAs */
     tot_states += dfa->num_used_states;
-    printf("\taho: Preprocessing DFA %d. num_states = %d | tot_states = %d\n",
+    //printf("\taho: Preprocessing DFA %d. num_states = %d | tot_states = %d\n", \
         dfa->id, dfa->num_used_states, tot_states);
     assert(dfa != NULL);
 
