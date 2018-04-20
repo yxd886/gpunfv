@@ -4,7 +4,7 @@
 #include "nf.hh"
 #include <omp.h>
 #include <future>
-#include "../gpu_interface.hh"
+#include "../include/gpu_interface.hh"
 
 extern uint64_t _batch_size;
 extern uint64_t print_time;
@@ -137,8 +137,7 @@ public:
         }
 
         void process_pkt(rte_packet* pkt, nf_flow_state* fs){
-            _nf->nf_logic(pkt, fs);
-            //IPS::ips_detect(pkt,fs);
+            _nf->nf_logic(pkt->get_header<unsigned char>(), fs);
         }
 
         void update_state(uint64_t index){

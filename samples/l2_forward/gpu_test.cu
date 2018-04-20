@@ -4,7 +4,7 @@
 #include <cassert>
 #include <cuda_runtime.h>
 #include <helper_cuda.h>
-#include "gpu_ips.cuh"
+#include "ips.cuh"
 
 using namespace std;
 

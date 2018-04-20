@@ -10,6 +10,7 @@
 
 #include "../../nf/aho-corasick/fpp.h"
 #include "../../nf/aho-corasick/aho.h"
+#include "../include/packet_parser.hh"
 
 
 #define DFA_NUM 50
@@ -109,13 +110,13 @@ public:
         //std::cout<<"init_automataState_dfa_id:"<<state._dfa_id<<std::endl;
     }
 
-    void parse_pkt(rte_packet *rte_pkt, struct ips_flow_state* state,struct aho_pkt*  aho_pkt){
-       aho_pkt->content=(uint8_t*)malloc(rte_pkt->len());
-       //std::cout<<"    rte_pkt->len():"<<rte_pkt->len()<<std::endl;
-       memcpy(aho_pkt->content,reinterpret_cast<uint8_t*>(rte_pkt->get_header(0,sizeof(char))),rte_pkt->len()-1);
+    void parse_pkt(void *pkt, struct ips_flow_state* state,struct aho_pkt*  aho_pkt){
+        uint16_t len = packetParser::get_size(pkt);
+
+       aho_pkt->content=(uint8_t*)malloc(len);
+       memcpy(aho_pkt->content, pkt, len-1);
        aho_pkt->dfa_id=state->_dfa_id;
-       aho_pkt->len=rte_pkt->len();
-       //std::cout<<"    aho_pkt->len:"<<rte_pkt->len()<<std::endl;
+       aho_pkt->len = len;
    }
 
    void process_batch(const struct aho_dfa *dfa_arr,
@@ -181,10 +182,10 @@ public:
         }
    }
 
-   void ips_detect(rte_packet *rte_pkt, struct ips_flow_state* state){
+   void ips_detect(void *pkt, struct ips_flow_state* state){
         struct aho_pkt* pkts=(struct aho_pkt* )malloc(sizeof(struct aho_pkt));
 
-        parse_pkt(rte_pkt, state,pkts);
+        parse_pkt(pkt, state,pkts);
 
         struct aho_ctrl_blk worker_cb;
         worker_cb.stats = this->stats;
@@ -200,22 +201,8 @@ public:
         free(pkts);
    }
 
-   inline void nf_logic(rte_packet *rte_pkt, struct ips_flow_state* state);
+   inline void nf_logic(void *rte_pkt, struct ips_flow_state* state);
 
 };
-
-
-//  nf part
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-// specify your nf
-using NF = IPS;                         // specify NF class
-using nf_flow_state = ips_flow_state;   // specify NF state class
-//using nf_pkt = rte_packet;              // specify NF packet class
-inline void NF::nf_logic(rte_packet *pkt, nf_flow_state *state) {   // specify nf logic function
-    ips_detect(pkt, state);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-//  flow manager part
 
 #endif /* IPS_HH */

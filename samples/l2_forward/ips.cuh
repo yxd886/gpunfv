@@ -12,13 +12,20 @@
 #include <netinet/udp.h>
 #include <netinet/in.h>
 
-#include "common.cuh"
-#include "../nf/aho-corasick/fpp.h"
-#include "../nf/aho-corasick/aho.hh"
+#include "../include/packet_parser.cuh"
+#include "../../nf/aho-corasick/fpp.h"
+#include "../../nf/aho-corasick/aho.hh"
 
 #define MAX_MATCH 8192
 #define MAX_PKT_SIZE 64
 #define DFA_NUM 50
+
+// __device__ uint32_t pkt_len(void *pkt) {
+//     //struct ether_hdr* m_pEthhdr = (struct ether_hdr*)pkt;
+//     struct iphdr* m_pIphdr = (struct iphdr*)(pkt + sizeof(struct ether_hdr));
+
+//   return Ntohs(m_pIphdr->tot_len) + sizeof(struct ether_hdr);
+// }
 
 struct ips_flow_state{
 
@@ -71,11 +78,14 @@ __global__ void childKernel(const struct aho_dfa *dfa_arr,
 }  
 
 __device__ void process_batch(const struct aho_dfa *dfa_arr,    
-   char *pkts, struct ips_flow_state *ips_state) {
+   char *pkt, struct ips_flow_state *ips_state) {
     int  j;
     
-   
-    int len = pkt_len(pkts);
+    // packetInfo info;
+    // packetParser::parse_raw_packet(pkt, &info);
+
+    //uint16_t len = info._size;
+    uint16_t len = packetParser::get_size(pkt);
     struct aho_state *st_arr = NULL;
         
     
@@ -91,7 +101,7 @@ __device__ void process_batch(const struct aho_dfa *dfa_arr,
 	
 			int count = st_arr[state].output.count;
 			ips_state->_alert[times] =(count != 0||ips_state->_alert[times]==true)?true:ips_state->_alert[times];
-			int inp = pkts[j];
+			int inp = pkt[j];
 			state = st_arr[state].G[inp]; 
 		}
 	ips_state->_state[times] = state;
@@ -116,9 +126,11 @@ __device__ void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state *state)
 }
 
 __device__ void parse_pkt(char *pkt, struct ips_flow_state *state, struct aho_pkt *aho_pkt){
-	
+	// packetInfo info;
+    // packetParser::parse_raw_packet(pkt, &info);
 
-    uint32_t len = pkt_len(pkt);
+    //uint16_t len = info._size;
+    uint16_t len = packetParser::get_size(pkt);
     aho_pkt->content=(uint8_t *)pkt;
     aho_pkt->dfa_id = state->_dfa_id;
     aho_pkt->len = len;
