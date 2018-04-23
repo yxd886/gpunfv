@@ -32,6 +32,8 @@ public:
             _dfa_id[i] = s._dfa_id[i];
             _alert[i] = s._alert[i];
         }
+
+        return *this;
     }
 };
 

@@ -17,7 +17,7 @@ extern uint64_t schedule;
 #define COMPUTE_RATIO   100
 #define MAX_PKT_SIZE    64
 #define MAX_FLOW_NUM    40000
-#define MAX_GPU_THREAD  5
+#define MAX_GPU_THREAD  10
 #define THREADPERBLOCK  256
 
 std::chrono::time_point<std::chrono::steady_clock> started[10];
