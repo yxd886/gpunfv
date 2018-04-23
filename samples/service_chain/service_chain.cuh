@@ -11,7 +11,8 @@
 #include "../firewall/firewall.cuh"
 #include "../l2_forward/ips.cuh"
 
-struct chain_flow_state{
+class chain_flow_state{
+public:
 	ips_flow_state _ips_state;
 	firewall_flow_state _firewall_state;
 };
@@ -35,7 +36,7 @@ void *init_service_chain_info(void *d1, void *d2) {
 class serviceChain {
 public:
 	__device__ inline static void nf_logic(void *pkt, chain_flow_state *state, chainInfo *info) {
-		//Firewall::nf_logic(pkt, &state->_firewall_state, info->_rules);
+		Firewall::nf_logic(pkt, &state->_firewall_state, info->_rules);
 
 		// suppose all packet can pass the firewall
 		IPS::nf_logic(pkt, &state->_ips_state, info->_ips->dfa_arr);

@@ -13,7 +13,7 @@ using namespace std;
 
 #define THREADPERBLOCK	256
 #define SHARE_MEM_SIZE  512
-#define MAX_PKT_SIZE 64
+#define MAX_PKT_SIZE 	64
 
 struct PKT{
 	char pkt[MAX_PKT_SIZE];
@@ -21,7 +21,7 @@ struct PKT{
 
 __global__ void gpu_nf_logic(char *pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows) {
 
-	//__shared__ struct ips_flow_state gpu_ips_flow_state[32];
+	__shared__ nf_flow_state gpu_nf_flow_state[32];
 
 	
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
@@ -30,6 +30,9 @@ __global__ void gpu_nf_logic(char *pkt_batch, char *state_batch, char *extra_inf
 	Infos *info = (Infos *)extra_info;
 	PKT *pkts = (PKT *)pkt_batch + id * flowDim;
 	nf_flow_state *states = (nf_flow_state *)state_batch;
+
+	// Copy state to shared memory
+	gpu_nf_flow_state[id%32] = states[id];
 		
 	for(int i = 0; i < flowDim; i++) {
 		if(pkts[i].pkt[0] == 0) {
@@ -42,11 +45,13 @@ __global__ void gpu_nf_logic(char *pkt_batch, char *state_batch, char *extra_inf
 				break;
 		}
  			
-		//process_batch(((struct gpu_IPS *)extra_info)->dfa_arr,(char*)pkts[i].pkt,&gpu_ips_flow_state[id%32]);
-		//packetParser::test_packet_parser((unsigned char *)pkts[i].pkt);
-		//process();
-		NF::nf_logic(pkts[i].pkt, &states[i], info);
+		//NF::nf_logic(pkts[i].pkt, &states[id], info);
+		NF::nf_logic(pkts[i].pkt, &gpu_nf_flow_state[id % 32], info);
 	}
+
+	// Copy state back from shared memory
+	states[id]= gpu_nf_flow_state[id % 32];
+
 }
 
 void gpu_launch(char *pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows,cudaStream_t stream) {

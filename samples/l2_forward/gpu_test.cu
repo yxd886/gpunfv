@@ -18,22 +18,17 @@ struct PKT{
 
 __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows) {
 
-	__shared__ struct ips_flow_state gpu_ips_flow_state[32];
+	__shared__ nf_flow_state gpu_nf_flow_state[32];
 
 	
 	int id = threadIdx.x + blockDim.x * blockIdx.x;
 	if(id >= nflows) return ;
 
 	PKT*pkts =(PKT*)pkt_batch + id * flowDim;
-	struct ips_flow_state* state_ptr=(struct ips_flow_state*)state_batch;
+	nf_flow_state *states = (nf_flow_state *)state_batch;
 
-
-	// for(int i= 0 ;i <DFA_NUM; i++){
-	// 	gpu_ips_flow_state[id%32]._state[i]= state_ptr[id]._state[i];
-	// 	gpu_ips_flow_state[id%32]._dfa_id[i] = state_ptr[id]._dfa_id[i];
-	// 	gpu_ips_flow_state[id%32]._alert[i] = state_ptr[id]._alert[i];
-
-	// }
+	// Copy state to shared memory
+	gpu_nf_flow_state[id%32] = states[id];
 	
 	
 	for(int i = 0; i < flowDim; i++) {
@@ -47,16 +42,12 @@ __global__ void gpu_nf_logic(char* pkt_batch, char *state_batch, char *extra_inf
 				break;
 		}
  			
-		//NF::nf_logic((char*)pkts[i].pkt, &gpu_ips_flow_state[id%32], ((struct gpu_IPS *)extra_info)->dfa_arr);
-		NF::nf_logic((char*)pkts[i].pkt, &state_ptr[id], ((struct gpu_IPS *)extra_info)->dfa_arr);
+		NF::nf_logic((char*)pkts[i].pkt, &gpu_nf_flow_state[id%32], ((struct gpu_IPS *)extra_info)->dfa_arr);
+		//NF::nf_logic((char*)pkts[i].pkt, &states[id], ((struct gpu_IPS *)extra_info)->dfa_arr);
 	}
 	
-	// for(int i= 0 ;i <DFA_NUM; i++){
-	// 	state_ptr[id]._state[i]= gpu_ips_flow_state[id%32]._state[i];
-	// 	state_ptr[id]._dfa_id[i]= gpu_ips_flow_state[id%32]._dfa_id[i];
-	// 	state_ptr[id]._alert[i] = gpu_ips_flow_state[id%32]._alert[i];
-
-	// }
+	// Copy state back from shared memory
+	states[id]= gpu_nf_flow_state[id%32];
 
 	return;	
 	

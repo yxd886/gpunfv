@@ -20,10 +20,19 @@
 // #define MAX_PKT_SIZE 64
 #define DFA_NUM 50
 
-struct ips_flow_state{
+class ips_flow_state{
+public:
     uint16_t _state[DFA_NUM];
     int _dfa_id[DFA_NUM];
     bool _alert[DFA_NUM];
+
+    __device__ ips_flow_state& operator=(const ips_flow_state& s) {
+        for(int i = 0; i < DFA_NUM; i++) {
+            _state[i] = s._state[i];
+            _dfa_id[i] = s._dfa_id[i];
+            _alert[i] = s._alert[i];
+        }
+    }
 };
 
 struct gpu_IPS{ 

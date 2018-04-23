@@ -13,7 +13,8 @@
 
 using namespace std;
 
-#define MAX_RULES	10000000
+#define MAX_RULES	10000000	// Maximum rule amount
+#define NRULES		1000		// Rule amount
 
 //void *gpu_init(unsigned size, void *ptr);
 
@@ -45,7 +46,7 @@ public:
 	void *info_for_gpu;
 
 	Firewall() : info_for_gpu(0) {
-		uint32_t n = 1000;
+		uint32_t n = NRULES;
 		assert(n > 0 && n < MAX_RULES);
 		Rule rule;
 		for(uint32_t i = 0; i < n; i++) {
