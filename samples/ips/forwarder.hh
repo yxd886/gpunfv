@@ -235,7 +235,9 @@ public:
         if(!eth_h) {
             drop_pkt(std::move(pkt));
         }
-
+        if(_pkt_counter==1){
+            started[_batch.current_idx] = steady_clock_type::now();
+         }
         if(ntohs(eth_h->ether_type) == static_cast<uint16_t>(eth_protocol_num::ipv4)) {
             auto ip_h = pkt.get_header<iphdr>(sizeof(ether_hdr));
             if(!ip_h) {
@@ -282,6 +284,7 @@ public:
                 else {
                     afi->second->per_flow_enqueue(std::move(pkt),type);
                 }
+
                 if(_pkt_counter>=_batch_size){
                      _pkt_counter=0;
                      _batch.current_idx=!_batch.current_idx;
@@ -619,9 +622,13 @@ public:
                     started[lcore_id] = steady_clock_type::now();
 
                     // Forward GPU packets[current_idx]
+
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
                         _flows[!index][i]->forward_pkts(!index);
                     }
+                    auto time = steady_clock_type::now();
+                    auto el = _flows[0]->_f.started[!index] - time;
+                    printf("lcore: %d,batch unmap time: %f\n", lcore_id,static_cast<double>(el.count() / 1.0));
 
                    /* if(gpu_pkts[!index]){
                         free(gpu_pkts[!index]);
@@ -954,6 +961,7 @@ public:
     uint16_t _lcore_id;
     std::vector<rte_mbuf*> _send_buffer;
     std::unordered_map<flow_key,flow_operator*,HashFunc,EqualKey> _flow_table;
+    std::chrono::time_point<std::chrono::steady_clock> started[2];
 };
 
 #endif // FORWARDER_HH
