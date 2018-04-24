@@ -20,7 +20,7 @@ uint16_t nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
 uint16_t nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 uint64_t schedule_timer_tsc[10] ={ 0};
 uint64_t throughput = 0;
-uint64_t pre_throughput = 0;
+uint64_t max_pre_throughput = 0;
 uint64_t step = 128;
 int direction = 1;
 bool dynamic_adjust = false;
@@ -545,11 +545,11 @@ int init_mem(unsigned nb_mbuf){
 }
 
 void adjust_threshold(){
-    if(pre_throughput==0){
+    if(max_pre_throughput==0){
         _batch_size += step;
         return;
     }
-    float r = (throughput-pre_throughput)/(float)pre_throughput;
+    float r = (throughput-max_pre_throughput)/(float)max_pre_throughput;
     if(r< -0.005){
         direction = (direction==1)?-1:1;
     }
@@ -598,7 +598,7 @@ void print_stats(void){
 
     if(dynamic_adjust) adjust_threshold();
     if(dynamic_adjust) printf("Threshold size: %d\n",_batch_size);
-    pre_throughput = throughput;
+    max_pre_throughput = std::max(throughput,max_pre_throughput);
     pre_total_tx=total_packets_tx;
     pre_total_drop=total_packets_dropped;
     pre_total_rx=total_packets_rx;
