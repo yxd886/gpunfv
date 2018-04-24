@@ -20,6 +20,7 @@ extern uint64_t dynamic_adjust;
 #define MAX_FLOW_NUM    40000
 #define MAX_GPU_THREAD  10
 #define THREADPERBLOCK  256
+#define MAX_THRESHOLD  40000
 
 std::chrono::time_point<std::chrono::steady_clock> started[10];
 std::chrono::time_point<std::chrono::steady_clock> stoped[10];
@@ -38,14 +39,14 @@ public:
     nf_flow_state* dev_state_batch_ptr;
 
     cuda_mem_allocator(){
-        gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*_batch_size*40);
+        gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*MAX_THRESHOLD*40);
         gpu_malloc((void**)(&dev_state_batch_ptr),sizeof(nf_flow_state)*MAX_FLOW_NUM);
     }
 
     ~cuda_mem_allocator(){}
 
     PKT* gpu_pkt_batch_alloc(int size) {
-        if(size>_batch_size*40) {
+        if(size>MAX_THRESHOLD*40) {
             return nullptr;
         }else{
             return dev_pkt_batch_ptr;
@@ -404,13 +405,13 @@ public:
         batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true),_profile_num(0){
             create_stream(&stream);
             lcore_id = rte_lcore_id();
-            gpu_malloc_host((void**)(&gpu_pkts[0]),sizeof(PKT)*_batch_size*40);
-            gpu_malloc_host((void**)(&gpu_pkts[1]),sizeof(PKT)*_batch_size*40);
+            gpu_malloc_host((void**)(&gpu_pkts[0]),sizeof(PKT)*MAX_THRESHOLD*40);
+            gpu_malloc_host((void**)(&gpu_pkts[1]),sizeof(PKT)*MAX_THRESHOLD*40);
             gpu_malloc_host((void**)(&gpu_states[0]),sizeof(nf_flow_state)*MAX_FLOW_NUM);
             gpu_malloc_host((void**)(&gpu_states[1]),sizeof(nf_flow_state)*MAX_FLOW_NUM);
 
-            memset(gpu_pkts[0], 0, sizeof(PKT)*_batch_size*40);
-            memset(gpu_pkts[1], 0, sizeof(PKT)*_batch_size*40);
+            memset(gpu_pkts[0], 0, sizeof(PKT)*MAX_THRESHOLD*40);
+            memset(gpu_pkts[1], 0, sizeof(PKT)*MAX_THRESHOLD*40);
             memset(gpu_states[0], 0, sizeof(nf_flow_state)*MAX_FLOW_NUM);
             memset(gpu_states[1], 0, sizeof(nf_flow_state)*MAX_FLOW_NUM);
 
@@ -420,7 +421,7 @@ public:
             destory_stream(stream);
         }
         void reset_batch(uint64_t index){
-            memset(gpu_pkts[index], 0, sizeof(PKT)*_batch_size*40);
+            memset(gpu_pkts[index], 0, sizeof(PKT)*MAX_THRESHOLD*40);
             memset(gpu_states[index], 0, sizeof(nf_flow_state)*MAX_FLOW_NUM);
         }
 
