@@ -51,7 +51,7 @@ l2fwd_main_loop(void)
         if (unlikely(timer_tsc >= timer_period)) {
 
             /* do this only on master core */
-            if (lcore_id == 0) {
+            if (lcore_id == 0&&flow_forwarder._batch._profileing==false) {
 
                 print_stats();
                 /* reset the timer */
