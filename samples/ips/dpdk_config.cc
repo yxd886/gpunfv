@@ -599,7 +599,7 @@ void print_stats(void){
 
     if(dynamic_adjust) adjust_threshold();
     if(dynamic_adjust) printf("Threshold size: %d\n",_batch_size);
-    max_pre_throughput = std::max(throughput,max_pre_throughput);
+    max_pre_throughput = throughput;
     pre_total_tx=total_packets_tx;
     pre_total_drop=total_packets_dropped;
     pre_total_rx=total_packets_rx;
