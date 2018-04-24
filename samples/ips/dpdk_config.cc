@@ -550,12 +550,10 @@ void adjust_threshold(){
         return;
     }
     float r = (throughput-pre_throughput)/(float)pre_throughput;
-    if(r>0.005){
-        _batch_size += direction*step;
-    }else if(r< -0.005){
+    if(r< -0.005){
         direction = (direction==1)?-1:1;
-        _batch_size += direction*step;
     }
+    _batch_size += direction*step;
 }
 
 void print_stats(void){
