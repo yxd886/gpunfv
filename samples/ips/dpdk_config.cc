@@ -21,7 +21,7 @@ uint16_t nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 uint64_t schedule_timer_tsc[10] ={ 0};
 int throughput = 0;
 int max_pre_throughput = 0;
-uint64_t step = 128;
+int step = 128;
 int direction = 1;
 bool dynamic_adjust = false;
 
