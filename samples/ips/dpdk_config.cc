@@ -550,6 +550,7 @@ void adjust_threshold(){
         return;
     }
     float r = (throughput-max_pre_throughput)/(float)max_pre_throughput;
+    printf("r: %f\n",r);
     if(r< -0.005){
         direction = (direction==1)?-1:1;
     }
