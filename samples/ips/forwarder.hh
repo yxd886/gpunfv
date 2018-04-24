@@ -474,10 +474,10 @@ public:
         	if(_profile_num<100){
         		_profile_num++;
         	}else{
-        		_profileing = false;
-        		if(lcore_id ==0&& dynamic_adjust){
+        		if(_profileing&&lcore_id ==0&& dynamic_adjust){
         		    _batch_size = 1024;
         		}
+        		_profileing = false;
         	}
 
 
