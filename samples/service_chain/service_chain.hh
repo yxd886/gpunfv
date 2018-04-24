@@ -2,7 +2,7 @@
 #define SERVICE_CHAIN_HH
 
 #include "../firewall/firewall.hh"
-#include "../l2_forward/ips.hh"
+#include "../ips/ips.hh"
 
 struct chain_flow_state{
 	ips_flow_state _ips_state;

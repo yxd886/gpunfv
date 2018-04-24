@@ -9,7 +9,7 @@
 #include "../include/packet_parser.cuh"
 #include "../include/gpu_interface.hh"
 #include "../firewall/firewall.cuh"
-#include "../l2_forward/ips.cuh"
+#include "../ips/ips.cuh"
 
 class chain_flow_state{
 public:
