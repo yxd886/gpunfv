@@ -554,7 +554,7 @@ void adjust_threshold(){
     printf("r: %f\n",r);
     if(r< 0){
         drop_counter++;
-        if(drop_counter == 5){
+        if(drop_counter == 4){
             drop_counter =0;
             direction = (direction==1)?-1:1;
         }
