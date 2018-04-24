@@ -236,7 +236,7 @@ public:
             drop_pkt(std::move(pkt));
         }
         if(_pkt_counter==1){
-            started[_batch.current_idx] = steady_clock_type::now();
+            lt_started[_batch.current_idx] = steady_clock_type::now();
          }
         if(ntohs(eth_h->ether_type) == static_cast<uint16_t>(eth_protocol_num::ipv4)) {
             auto ip_h = pkt.get_header<iphdr>(sizeof(ether_hdr));
