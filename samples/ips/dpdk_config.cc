@@ -559,6 +559,8 @@ void adjust_threshold(){
             direction = (direction==1)?-1:1;
         }
 
+    }else{
+        drop_counter = 0;
     }
     _batch_size += direction*step;
 }
