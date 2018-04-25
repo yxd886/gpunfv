@@ -628,7 +628,7 @@ public:
                     }
                     auto time = steady_clock_type::now();
                     auto el = time - _flows[!index][0]->_f.lt_started[!index] ;
-                    printf("lcore: %d,batch unmap time: %f\n", lcore_id,static_cast<double>(el.count() / 1.0));
+                    if(print_simple_time) printf("lcore: %d,batch unmap time: %f\n", lcore_id,static_cast<double>(el.count() / 1.0));
 
                    /* if(gpu_pkts[!index]){
                         free(gpu_pkts[!index]);
