@@ -216,7 +216,7 @@ public:
     const uint16_t ip_packet_len_max = 65535;
 
     void time_trigger_schedule(){
-        if (_pkt_counter==0||_batch._profileing) return;
+        if (_pkt_counter==0||_batch._profileing||_batch._period_profile) return;
         _pkt_counter=0;
         _batch.current_idx=!_batch.current_idx;
         printf("lcore_id: %d, trigger\n",_lcore_id);
@@ -402,10 +402,12 @@ public:
 
         bool _profileing;
         int _profile_num;
+        bool _period_profile;
+        int _period_profile_num = 0;
         profile_elements _profile_elements;
         parameters _parameters;
 
-        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true),_profile_num(0){
+        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true),_profile_num(0),_period_profile(false),_period_profile_num(0){
             create_stream(&stream);
             lcore_id = rte_lcore_id();
             gpu_malloc_host((void**)(&gpu_pkts[0]),sizeof(PKT)*MAX_THRESHOLD*40);
@@ -470,24 +472,41 @@ public:
 
         }
 
+
+        bool need_periodical_profile(){
+            if(_profileing||_period_profile){
+                return false;
+            }
+            _period_profile_num ++;
+            if(_period_profile_num==100){
+                _period_profile_num = 0;
+                printf("periodical profile\n");
+                return true;
+
+
+            }
+            return false;
+        }
+
         void schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
         	 schedule_timer_tsc[lcore_id] = 0;
-        	if(_profile_num<100){
+        	if(unlikely(_profile_num<100)){
         		_profile_num++;
         	}else{
-        		if(_profileing&&lcore_id ==0&& dynamic_adjust){
+        		if(unlikely(_profileing&&lcore_id ==0&& dynamic_adjust)){
         		    _batch_size = 1024;
+
         		}
         		_profileing = false;
+
         	}
-
-
+        	_period_profile = need_periodical_profile();
             simple_stoped[lcore_id] = steady_clock_type::now();
             auto simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
 
-            if(_profileing) _profile_elements.cpu_enqueue_time = static_cast<double>(simple_elapsed.count() / 1.0);
+            if(_profileing||_period_profile) _profile_elements.cpu_enqueue_time = static_cast<double>(simple_elapsed.count() / 1.0);
             //adjust_enqueue_rate();
             if(print_simple_time) printf("locre: %d,Simple Enqueuing time: %f\n", lcore_id,static_cast<double>(simple_elapsed.count() / 1.0));
             simple_started[lcore_id] = steady_clock_type::now();
@@ -675,7 +694,7 @@ public:
                 simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
                 if(print_simple_time)    printf("lcore: %d, simple batching states time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
-                if(gpu_time||_profileing){
+                if(gpu_time||_profileing||_period_profile){
                     gpu_sync(stream);
                     started[lcore_id] = steady_clock_type::now();
                 }
@@ -683,7 +702,7 @@ public:
                 gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
                 gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
 
-                if(gpu_time||_profileing){
+                if(gpu_time||_profileing||_period_profile){
                     gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
@@ -713,7 +732,7 @@ public:
                 //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
                 /////////////////////////////////////////////
                 // Launch kernel
-                if(gpu_time||_profileing){
+                if(gpu_time||_profileing||_period_profile){
                 	gpu_sync(stream);
                 started[lcore_id] = steady_clock_type::now();
                 }
@@ -727,7 +746,7 @@ public:
                 started[lcore_id] = steady_clock_type::now();
 
                 if(print_time)  printf("lcore_id: %d gpu launced just now\n", lcore_id);
-                if(gpu_time||_profileing){
+                if(gpu_time||_profileing||_period_profile){
                     gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
@@ -831,7 +850,7 @@ public:
             simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
             if(print_simple_time)    printf("lcore: %d, simple cpu processing time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
-            if(_profileing){
+            if(_profileing||_period_profile){
                 _profile_elements.cpu_process_time = static_cast<double>(elapsed.count() / 1.0);
                 compute_parameter();
             }
@@ -859,7 +878,7 @@ public:
             }
             std::cout<<std::endl;*/
             if(!schedule) return _flows[index].size();
-            if(_profileing){
+            if(_profileing||_period_profile){
 
                 _profile_elements.gpu_flow_num = _flows[index].size()/2;
                 _profile_elements.cpu_total_pkt_num = 0;
