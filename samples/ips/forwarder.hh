@@ -494,6 +494,7 @@ public:
         	 schedule_timer_tsc[lcore_id] = 0;
         	if(unlikely(_profile_num<100)){
         		_profile_num++;
+        		printf("lcore_id: %d, Profiling......\n",lcore_id);
         	}else{
         		if(unlikely(_profileing&&lcore_id ==0&& dynamic_adjust)){
         		    _batch_size = 1024;
@@ -706,7 +707,7 @@ public:
                     gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
-                    printf("lcore %d copy pkt to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                    if(gpu_time)    printf("lcore %d copy pkt to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 
                     simple_stoped[lcore_id] = steady_clock_type::now();
@@ -750,7 +751,7 @@ public:
                     gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
-                    printf("lcore %d sync time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                    if(gpu_time) printf("lcore %d sync time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
                     _profile_elements.gpu_process_time = static_cast<double>(elapsed.count() / 1.0);
                 }
