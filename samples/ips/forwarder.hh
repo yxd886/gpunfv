@@ -474,7 +474,7 @@ public:
 
 
         bool need_periodical_profile(){
-            if(_profileing||_period_profile){
+            if(_profileing||_period_profile||_batch_size==1){
                 return false;
             }
             _period_profile_num ++;

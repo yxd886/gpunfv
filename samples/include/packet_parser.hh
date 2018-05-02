@@ -15,6 +15,7 @@
 #include <rte_ip.h>
 #include <rte_tcp.h>
 #include <rte_udp.h>
+#include <rte_prefetch.h>
 
 #include "cuda_common.hh"
 #include "net.hh"
