@@ -133,9 +133,9 @@ private:
 		bool drop;
 		uint32_t i;
 
-		for( i = 0; i<rules.size();i++){
-		    rte_prefetch0((void*)&rules[i]);
-		}
+
+        rte_prefetch0((void*)&rules[0]);
+
 		// Match rules
 		for(i = 0; i < rules.size(); i++){
 			Rule temp = rules[i];	// GPU vector access must via this copy
