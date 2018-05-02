@@ -165,4 +165,4 @@ $(eval $(call BUILD, \
 .PRECIOUS: %.d 
 
 # include rules in .d files
--include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SRCS)))
+-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(CC_SRCS)))
