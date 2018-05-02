@@ -129,17 +129,33 @@ public:
         for(I = 0; I < BATCH_SIZE; I++) {
             int len = pkts[I].len;
 
+
+            int states[DFA_NUM];
+            int dfa_ids[DFA_NUM];
+            struct aho_state *st_arrs[DFA_NUM];
+            for(int i = 0; i<DFA_NUM;i++){
+                states[i]= ips_state->_state[i];
+                dfa_ids[i] = pkts[I].dfa_id[i];
+                rte_prefetch0((void*)&dfa_arr[dfa_ids[i]]);
+
+            }
+            for(int i = 0; i<DFA_NUM; i++){
+                st_arrs[i] = dfa_arr[dfa_ids[i]].root;
+                rte_prefetch0((void*)st_arrs[i]);
+            }
+
             for(int times=0;times<DFA_NUM;times++){
-                int state = ips_state->_state[times];
-                int dfa_id = pkts[I].dfa_id[times];
-                struct aho_state *st_arr = dfa_arr[dfa_id].root;
-                if(state>=dfa_arr[dfa_id].num_used_states){
+
+                //int state = ips_state->_state[times];
+                //int dfa_id = pkts[I].dfa_id[times];
+                //struct aho_state *st_arr = dfa_arr[dfa_id].root;
+                if(states[times]>=dfa_arr[dfa_ids[times]].num_used_states){
                      ips_state->_alert[times]=false;
                      ips_state->_state[times]=0;
                 }
 
                 for(j = 0; j < len; j++) {
-                    int count = st_arr[state].output.count;
+                    int count = st_arrs[times][states[times]].output.count;
 
                     if(count != 0) {
                         /* This state matches some patterns: copy the pattern IDs
@@ -152,10 +168,10 @@ public:
                     }
 
                     int inp = pkts[I].content[j];
-                    state = st_arr[state].G[inp];
+                    states[times] = st_arrs[times][states[times]].G[inp];
                 }
                 //std::cout<<"      after for loop"<<std::endl;
-                ips_state->_state[times]=state;
+                ips_state->_state[times]=states[times];
             }
         }
     }
