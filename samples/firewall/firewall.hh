@@ -98,7 +98,8 @@ public:
 private:
 	inline void process(void *packet, firewall_flow_state* state) {
 		packetInfo info;
-
+		rte_prefetch0((void*)packet);
+		rte_prefetch0((void*)&rules[0]);
 		packetParser::parse_raw_packet(packet, &info);
 		match_rules(&info, state);
 	}
@@ -134,7 +135,7 @@ private:
 		uint32_t i;
 
 
-        rte_prefetch0((void*)&rules[0]);
+
 
 		// Match rules
 		for(i = 0; i < rules.size(); i++){
