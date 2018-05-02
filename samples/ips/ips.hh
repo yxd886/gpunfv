@@ -120,6 +120,7 @@ public:
        memcpy(aho_pkt->content, pkt, len-1);
        aho_pkt->dfa_id=state->_dfa_id;
        aho_pkt->len = len;
+
    }
 
    void process_batch(const struct aho_dfa *dfa_arr,
@@ -143,6 +144,8 @@ public:
                 st_arrs[i] = dfa_arr[dfa_ids[i]].root;
                 rte_prefetch0((void*)st_arrs[i]);
             }
+
+            rte_prefetch0((void*)pkts[I].content);
 
             for(int times=0;times<DFA_NUM;times++){
 
