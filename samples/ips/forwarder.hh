@@ -436,8 +436,8 @@ public:
             cudaGetDeviceProperties(&deviceProp, 0);
             _parameters.multi_processor_num = deviceProp.multiProcessorCount;
             _parameters.thread_per_block = THREADPERBLOCK;
-            _parameters.cpu_process_rate = _profile_elements.cpu_process_time/_profile_elements.cpu_total_pkt_num;
-            _parameters.gpu_copy_rate = _profile_elements.gpu_copy_time/_profile_elements.gpu_total_pkt_num;
+            if(_profile_elements.cpu_total_pkt_num!=0) _parameters.cpu_process_rate = _profile_elements.cpu_process_time/_profile_elements.cpu_total_pkt_num;
+            if(_profile_elements.gpu_total_pkt_num!=0) _parameters.gpu_copy_rate = _profile_elements.gpu_copy_time/_profile_elements.gpu_total_pkt_num;
             int stage = (_profile_elements.gpu_flow_num/_parameters.multi_processor_num/_parameters.thread_per_block)+1;
             _parameters.gpu_process_rate = _profile_elements.gpu_process_time/(_profile_elements.max_pkt_num_gpu_flow*stage);
             _parameters.cpu_enqueue_rate = _profile_elements.cpu_enqueue_time/_batch_size;
