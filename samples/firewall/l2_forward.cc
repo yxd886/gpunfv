@@ -51,7 +51,7 @@ l2fwd_main_loop(void)
         if (unlikely(timer_tsc >= timer_period)) {
 
             /* do this only on master core */
-            if (lcore_id == 0) {
+            if (lcore_id == 0&&flow_forwarder._batch._profileing==false) {
 
                 print_stats();
                 /* reset the timer */
@@ -63,10 +63,10 @@ l2fwd_main_loop(void)
         /* if schedule timer has reached its timeout */
         if (unlikely(schedule_timer_tsc[lcore_id] >= schedule_period)) {
 
-              schedule_timer_tsc[lcore_id] = 0;
-              /* reset the timer */
+        	  schedule_timer_tsc[lcore_id] = 0;
+        	  /* reset the timer */
 
-              flow_forwarder.time_trigger_schedule();
+        	  flow_forwarder.time_trigger_schedule();
 
 
         }

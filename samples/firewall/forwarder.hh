@@ -12,13 +12,15 @@ extern uint64_t gpu_time;
 extern uint64_t print_simple_time;
 extern uint64_t schedule_timer_tsc[10];
 extern uint64_t schedule;
+extern uint64_t dynamic_adjust;
 
 
-#define COMPUTE_RATIO 100
-#define MAX_PKT_SIZE 64
-#define MAX_FLOW_NUM 40000
-#define MAX_GPU_THREAD 10
+#define COMPUTE_RATIO   100
+#define MAX_PKT_SIZE    64
+#define MAX_FLOW_NUM    40000
+#define MAX_GPU_THREAD  10
 #define THREADPERBLOCK  256
+#define MAX_THRESHOLD  40000
 
 std::chrono::time_point<std::chrono::steady_clock> started[10];
 std::chrono::time_point<std::chrono::steady_clock> stoped[10];
@@ -37,14 +39,14 @@ public:
     nf_flow_state* dev_state_batch_ptr;
 
     cuda_mem_allocator(){
-        gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*_batch_size*40);
+        gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*MAX_THRESHOLD*40);
         gpu_malloc((void**)(&dev_state_batch_ptr),sizeof(nf_flow_state)*MAX_FLOW_NUM);
     }
 
     ~cuda_mem_allocator(){}
 
     PKT* gpu_pkt_batch_alloc(int size) {
-        if(size>_batch_size*40) {
+        if(size>MAX_THRESHOLD*40) {
             return nullptr;
         }else{
             return dev_pkt_batch_ptr;
@@ -214,7 +216,7 @@ public:
     const uint16_t ip_packet_len_max = 65535;
 
     void time_trigger_schedule(){
-        if (_pkt_counter==0||_batch._profileing) return;
+        if (_pkt_counter==0||_batch._profileing||_batch._period_profile) return;
         _pkt_counter=0;
         _batch.current_idx=!_batch.current_idx;
         printf("lcore_id: %d, trigger\n",_lcore_id);
@@ -233,7 +235,9 @@ public:
         if(!eth_h) {
             drop_pkt(std::move(pkt));
         }
-
+        if(_pkt_counter==1){
+            lt_started[_batch.current_idx] = steady_clock_type::now();
+         }
         if(ntohs(eth_h->ether_type) == static_cast<uint16_t>(eth_protocol_num::ipv4)) {
             auto ip_h = pkt.get_header<iphdr>(sizeof(ether_hdr));
             if(!ip_h) {
@@ -280,6 +284,7 @@ public:
                 else {
                     afi->second->per_flow_enqueue(std::move(pkt),type);
                 }
+
                 if(_pkt_counter>=_batch_size){
                      _pkt_counter=0;
                      _batch.current_idx=!_batch.current_idx;
@@ -397,19 +402,21 @@ public:
 
         bool _profileing;
         int _profile_num;
+        bool _period_profile;
+        int _period_profile_num = 0;
         profile_elements _profile_elements;
         parameters _parameters;
 
-        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true),_profile_num(0){
+        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true),_profile_num(0),_period_profile(false),_period_profile_num(0){
             create_stream(&stream);
             lcore_id = rte_lcore_id();
-            gpu_malloc_host((void**)(&gpu_pkts[0]),sizeof(PKT)*_batch_size*40);
-            gpu_malloc_host((void**)(&gpu_pkts[1]),sizeof(PKT)*_batch_size*40);
+            gpu_malloc_host((void**)(&gpu_pkts[0]),sizeof(PKT)*MAX_THRESHOLD*40);
+            gpu_malloc_host((void**)(&gpu_pkts[1]),sizeof(PKT)*MAX_THRESHOLD*40);
             gpu_malloc_host((void**)(&gpu_states[0]),sizeof(nf_flow_state)*MAX_FLOW_NUM);
             gpu_malloc_host((void**)(&gpu_states[1]),sizeof(nf_flow_state)*MAX_FLOW_NUM);
 
-            memset(gpu_pkts[0], 0, sizeof(PKT)*_batch_size*40);
-            memset(gpu_pkts[1], 0, sizeof(PKT)*_batch_size*40);
+            memset(gpu_pkts[0], 0, sizeof(PKT)*MAX_THRESHOLD*40);
+            memset(gpu_pkts[1], 0, sizeof(PKT)*MAX_THRESHOLD*40);
             memset(gpu_states[0], 0, sizeof(nf_flow_state)*MAX_FLOW_NUM);
             memset(gpu_states[1], 0, sizeof(nf_flow_state)*MAX_FLOW_NUM);
 
@@ -419,7 +426,7 @@ public:
             destory_stream(stream);
         }
         void reset_batch(uint64_t index){
-            memset(gpu_pkts[index], 0, sizeof(PKT)*_batch_size*40);
+            memset(gpu_pkts[index], 0, sizeof(PKT)*MAX_THRESHOLD*40);
             memset(gpu_states[index], 0, sizeof(nf_flow_state)*MAX_FLOW_NUM);
         }
 
@@ -429,8 +436,8 @@ public:
             cudaGetDeviceProperties(&deviceProp, 0);
             _parameters.multi_processor_num = deviceProp.multiProcessorCount;
             _parameters.thread_per_block = THREADPERBLOCK;
-            _parameters.cpu_process_rate = _profile_elements.cpu_process_time/_profile_elements.cpu_total_pkt_num;
-            _parameters.gpu_copy_rate = _profile_elements.gpu_copy_time/_profile_elements.gpu_total_pkt_num;
+            if(_profile_elements.cpu_total_pkt_num!=0) _parameters.cpu_process_rate = _profile_elements.cpu_process_time/_profile_elements.cpu_total_pkt_num;
+            if(_profile_elements.gpu_total_pkt_num!=0) _parameters.gpu_copy_rate = _profile_elements.gpu_copy_time/_profile_elements.gpu_total_pkt_num;
             int stage = (_profile_elements.gpu_flow_num/_parameters.multi_processor_num/_parameters.thread_per_block)+1;
             _parameters.gpu_process_rate = _profile_elements.gpu_process_time/(_profile_elements.max_pkt_num_gpu_flow*stage);
             _parameters.cpu_enqueue_rate = _profile_elements.cpu_enqueue_time/_batch_size;
@@ -465,21 +472,42 @@ public:
 
         }
 
+
+        bool need_periodical_profile(){
+            if(_profileing||_period_profile){
+                return false;
+            }
+            _period_profile_num ++;
+            if(_period_profile_num==300){
+                _period_profile_num = 0;
+                printf("periodical profile\n");
+                return true;
+
+
+            }
+            return false;
+        }
+
         void schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-             schedule_timer_tsc[lcore_id] = 0;
-            if(_profile_num<100){
-                _profile_num++;
-            }else{
-                _profileing = false;
-            }
+        	 schedule_timer_tsc[lcore_id] = 0;
+        	if(unlikely(_profile_num<100)){
+        		_profile_num++;
+        		printf("lcore_id: %d, Profiling......\n",lcore_id);
+        	}else{
+        		if(unlikely(_profileing&&lcore_id ==0&& dynamic_adjust)){
+        		    _batch_size = 1024;
 
+        		}
+        		_profileing = false;
 
+        	}
+        	_period_profile = need_periodical_profile();
             simple_stoped[lcore_id] = steady_clock_type::now();
             auto simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
 
-            if(_profileing) _profile_elements.cpu_enqueue_time = static_cast<double>(simple_elapsed.count() / 1.0);
+            if(_profileing||_period_profile) _profile_elements.cpu_enqueue_time = static_cast<double>(simple_elapsed.count() / 1.0);
             //adjust_enqueue_rate();
             if(print_simple_time) printf("locre: %d,Simple Enqueuing time: %f\n", lcore_id,static_cast<double>(simple_elapsed.count() / 1.0));
             simple_started[lcore_id] = steady_clock_type::now();
@@ -614,9 +642,13 @@ public:
                     started[lcore_id] = steady_clock_type::now();
 
                     // Forward GPU packets[current_idx]
+
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
                         _flows[!index][i]->forward_pkts(!index);
                     }
+                    auto time = steady_clock_type::now();
+                    auto el = time - _flows[!index][0]->_f.lt_started[!index] ;
+                    if(print_simple_time) printf("lcore: %d,batch unmap time: %f\n", lcore_id,static_cast<double>(el.count() / 1.0));
 
                    /* if(gpu_pkts[!index]){
                         free(gpu_pkts[!index]);
@@ -663,7 +695,7 @@ public:
                 simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
                 if(print_simple_time)    printf("lcore: %d, simple batching states time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
-                if(gpu_time||_profileing){
+                if(gpu_time||_profileing||_period_profile){
                     gpu_sync(stream);
                     started[lcore_id] = steady_clock_type::now();
                 }
@@ -671,11 +703,11 @@ public:
                 gpu_memcpy_async_h2d(dev_gpu_pkts,gpu_pkts[index],ngpu_pkts,stream);
                 gpu_memcpy_async_h2d(dev_gpu_states,gpu_states[index],ngpu_states,stream);
 
-                if(gpu_time||_profileing){
+                if(gpu_time||_profileing||_period_profile){
                     gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
-                    printf("lcore %d copy pkt to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                    if(gpu_time)    printf("lcore %d copy pkt to device time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
 
                     simple_stoped[lcore_id] = steady_clock_type::now();
@@ -701,8 +733,8 @@ public:
                 //printf("----gpu_pkts = %p, ngpu_pkts = %d, gpu_pkts[0] = %p\n", gpu_pkts, ngpu_pkts, gpu_pkts[0]);
                 /////////////////////////////////////////////
                 // Launch kernel
-                if(gpu_time||_profileing){
-                    gpu_sync(stream);
+                if(gpu_time||_profileing||_period_profile){
+                	gpu_sync(stream);
                 started[lcore_id] = steady_clock_type::now();
                 }
                 started[lcore_id] = steady_clock_type::now();
@@ -715,11 +747,11 @@ public:
                 started[lcore_id] = steady_clock_type::now();
 
                 if(print_time)  printf("lcore_id: %d gpu launced just now\n", lcore_id);
-                if(gpu_time||_profileing){
+                if(gpu_time||_profileing||_period_profile){
                     gpu_sync(stream);
                     stoped[lcore_id] = steady_clock_type::now();
                     elapsed = stoped[lcore_id] - started[lcore_id];
-                    printf("lcore %d sync time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
+                    if(gpu_time) printf("lcore %d sync time: %f\n", lcore_id,static_cast<double>(elapsed.count() / 1.0));
                     started[lcore_id] = steady_clock_type::now();
                     _profile_elements.gpu_process_time = static_cast<double>(elapsed.count() / 1.0);
                 }
@@ -819,7 +851,7 @@ public:
             simple_elapsed = simple_stoped[lcore_id] - simple_started[lcore_id];
             if(print_simple_time)    printf("lcore: %d, simple cpu processing time: %f\n",lcore_id, static_cast<double>(simple_elapsed.count() / 1.0));
 
-            if(_profileing){
+            if(_profileing||_period_profile){
                 _profile_elements.cpu_process_time = static_cast<double>(elapsed.count() / 1.0);
                 compute_parameter();
             }
@@ -847,7 +879,7 @@ public:
             }
             std::cout<<std::endl;*/
             if(!schedule) return _flows[index].size();
-            if(_profileing){
+            if(_profileing||_period_profile){
 
                 _profile_elements.gpu_flow_num = _flows[index].size()/2;
                 _profile_elements.cpu_total_pkt_num = 0;
@@ -949,6 +981,7 @@ public:
     uint16_t _lcore_id;
     std::vector<rte_mbuf*> _send_buffer;
     std::unordered_map<flow_key,flow_operator*,HashFunc,EqualKey> _flow_table;
+    std::chrono::time_point<std::chrono::steady_clock> lt_started[2];
 };
 
 #endif // FORWARDER_HH

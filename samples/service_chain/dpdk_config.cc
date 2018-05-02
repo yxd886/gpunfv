@@ -19,6 +19,11 @@ uint64_t gpu_time = 0;
 uint16_t nb_rxd = RTE_TEST_RX_DESC_DEFAULT;
 uint16_t nb_txd = RTE_TEST_TX_DESC_DEFAULT;
 uint64_t schedule_timer_tsc[10] ={ 0};
+int throughput = 0;
+int max_pre_throughput = 0;
+int step = 128;
+int direction = 1;
+bool dynamic_adjust = false;
 
 /* ethernet addresses of ports */
 uint64_t dest_eth_addr[RTE_MAX_ETHPORTS];
@@ -348,9 +353,11 @@ int parse_args(int argc, char **argv){
         case 'b':
             _batch_size = parse_batchsize(optarg);
             if (_batch_size == 1) {
-                printf("invalid _batch_size\n");
-                print_usage(prgname);
-                return -1;
+                //printf("invalid _batch_size\n");
+                //print_usage(prgname);
+                //return -1;
+                _batch_size = 10000;
+                dynamic_adjust = true;
             }
             break;
         case 'P':
@@ -537,7 +544,26 @@ int init_mem(unsigned nb_mbuf){
     return 0;
 }
 
+int drop_counter=0;
+void adjust_threshold(){
+    if(max_pre_throughput==0){
+        _batch_size += step;
+        return;
+    }
+    float r = (throughput-max_pre_throughput)/(float)max_pre_throughput;
+    printf("r: %f\n",r);
+    if(r< 0){
+        drop_counter++;
+        if(drop_counter == 4){
+            drop_counter =0;
+            direction = (direction==1)?-1:1;
+        }
 
+    }else{
+        drop_counter = 0;
+    }
+    _batch_size += direction*step;
+}
 
 void print_stats(void){
     uint64_t total_packets_dropped, total_packets_tx, total_packets_rx;
@@ -572,14 +598,16 @@ void print_stats(void){
     }
         /* skip disabled ports */
 
-
+    throughput = total_packets_rx-pre_total_rx;
     printf("Total   Packets sent rate: %8d Packets received rate: %8d Packets dropped: %8d\n",
            total_packets_tx-pre_total_tx,
            total_packets_rx-pre_total_rx,
            total_packets_dropped-pre_total_drop);
     printf("-------------------------------------------------------------------------------\n");
 
-
+    if(dynamic_adjust) adjust_threshold();
+    if(dynamic_adjust) printf("Threshold size: %d\n",_batch_size);
+    max_pre_throughput = throughput;
     pre_total_tx=total_packets_tx;
     pre_total_drop=total_packets_dropped;
     pre_total_rx=total_packets_rx;
