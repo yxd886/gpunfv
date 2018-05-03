@@ -137,16 +137,16 @@ public:
             for(int i = 0; i<DFA_NUM;i++){
                 states[i]= ips_state->_state[i];
                 dfa_ids[i] = pkts[I].dfa_id[i];
-                __builtin_prefetch(&dfa_arr[dfa_ids[i]]);
+                //__builtin_prefetch(&dfa_arr[dfa_ids[i]]);
 
             }
             for(int i = 0; i<DFA_NUM; i++){
                 st_arrs[i] = dfa_arr[dfa_ids[i]].root;
-                __builtin_prefetch(st_arrs[i]);
-                __builtin_prefetch(&st_arrs[i][states[i]]);
+                //__builtin_prefetch(st_arrs[i]);
+                //__builtin_prefetch(&st_arrs[i][states[i]]);
             }
 
-            __builtin_prefetch(pkts[I].content);
+            //__builtin_prefetch(pkts[I].content);
 
             for(int times=0;times<DFA_NUM;times++){
 
