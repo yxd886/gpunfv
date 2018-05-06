@@ -51,7 +51,7 @@ public:
 	}
 };
 
-void *init_firewall_info(size_t size, void *data) {
+void *init_nf_info(size_t size, void *data) {
 	Rules info(size, data);
 
 	// Copy Infos to gpu
