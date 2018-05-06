@@ -9,6 +9,9 @@
 #include "../include/packet_parser.cuh"
 #include "../include/gpu_interface.hh"
 
+#define IP_NUM		10		// Rule amount
+#define MAC_NUM		10		// Rule amount
+
 using namespace std;
 
 struct flow_dst{
