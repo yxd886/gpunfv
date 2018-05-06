@@ -38,7 +38,7 @@ public:
 	uint32_t size;
 	flow_table* _table;
 
-	__host__ flow_table(size_t s, void *r) : size(s) {
+	__host__ gpu_flow_table(size_t s, void *r) : size(s) {
 		uint32_t real_data_size = sizeof(flow_table) * size;
 
 		// Copy real data to gpu and set the device pointer
