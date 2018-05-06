@@ -42,7 +42,7 @@ public:
 		uint32_t real_data_size = sizeof(flow_table) * size;
 
 		// Copy real data to gpu and set the device pointer
-		_table = (Rule *)gpu_malloc_set(real_data_size, r);
+		_table = (flow_table *)gpu_malloc_set(real_data_size, r);
 	}
 
 };
