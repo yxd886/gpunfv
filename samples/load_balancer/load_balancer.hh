@@ -65,7 +65,7 @@ public:
 
 	inline void nf_init() {
 
-		info_for_gpu = init_nf_info(1, &_flow_table);
+		info_for_gpu = init_load_balancer_info(1, &_flow_table);
 	}
 
 	// Convert 4 integers to a network byte order ip address
