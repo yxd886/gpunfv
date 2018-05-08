@@ -3,8 +3,8 @@
 
 #include "flow_monitor.cuh"
 
-typedef class Firewall NF;						// specify NF class
-typedef class firewall_flow_state nf_flow_state;	// specify NF state class
-typedef class Rules Infos;
+typedef class flow_monitor NF;						// specify NF class
+typedef class flow_monitor_flow_state nf_flow_state;	// specify NF state class
+typedef class flow_monitor_Rules Infos;
 
 #endif // NF_CUH

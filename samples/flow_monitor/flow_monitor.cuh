@@ -11,7 +11,7 @@
 
 using namespace std;
 
-struct Rule{
+struct flow_monitor_Rule{
 	uint32_t saddr;			// source ip address (network byte order)
 	uint32_t daddr;			// destination ip address (network byte order)
 	uint32_t smask;			// source network mask (host byte order)
@@ -22,7 +22,7 @@ struct Rule{
 	uint8_t action;			// action
 };
 
-class firewall_flow_state {
+class flow_monitor_flow_state {
 public:
 	int match_no;
 	int drop_no;
@@ -33,32 +33,32 @@ public:
 	int protocol_type;
 };
 
-class Rules {
+class flow_monitor_Rules {
 public:	
 	uint32_t size;
-	Rule *rules;
+	flow_monitor_Rule *rules;
 	//uint32_t data_size;
 
-	__host__ Rules(size_t s, void *r) : size(s) {
-		uint32_t real_data_size = sizeof(Rule) * size;
+	__host__ flow_monitor_Rules(size_t s, void *r) : size(s) {
+		uint32_t real_data_size = sizeof(flow_monitor_Rule) * size;
 
 		// Copy real data to gpu and set the device pointer
-		rules = (Rule *)gpu_malloc_set(real_data_size, r);
+		rules = (flow_monitor_Rule *)gpu_malloc_set(real_data_size, r);
 	}
 
-	__device__ inline Rule& operator[](size_t idx) {
+	__device__ inline flow_monitor_Rule& operator[](size_t idx) {
 		return rules[idx];
 	}
 };
 
 void *init_nf_info(size_t size, void *data) {
-	Rules info(size, data);
+	flow_monitor_Rules info(size, data);
 
 	// Copy Infos to gpu
 	 return gpu_malloc_set(sizeof(info), &info);
 }
 
-class Firewall {
+class flow_monitor {
 public:
 	// Convert 4 integers to a network byte order ip address
 	__device__ inline static uint32_t i2ip(uint8_t s0, uint8_t s1, uint8_t s2, uint8_t s3) {
@@ -83,12 +83,12 @@ public:
 		state.protocol_type = 0;
 	}
 
-	__device__ inline static void nf_logic(void *pkt, firewall_flow_state *state, Rules *rules) {
+	__device__ inline static void nf_logic(void *pkt, firewall_flow_state *state, flow_monitor_Rules *rules) {
 		process(pkt, state, rules);
 	} 
 
 private:
-	__device__ inline static void process(void *packet, firewall_flow_state* state, Rules *rules) {
+	__device__ inline static void process(void *packet, firewall_flow_state* state, flow_monitor_Rules *rules) {
 		packetInfo info;
 
 		packetParser::parse_raw_packet(packet, &info);
@@ -101,7 +101,7 @@ private:
 		return (net::myntohl(addr1) & mask) == (net::myntohl(addr2) & mask);
 	}
 
-	__device__ static void match_rules(packetInfo *info, firewall_flow_state* state, Rules *rules) {
+	__device__ static void match_rules(packetInfo *info, firewall_flow_state* state, flow_monitor_Rules *rules) {
 		uint32_t s_addr, d_addr;
 		uint16_t s_port, d_port;
 		uint8_t protocol;
@@ -129,7 +129,7 @@ private:
 
 		// Match rules
 		for(i = 0; i < (*rules).size; i++){
-			Rule temp = (*rules)[i];	
+			flow_monitor_Rule temp = (*rules)[i];	
 
 			if(temp.saddr == ANY_ADDR ? false : 
 					!ip_eq_mask(temp.saddr, s_addr, temp.smask))
@@ -151,9 +151,9 @@ private:
 			// Perfect match
 			state->match_no++;
 
-			if(temp.action == Rule::PASS)
+			if(temp.action == flow_monitor_Rule::PASS)
 				drop = false;
-			else if(temp.action == Rule::DROP)
+			else if(temp.action == flow_monitor_Rule::DROP)
 				drop = true;
 			else
 				assert(0 && "Unexpected action id");

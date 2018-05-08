@@ -4,6 +4,7 @@
 // NF-related interface
 void *init_nf_info(size_t size, void * data);
 void *init_service_chain_info(void *d1, void * d2);
+void *init_service_chain_info(void *d1, void * d2, void* d3);
 
 // non NF-related interface
 

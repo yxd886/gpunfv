@@ -18,7 +18,7 @@ using namespace std;
 
 //void *gpu_init(unsigned size, void *ptr);
 
-struct Rule{
+struct flow_monitor_Rule{
 	uint32_t saddr;			// source ip address (network byte order)
 	uint32_t daddr;			// destination ip address (network byte order)
 	uint32_t smask;			// source network mask (host byte order)
@@ -43,14 +43,14 @@ public:
 };
 
 class flow_monitor {
-	vector<Rule> rules;
+	vector<flow_monitor_Rule> rules;
 public:
 	void *info_for_gpu;
 
 	flow_monitor() : info_for_gpu(0) {
 		uint32_t n = NRULES;
 		assert(n > 0 && n < MAX_RULES);
-		Rule rule;
+		flow_monitor_Rule rule;
 		for(uint32_t i = 0; i < n; i++) {
 			rule.saddr = i2ip((i >> 24) % 256, (i >> 16) % 256, (i >> 8) % 256, i % 256);		// source ip 0~n
 			rule.daddr = i2ip(10, 10, 0, 2);		// destination ip 10.10.0.2
@@ -59,7 +59,7 @@ public:
 			rule.sport = net::myhtons(0xaabb);					// source port
 			rule.dport = net::myhtons(0xccdd);					// destination port
 			rule.protocol = packetInfo::UDP;
-			rule.action = Rule::DROP;
+			rule.action = flow_monitor_Rule::DROP;
 			rules.push_back(rule);
 		}
 
@@ -146,7 +146,7 @@ private:
 
 		// Match rules
 		for(i = 0; i < rules.size(); i++){
-			Rule temp = rules[i];	// GPU vector access must via this copy
+			flow_monitor_Rule temp = rules[i];	// GPU vector access must via this copy
 
 			if(temp.saddr == ANY_ADDR ? false :
 					!ip_eq_mask(temp.saddr, s_addr, temp.smask))
@@ -168,9 +168,9 @@ private:
 			// Perfect match
 			state->match_no++;
 
-			if(temp.action == Rule::PASS)
+			if(temp.action == flow_monitor_Rule::PASS)
 				drop = false;
-			else if(temp.action == Rule::DROP)
+			else if(temp.action == flow_monitor_Rule::DROP)
 				drop = true;
 			else
 				assert(0 && "Unexpected action id");
