@@ -25,7 +25,7 @@ public:
 
 	gpu_flow_table* _flow_tables;
 
-	chainInfo(void *fm_rules, void *rules, void* lb) : _fm_rules((flow_monitor_Rules *) fm_rules),_flow_tables((gpu_flow_table*)lb) {}
+	chainInfo(void *fm_rules, void* lb) : _fm_rules((flow_monitor_Rules *) fm_rules),_flow_tables((gpu_flow_table*)lb) {}
 };
 
 // Copy infomation for nf to use in GPU
