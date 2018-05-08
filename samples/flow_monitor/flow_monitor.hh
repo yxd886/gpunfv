@@ -69,7 +69,7 @@ public:
 	inline void nf_init() {
 		assert(rules.size());
 
-		info_for_gpu = init_nf_info(rules.size(), &rules[0]);
+		info_for_gpu = init_flow_monitor_info(rules.size(), &rules[0]);
 	}
 
 	// Convert 4 integers to a network byte order ip address

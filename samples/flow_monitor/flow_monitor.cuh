@@ -51,7 +51,7 @@ public:
 	}
 };
 
-void *init_nf_info(size_t size, void *data) {
+void *init_flow_monitor_info(size_t size, void *data) {
 	flow_monitor_Rules info(size, data);
 
 	// Copy Infos to gpu

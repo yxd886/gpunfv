@@ -2,7 +2,9 @@
 #define GPU_INTERFACE_HH
 
 // NF-related interface
-void *init_nf_info(size_t size, void * data);
+void *init_firewall_info(size_t size, void * data);
+void *init_load_balancer_info(size_t size, void * data);
+void *init_flow_monitor_info(size_t size, void * data);
 void *init_service_chain_info(void *d1, void * d2);
 void *init_service_chain_info(void *d1, void * d2, void* d3);
 

@@ -47,7 +47,7 @@ public:
 
 };
 
-void *init_nf_info(size_t size, void *data) {
+void *init_load_balancer_info(size_t size, void *data) {
 	gpu_flow_table info(size, data);
 
 	// Copy Infos to gpu
