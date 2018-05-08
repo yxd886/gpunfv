@@ -13,8 +13,8 @@
 
 using namespace std;
 
-#define MAX_RULES	10000000	// Maximum rule amount
-#define NRULES		500		// Rule amount
+#define MAX_FM_RULES	10000000	// Maximum rule amount
+#define FM_NRULES		500		// Rule amount
 
 //void *gpu_init(unsigned size, void *ptr);
 
@@ -48,8 +48,8 @@ public:
 	void *info_for_gpu;
 
 	flow_monitor() : info_for_gpu(0) {
-		uint32_t n = NRULES;
-		assert(n > 0 && n < MAX_RULES);
+		uint32_t n = FM_NRULES;
+		assert(n > 0 && n < MAX_FM_RULES);
 		flow_monitor_Rule rule;
 		for(uint32_t i = 0; i < n; i++) {
 			rule.saddr = i2ip((i >> 24) % 256, (i >> 16) % 256, (i >> 8) % 256, i % 256);		// source ip 0~n
