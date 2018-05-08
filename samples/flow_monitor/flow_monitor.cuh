@@ -73,7 +73,7 @@ public:
 		return res;
 	}
 
-	__device__ inline static void init_automataState(firewall_flow_state &state) {
+	__device__ inline static void init_automataState(flow_monitor_flow_state &state) {
 		state.match_no = 0;
 		state.drop_no = 0;
 		state.pass_no = 0;
@@ -83,12 +83,12 @@ public:
 		state.protocol_type = 0;
 	}
 
-	__device__ inline static void nf_logic(void *pkt, firewall_flow_state *state, flow_monitor_Rules *rules) {
+	__device__ inline static void nf_logic(void *pkt, flow_monitor_flow_state *state, flow_monitor_Rules *rules) {
 		process(pkt, state, rules);
 	} 
 
 private:
-	__device__ inline static void process(void *packet, firewall_flow_state* state, flow_monitor_Rules *rules) {
+	__device__ inline static void process(void *packet, flow_monitor_flow_state* state, flow_monitor_Rules *rules) {
 		packetInfo info;
 
 		packetParser::parse_raw_packet(packet, &info);
@@ -101,7 +101,7 @@ private:
 		return (net::myntohl(addr1) & mask) == (net::myntohl(addr2) & mask);
 	}
 
-	__device__ static void match_rules(packetInfo *info, firewall_flow_state* state, flow_monitor_Rules *rules) {
+	__device__ static void match_rules(packetInfo *info, flow_monitor_flow_state* state, flow_monitor_Rules *rules) {
 		uint32_t s_addr, d_addr;
 		uint16_t s_port, d_port;
 		uint8_t protocol;
