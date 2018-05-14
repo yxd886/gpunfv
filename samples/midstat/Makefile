@@ -25,13 +25,13 @@ DPDK = /home/net/gpunfv/mOS-networking-stack/drivers/dpdk
 
 # mos parameters
 MTCP_FLD    = /home/net/gpunfv/mOS-networking-stack/core
-MTCP_INC    =-I$(MTCP_FLD)/include
+MTCP_INC    = $(MTCP_FLD)/include
 MTCP_TARGET = $(MTCP_FLD)/lib/libmtcp.a
 LIBS        += -lmtcp -lssl -lcrypto -lnuma -lpthread -lrt
-LIB_DIR     += -L$(MTCP_FLD)/lib
+MOS_LIB_DIR     += -L$(MTCP_FLD)/lib
 CMN_DIR     = ../common
-CMN_INC     = -I$(CMN_DIR)
-UTIL_INC    = -I/home/net/gpunfv/mOS-networking-stack/util/include
+CMN_INC     = $(CMN_DIR)
+CMN_INC    = /home/net/gpunfv/mOS-networking-stack/util/include
 
 ###############################################################
 
@@ -70,10 +70,10 @@ CUDA_LDFLAGS = -L$(CUDA)/lib64
 
 # c++ flags
 CXXFLAGS = -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
-	    $(addprefix -isystem ,$(DPDK_INC_DIR) $(CUDA_INC_DIR)) 
+	    $(addprefix -isystem ,$(DPDK_INC_DIR) $(CUDA_INC_DIR) $(MTCP_INC) $(CMN_INC) $(CMN_INC)) 
 
 # link flags
-LDFLAGS = $(CUDA_LDFLAGS) -L$(DPDK_LIB_DIR)
+LDFLAGS = $(CUDA_LDFLAGS) -L$(DPDK_LIB_DIR) -L$(MOS_LIB_DIR)
 
 #LIBS += -lcudart -lrte_mempool -lrte_mempool_ring -lrte_mempool_stack -lrte_eal
 LIBS += -lcudart  -Wl,--whole-archive -ldpdk -Wl,--no-whole-archive -lpthread -ldl  -m64 -g -pthread -lrt -march=native -Wl, -export-dynamic $(DPDK_LIB_DIR) -Wl, -lnuma -Wl, -lmtcp -Wl, -lrt -Wl,-ldl -Wl, $(shell cat ../../mOS-networking-stack/drivers/dpdk/lib/ldflags.txt)
