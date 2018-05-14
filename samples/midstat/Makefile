@@ -76,7 +76,7 @@ CXXFLAGS = -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
 LDFLAGS = $(CUDA_LDFLAGS) -L$(DPDK_LIB_DIR) -L$(MOS_LIB_DIR)
 
 #LIBS += -lcudart -lrte_mempool -lrte_mempool_ring -lrte_mempool_stack -lrte_eal
-LIBS += -lcudart  -Wl,--whole-archive -ldpdk -Wl,--no-whole-archive -lpthread -ldl  -m64 -g -pthread -lrt -march=native -Wl, -export-dynamic $(DPDK_LIB_DIR) -Wl, -lnuma -Wl, -lmtcp -Wl, -lrt -Wl,-ldl -Wl, $(shell cat ../../mOS-networking-stack/drivers/dpdk/lib/ldflags.txt)
+LIBS += -lcudart  -Wl,--whole-archive -ldpdk -Wl,--no-whole-archive -lpthread -ldl
 #LIBS += -lcudart -lpthread  \
  -Wl,--whole-archive -lrte_pmd_i40e \
  -lrte_hash -lrte_kvargs -lrte_mbuf -lrte_ethdev -lrte_eal -lrte_mempool -lrte_mempool_ring -lrte_ring \
