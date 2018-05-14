@@ -12,7 +12,7 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include "applib.h"
+#include "applib.hh"
 /*----------------------------------------------------------------------------*/
 char *
 strevent(uint64_t ev)
