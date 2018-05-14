@@ -73,13 +73,13 @@ cb_creation(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 	socklen_t addrslen = sizeof(struct sockaddr) * 2;
 	struct connection *c;
 
-	c = calloc(sizeof(struct connection), 1);
+	c = (struct connection*)calloc(sizeof(struct connection), 1);
 	if (!c)
 		return;
 
 	/* Fill values of the connection structure */
 	c->sock = sock;
-	if (mtcp_getpeername(mctx, c->sock, (void *)c->addrs, &addrslen,
+	if (mtcp_getpeername(mctx, c->sock, (sockaddr *)c->addrs, &addrslen,
 						 MOS_SIDE_BOTH) < 0) {
 		perror("mtcp_getpeername");
 		/* it's better to stop here and do debugging */
