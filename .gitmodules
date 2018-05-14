@@ -2,3 +2,6 @@
 	path = dpdk
 	url = https://github.com/yxd886/dpdk.git
         branch = seastar_use
+[submodule "mOS-networking-stack"]
+	path = mOS-networking-stack
+	url = https://github.com/ndsl-kaist/mOS-networking-stack.git
