@@ -31,7 +31,7 @@ LIBS        += -lmtcp -lssl -lcrypto -lnuma -lpthread -lrt
 MOS_LIB_DIR     += -L$(MTCP_FLD)/lib
 CMN_DIR     = ../common
 CMN_INC     = $(CMN_DIR)
-CMN_INC    = /home/net/gpunfv/mOS-networking-stack/util/include
+UTIL_INC    = /home/net/gpunfv/mOS-networking-stack/util/include
 
 ###############################################################
 
@@ -70,7 +70,7 @@ CUDA_LDFLAGS = -L$(CUDA)/lib64
 
 # c++ flags
 CXXFLAGS = -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
-	    $(addprefix -isystem ,$(DPDK_INC_DIR) $(CUDA_INC_DIR) $(MTCP_INC) $(CMN_INC) $(CMN_INC)) 
+	    $(addprefix -isystem ,$(DPDK_INC_DIR) $(CUDA_INC_DIR) $(MTCP_INC) $(CMN_INC) $(UTIL_INC)) 
 
 # link flags
 LDFLAGS = $(CUDA_LDFLAGS) -L$(DPDK_LIB_DIR) -L$(MOS_LIB_DIR)
