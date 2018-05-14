@@ -17,9 +17,11 @@
 #include <signal.h>
 #include <sys/queue.h>
 #include <errno.h>
-
+extern"C"{
 #include <mos_api.h>
 #include "cpu.h"
+}
+
 
 /* Maximum CPU cores */
 #define MAX_CORES 		16
