@@ -56,6 +56,7 @@ DEPDIR = .deps
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$(@:.o=.d)
 CUDEPFLAGS = -MT $@ -Xcompiler -MMD,-MP,-MF$(DEPDIR)/$(@:.o=.d)
 $(shell mkdir -p $(DEPDIR) > /dev/null)
+$(shell mkdir -p $(DEPDIR)/../common/ > /dev/null)
 
 #########################################################################################
 
