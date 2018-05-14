@@ -4,4 +4,4 @@
         branch = seastar_use
 [submodule "mOS-networking-stack"]
 	path = mOS-networking-stack
-	url = https://github.com/yxd886/mos.git
+	url = https://github.com/yxd886/mOS-networking-stack.git
