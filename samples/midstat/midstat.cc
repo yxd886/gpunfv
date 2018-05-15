@@ -72,7 +72,8 @@ find_connection(int cpu, int sock)
 static void
 cb_creation(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 {
-	socklen_t addrslen = sizeof(struct sockaddr) * 2;
+	printf("cb_creation\n");
+    socklen_t addrslen = sizeof(struct sockaddr) * 2;
 	struct connection *c;
 
 	c = (struct connection*)calloc(sizeof(struct connection), 1);
@@ -96,7 +97,8 @@ cb_creation(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 static void
 cb_destroy(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 {
-	struct connection *c;
+    printf("cb_destroy\n");
+    struct connection *c;
 
 	if (!(c = find_connection(mctx->cpu, sock)))
 		return;
@@ -109,7 +111,8 @@ cb_destroy(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 static void
 cb_st_chg(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 {
-	struct connection *c;
+    printf("cb_st_chg\n");
+    struct connection *c;
 	socklen_t intlen = sizeof(int);
 
 	if (!(c = find_connection(mctx->cpu, sock)))
