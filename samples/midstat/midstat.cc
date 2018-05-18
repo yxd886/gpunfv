@@ -216,7 +216,7 @@ Change_eth_addr(mctx_t mctx, int msock, int side,
 
     if(side == MOS_SIDE_CLI){
         //printf("from client!\n");
-        char mac_dst_str[6]={0x3c, 0xfd, 0xfe, 0x06, 0x07, 0x82};
+        uint8_t mac_dst_str[6]={0x3c, 0xfd, 0xfe, 0x06, 0x07, 0x82};
        // char mac_src_str[6]={0x3c, 0xfd, 0xfe, 0x06, 0x09, 0x62};
         mtcp_setlastpkt(mctx, msock, side, 0,
                         (uint8_t*)mac_dst_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
@@ -224,7 +224,7 @@ Change_eth_addr(mctx_t mctx, int msock, int side,
        //                 (uint8_t*)mac_src_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
     }else if(side == MOS_SIDE_SVR){
         //printf("from server!!!!!!!\n");
-        char mac_dst_str[6]={0x3c, 0xfd, 0xfe, 0x06, 0x08, 0x00};
+        uint8_t mac_dst_str[6]={0x3c, 0xfd, 0xfe, 0x06, 0x08, 0x00};
        // char mac_src_str[6]={0x3c, 0xfd, 0xfe, 0x06, 0x09, 0x60};
         mtcp_setlastpkt(mctx, msock, side, 0,
                         (uint8_t*)mac_dst_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
