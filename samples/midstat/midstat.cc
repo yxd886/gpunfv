@@ -72,7 +72,7 @@ find_connection(int cpu, int sock)
 static void
 cb_creation(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 {
-	printf("cb_creation\n");
+	//printf("cb_creation\n");
     socklen_t addrslen = sizeof(struct sockaddr) * 2;
 	struct connection *c;
 
@@ -86,7 +86,7 @@ cb_creation(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 						 MOS_SIDE_BOTH) < 0) {
 		perror("mtcp_getpeername");
 		/* it's better to stop here and do debugging */
-		exit(EXIT_FAILURE); 
+		exit(EXIT_FAILURE);
 	}
 
 	/* Insert the structure to the queue */
@@ -97,7 +97,7 @@ cb_creation(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 static void
 cb_destroy(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 {
-    printf("cb_destroy\n");
+   // printf("cb_destroy\n");
     struct connection *c;
 
 	if (!(c = find_connection(mctx->cpu, sock)))
@@ -111,7 +111,7 @@ cb_destroy(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 static void
 cb_st_chg(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 {
-    printf("cb_st_chg\n");
+    //printf("cb_st_chg\n");
     struct connection *c;
 	socklen_t intlen = sizeof(int);
 
@@ -195,6 +195,44 @@ cb_printstat(mctx_t mctx, int sock, int side,
 
 	return;
 }
+
+static void
+Change_eth_addr(mctx_t mctx, int msock, int side,
+        uint64_t events, filter_arg_t *arg)
+
+{
+    /* this function is called at the first SYN */
+    struct pkt_info p;
+
+
+    mtcp_getlastpkt(mctx, msock, side, &p);
+   /* printf("In callback: eth src:%x:%x:%x:%x:%x:%x  ",p.ethh->h_source[0],p.ethh->h_source[1],p.ethh->h_source[2],p.ethh->h_source[3],p.ethh->h_source[4],p.ethh->h_source[5]);
+    printf("In callback: eth dst:%x:%x:%x:%x:%x:%x  ",p.ethh->h_dest[0],p.ethh->h_dest[1],p.ethh->h_dest[2],p.ethh->h_dest[3],p.ethh->h_dest[4],p.ethh->h_dest[5]);
+
+    printf("received pkt!  ");
+    printf("side: %d\n",side);*/
+
+    //printf("dst_mac: 0%x:%x:%x:%x:%x:%x\n",p.ethh->h_dest[0],p.ethh->h_dest[1],p.ethh->h_dest[2],p.ethh->h_dest[3],p.ethh->h_dest[4],p.ethh->h_dest[5]);
+
+    if(side == MOS_SIDE_CLI){
+        //printf("from client!\n");
+        char mac_dst_str[6]={0x3c, 0xfd, 0xfe, 0x06, 0x07, 0x82};
+       // char mac_src_str[6]={0x3c, 0xfd, 0xfe, 0x06, 0x09, 0x62};
+        mtcp_setlastpkt(mctx, msock, side, 0,
+                        (uint8_t*)mac_dst_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
+       // mtcp_setlastpkt(mctx, msock, side, 6,
+       //                 (uint8_t*)mac_src_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
+    }else if(side == MOS_SIDE_SVR){
+        //printf("from server!!!!!!!\n");
+        char mac_dst_str[6]={0x3c, 0xfd, 0xfe, 0x06, 0x08, 0x00};
+       // char mac_src_str[6]={0x3c, 0xfd, 0xfe, 0x06, 0x09, 0x60};
+        mtcp_setlastpkt(mctx, msock, side, 0,
+                        (uint8_t*)mac_dst_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
+      //  mtcp_setlastpkt(mctx, msock, side, 6,
+      //                  (uint8_t*)mac_src_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
+    }
+
+}
 /*----------------------------------------------------------------------------*/
 /* Register required callbacks */
 static void
@@ -210,29 +248,36 @@ RegisterCallbacks(mctx_t mctx, int sock, event_t ev_new_syn)
 				   MOS_HK_SND, cb_creation)) {
 		fprintf(stderr, "Failed to register cb_creation()\n");
 		exit(-1); /* no point in proceeding if callback registration fails */
-	}	
+	}
 	if (mtcp_register_callback(mctx, sock, MOS_ON_CONN_END,
 				   MOS_HK_SND, cb_destroy)) {
 		fprintf(stderr, "Failed to register cb_destroy()\n");
 		exit(-1); /* no point in proceeding if callback registration fails */
-	}	
+	}
 	if (mtcp_register_callback(mctx, sock, MOS_ON_TCP_STATE_CHANGE,
 				   MOS_HK_SND, cb_st_chg)) {
 		fprintf(stderr, "Failed to register cb_st_chg()\n");
 		exit(-1); /* no point in proceeding if callback registration fails */
-	}	
+	}
 	if (mtcp_register_callback(mctx, sock, MOS_ON_TCP_STATE_CHANGE,
 				   MOS_HK_RCV, cb_st_chg)) {
 		fprintf(stderr, "Failed to register cb_st_chg()\n");
 		exit(-1); /* no point in proceeding if callback registration fails */
-	}	
+	}
+    if (mtcp_register_callback(mctx, sock,
+                               MOS_ON_PKT_IN,
+                               MOS_HK_SND,
+                               Change_eth_addr) == -1){
+        fprintf(stderr, "Failed to register cb_st_chg()\n");
+        exit(-1); /* no point in proceeding if callback registration fails */
+    }
 
 	/* CPU 0 is in charge of printing stats */
 	if (mctx->cpu == 0 &&
 		mtcp_settimer(mctx, sock, &tv_1sec, cb_printstat)) {
 		fprintf(stderr, "Failed to register print timer\n");
 		exit(-1); /* no point in proceeding if the titmer is broken*/
-	}	
+	}
 }
 /*----------------------------------------------------------------------------*/
 /* Open monitoring socket and ready it for monitoring */
@@ -265,7 +310,7 @@ InitMonitor(mctx_t mctx, event_t ev_new_syn)
 	RegisterCallbacks(mctx, sock, ev_new_syn);
 }
 /*----------------------------------------------------------------------------*/
-int 
+int
 main(int argc, char **argv)
 {
 	int i, opt;
@@ -274,7 +319,7 @@ main(int argc, char **argv)
 	struct mtcp_conf mcfg;          /* mOS configuration */
 
 	/* get the total # of cpu cores */
-	g_max_cores = GetNumCPUs();       
+	g_max_cores = GetNumCPUs();
 
 	/* Parse command line arguments */
 	while ((opt = getopt(argc, argv, "c:f:")) != -1) {
