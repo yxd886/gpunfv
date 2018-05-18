@@ -17,6 +17,7 @@
 #include <signal.h>
 #include <sys/queue.h>
 #include <errno.h>
+#include <getopt.h>
 extern"C"{
 #include <mos_api.h>
 #include "cpu.h"
