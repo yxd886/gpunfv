@@ -21,8 +21,22 @@ extern"C"{
 #include <mos_api.h>
 #include "cpu.h"
 }
+uint64_t _batch_size=1;
+uint64_t schedule = 0;
+uint64_t print_time = 0;
+uint64_t print_simple_time = 0;
+uint64_t gpu_time = 0;
+uint64_t schedule_timer_tsc[10] ={ 0};
+int throughput = 0;
+int max_pre_throughput = 0;
+int step = 128;
+int direction = 1;
+bool dynamic_adjust = false;
 
-
+#define CMD_LINE_OPT_PRINT_TIME "print-time"
+#define CMD_LINE_OPT_PRINT_SIMPLE_TIME "simple-time"
+#define CMD_LINE_OPT_GPU_TIME "gpu-time"
+#define CMD_LINE_OPT_SCHEDULE "schedule"
 /* Maximum CPU cores */
 #define MAX_CORES 		16
 /* Number of TCP flags to monitor */
@@ -310,6 +324,78 @@ InitMonitor(mctx_t mctx, event_t ev_new_syn)
 	RegisterCallbacks(mctx, sock, ev_new_syn);
 }
 /*----------------------------------------------------------------------------*/
+
+void parse_args_and_init(int argc, char **argv){
+    int opt, ret;
+    char **argvopt;
+    int option_index;
+    char *prgname = argv[0];
+    static struct option lgopts[] = {
+        {CMD_LINE_OPT_PRINT_TIME, 0, 0, 0},
+        {CMD_LINE_OPT_PRINT_SIMPLE_TIME, 0, 0, 0},
+        {CMD_LINE_OPT_GPU_TIME, 0, 0, 0},
+        {CMD_LINE_OPT_SCHEDULE,0,0,0},
+        {NULL, 0, 0, 0}
+    };
+
+    argvopt = argv;
+
+    while ((opt = getopt_long(argc, argvopt, "c:f:b",
+                lgopts, &option_index)) != EOF) {
+
+        switch (opt) {
+        /* portmask */
+        case 'c':
+            enabled_port_mask = parse_portmask(optarg);
+            if (enabled_port_mask == 0) {
+                printf("invalid portmask\n");
+                print_usage(prgname);
+                return -1;
+            }
+            break;
+        case 'f':
+            fname = optarg;
+            break;
+        case 'b':
+            _batch_size = parse_batchsize(optarg);
+            if (_batch_size == 1) {
+                _batch_size = 10000;
+                dynamic_adjust = true;
+            }
+            break;
+
+        /* long options */
+        case 0:
+            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_PRINT_TIME,
+                sizeof(CMD_LINE_OPT_PRINT_TIME))) {
+                  print_time=1;
+            }
+            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_PRINT_SIMPLE_TIME,
+                sizeof(CMD_LINE_OPT_PRINT_SIMPLE_TIME))) {
+                  print_simple_time=1;
+            }
+            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_GPU_TIME,
+                sizeof(CMD_LINE_OPT_GPU_TIME))) {
+                  gpu_time=1;
+            }
+            if (!strncmp(lgopts[option_index].name, CMD_LINE_OPT_SCHEDULE,
+                sizeof(CMD_LINE_OPT_SCHEDULE))) {
+                  schedule=1;
+            }
+            break;
+
+        default:
+            printf("Usage: %s [-f mos_config_file] [-c #_of_cpu]\n", argv[0]);
+            return;
+        }
+    }
+
+    if (mtcp_init(fname)) {
+        fprintf(stderr, "Failed to initialize mtcp.\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -322,7 +408,7 @@ main(int argc, char **argv)
 	g_max_cores = GetNumCPUs();
 
 	/* Parse command line arguments */
-	while ((opt = getopt(argc, argv, "c:f:")) != -1) {
+	/*while ((opt = getopt(argc, argv, "c:f:")) != -1) {
 		switch (opt) {
 		case 'f':
 			fname = optarg;
@@ -338,13 +424,14 @@ main(int argc, char **argv)
 			printf("Usage: %s [-f mos_config_file] [-c #_of_cpu]\n", argv[0]);
 			return 0;
 		}
-	}
+	}*/
 
-	/* parse mos configuration file */
+/*
 	if (mtcp_init(fname)) {
 		fprintf(stderr, "Failed to initialize mtcp.\n");
 		exit(EXIT_FAILURE);
-	}
+	}*/
+	parse_args_and_init(argc,argv);
 
 	/* set the core limit */
 	mtcp_getconf(&mcfg);
