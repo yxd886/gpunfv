@@ -330,6 +330,7 @@ void parse_args_and_init(int argc, char **argv){
     int opt, ret;
     char **argvopt;
     int option_index;
+    char *fname = MOS_CONFIG_FILE;  /* path to the default mos config file */
     char *prgname = argv[0];
     static struct option lgopts[] = {
         {CMD_LINE_OPT_PRINT_TIME, 0, 0, 0},
@@ -347,18 +348,17 @@ void parse_args_and_init(int argc, char **argv){
         switch (opt) {
         /* portmask */
         case 'c':
-            enabled_port_mask = parse_portmask(optarg);
-            if (enabled_port_mask == 0) {
-                printf("invalid portmask\n");
-                print_usage(prgname);
-                return -1;
+            if (atoi(optarg) > g_max_cores) {
+                printf("Available number of CPU cores is %d\n", g_max_cores);
+                return;
             }
+            g_max_cores = atoi(optarg);
             break;
         case 'f':
             fname = optarg;
             break;
         case 'b':
-            _batch_size = parse_batchsize(optarg);
+            _batch_size = atoi(optarg);
             if (_batch_size == 1) {
                 _batch_size = 10000;
                 dynamic_adjust = true;
@@ -402,7 +402,7 @@ main(int argc, char **argv)
 {
 	int i, opt;
 	event_t ev_new_syn;             /* New SYN UDE */
-	char *fname = MOS_CONFIG_FILE;  /* path to the default mos config file */
+
 	struct mtcp_conf mcfg;          /* mOS configuration */
 
 	/* get the total # of cpu cores */
