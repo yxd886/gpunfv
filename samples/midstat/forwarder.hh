@@ -5,7 +5,12 @@
 #include <omp.h>
 #include <future>
 #include "../include/gpu_interface.hh"
+
+extern"C"{
+
 #include <ip_out.h>
+}
+
 
 extern uint64_t _batch_size;
 extern uint64_t print_time;
