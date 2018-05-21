@@ -18,6 +18,7 @@
 #include <sys/queue.h>
 #include <errno.h>
 #include <getopt.h>
+#include <forwarder.hh>
 extern"C"{
 #include <mos_api.h>
 #include "cpu.h"
