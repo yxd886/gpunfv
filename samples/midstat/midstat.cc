@@ -35,6 +35,7 @@ int step = 128;
 int direction = 1;
 bool dynamic_adjust = false;
 
+
 /* Maximum CPU cores */
 #define MAX_CORES 		16
 /* Number of TCP flags to monitor */
@@ -49,6 +50,8 @@ bool dynamic_adjust = false;
 #include "../include/rte_packet.hh"
 #include "forwarder.hh"
 
+
+forwarder* g_forwarder[MAX_CORES];
 struct connection {
 	int sock;                      /* socket ID */
 	struct sockaddr_in addrs[2];   /* Address of a client and a serer */
