@@ -44,9 +44,10 @@ bool dynamic_adjust = false;
 /*----------------------------------------------------------------------------*/
 /* Global variables */
 
-#include "forwarder.hh"
+
 #include "../include/dpdk_config.hh"
 #include "../include/rte_packet.hh"
+#include "forwarder.hh"
 
 struct connection {
 	int sock;                      /* socket ID */
