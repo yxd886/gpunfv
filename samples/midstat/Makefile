@@ -25,7 +25,7 @@ DPDK = /home/net/gpunfv/mOS-networking-stack/drivers/dpdk
 
 # mos parameters
 MTCP_FLD    = /home/net/gpunfv/mOS-networking-stack/core
-MTCP_INC    = $(MTCP_FLD)/include
+MTCP_INC    = $(MTCP_FLD)/include $(MTCP_FLD)/src/include
 MTCP_TARGET = $(MTCP_FLD)/lib/libmtcp.a
 LIBS        += -lmtcp -lssl -lcrypto -lnuma -lpthread -lrt
 MOS_LIB_DIR     += $(MTCP_FLD)/lib
