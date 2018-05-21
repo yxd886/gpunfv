@@ -138,7 +138,7 @@ public:
 
         void process_pkts(uint64_t index){
             for(unsigned int i=0;i<packets[index].size();i++){
-                process_pkt(&packets[index][i],&_fs);
+                process_pkt(packets[index][i],&_fs);
             }
             forward_pkts(index);
         }
@@ -241,50 +241,48 @@ public:
         if(_pkt_counter==1){
             lt_started[_batch.current_idx] = steady_clock_type::now();
          }
-        if(ntohs(eth_h->ether_type) == static_cast<uint16_t>(eth_protocol_num::ipv4)) {
-            auto ip_h = pkt->p.iph;
+
+        auto ip_h = pkt->p.iph;
 
 
-            // The following code blocks checks and regulates
-            // incoming IP packets.
+        // The following code blocks checks and regulates
+        // incoming IP packets.
 
-            if(ip_h->protocol == static_cast<uint8_t>(ip_protocol_num::tcp)) {
-                auto tcp_h = pkt->p.tcph;
-                if(!tcp_h) {
-                    drop_pkt(pkt);
-                }
-
-                flow_key fk{ntohl(ip_h->daddr),
-                                        ntohl(ip_h->saddr),
-                                        ntohs(tcp_h->dst_port),
-                                        ntohs(tcp_h->src_port)};
-                auto afi = _flow_table.find(fk);
-                if(afi == _flow_table.end()) {
-
-                    auto impl_lw_ptr =  new flow_operator(*this);
-                    auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
-                    assert(succeed);
-                    impl_lw_ptr->per_flow_enqueue(pkt,type);
-
-                }
-                else {
-                    afi->second->per_flow_enqueue(pkt,type);
-                }
-                if(_pkt_counter>=_batch_size){
-                     _pkt_counter=0;
-                     _batch.current_idx=!_batch.current_idx;
-                     _batch.schedule_task(!_batch.current_idx);
-                 }
-
-                return;
-            }
-            else{
+        if(ip_h->protocol == static_cast<uint8_t>(ip_protocol_num::tcp)) {
+            auto tcp_h = pkt->p.tcph;
+            if(!tcp_h) {
                 drop_pkt(pkt);
             }
+
+            flow_key fk{ntohl(ip_h->daddr),
+                                    ntohl(ip_h->saddr),
+                                    ntohs(tcp_h->dest),
+                                    ntohs(tcp_h->source)};
+            auto afi = _flow_table.find(fk);
+            if(afi == _flow_table.end()) {
+
+                auto impl_lw_ptr =  new flow_operator(*this);
+                auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
+                assert(succeed);
+                impl_lw_ptr->per_flow_enqueue(pkt,type);
+
+            }
+            else {
+                afi->second->per_flow_enqueue(pkt,type);
+            }
+            if(_pkt_counter>=_batch_size){
+                 _pkt_counter=0;
+                 _batch.current_idx=!_batch.current_idx;
+                 _batch.schedule_task(!_batch.current_idx);
+             }
+
+            return;
         }
         else{
             drop_pkt(pkt);
         }
+
+
 
     }
 
@@ -521,7 +519,7 @@ public:
 
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
 
-                        rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j].get_header<ether_hdr>(0)),_flows[index][i]->packets[index][j].len());
+                        rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,reinterpret_cast<char*>(_flows[index][i]->packets[index][j]->p.ethh),_flows[index][i]->packets[index][j]->p.ip_len+_flows[index][i]->packets[index][j]->p.eth_len);
                     }
                 }
 
@@ -736,7 +734,7 @@ public:
                         rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(nf_flow_state));
 
                         for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                            rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j]->p.ethh),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j]->p.eth_len+_flows[!index][i]->packets[!index][j]->p.ip_len);
                         }
                     }
                     gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
