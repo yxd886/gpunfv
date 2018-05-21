@@ -18,9 +18,7 @@
 #include <sys/queue.h>
 #include <errno.h>
 #include <getopt.h>
-#include "forwarder.hh"
-#include "../include/dpdk_config.hh"
-#include "../include/rte_packet.hh"
+
 extern"C"{
 #include <mos_api.h>
 #include "cpu.h"
@@ -45,6 +43,10 @@ bool dynamic_adjust = false;
 #define MOS_CONFIG_FILE		"config/mos.conf"
 /*----------------------------------------------------------------------------*/
 /* Global variables */
+
+#include "forwarder.hh"
+#include "../include/dpdk_config.hh"
+#include "../include/rte_packet.hh"
 
 struct connection {
 	int sock;                      /* socket ID */
