@@ -85,7 +85,7 @@
 #include <unistd.h>
 
 #include <linux/udp.h>
-#include <linux/ip.h>
+#include <netinet/ip.h>
 #include <linux/tcp.h>
 
 #include <cmdline_parse.h>
