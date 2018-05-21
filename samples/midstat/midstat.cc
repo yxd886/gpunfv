@@ -18,7 +18,9 @@
 #include <sys/queue.h>
 #include <errno.h>
 #include <getopt.h>
-//#include "forwarder.hh"
+#include "forwarder.hh"
+#include "../include/dpdk_config.hh"
+#include "../include/rte_packet.hh"
 extern"C"{
 #include <mos_api.h>
 #include "cpu.h"
@@ -35,10 +37,6 @@ int step = 128;
 int direction = 1;
 bool dynamic_adjust = false;
 
-#define CMD_LINE_OPT_PRINT_TIME "print-time"
-#define CMD_LINE_OPT_PRINT_SIMPLE_TIME "simple-time"
-#define CMD_LINE_OPT_GPU_TIME "gpu-time"
-#define CMD_LINE_OPT_SCHEDULE "schedule"
 /* Maximum CPU cores */
 #define MAX_CORES 		16
 /* Number of TCP flags to monitor */
