@@ -93,6 +93,13 @@ static void
 cb_creation(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 {
 	//printf("cb_creation\n");
+    struct pkt_ctx * ptx=NULL;
+    mtcp_getlastpkt(mctx, sock, side, &ptx);
+    if (side == MOS_SIDE_CLI) {
+
+        g_forwarder[mctx->cpu]->dispath_flow(ptx);
+    }
+
     socklen_t addrslen = sizeof(struct sockaddr) * 2;
 	struct connection *c;
 
@@ -223,6 +230,8 @@ Change_eth_addr(mctx_t mctx, int msock, int side,
 {
     /* this function is called at the first SYN */
     struct pkt_info p;
+    struct pkt_ctx * ptx=NULL;
+    mtcp_getlastpkt(mctx, msock, side, &ptx);
 
 
     mtcp_getlastpkt(mctx, msock, side, &p);
@@ -242,6 +251,7 @@ Change_eth_addr(mctx_t mctx, int msock, int side,
                         (uint8_t*)mac_dst_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
        // mtcp_setlastpkt(mctx, msock, side, 6,
        //                 (uint8_t*)mac_src_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
+        g_forwarder[mctx->cpu]->dispath_flow(ptx);
     }else if(side == MOS_SIDE_SVR){
         //printf("from server!!!!!!!\n");
         uint8_t mac_dst_str[6]={0x3c, 0xfd, 0xfe, 0x06, 0x08, 0x00};
@@ -250,6 +260,7 @@ Change_eth_addr(mctx_t mctx, int msock, int side,
                         (uint8_t*)mac_dst_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
       //  mtcp_setlastpkt(mctx, msock, side, 6,
       //                  (uint8_t*)mac_src_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
+        g_forwarder[mctx->cpu]->send_pkt(ptx);
     }
 
 }
@@ -454,6 +465,7 @@ main(int argc, char **argv)
 			fprintf(stderr, "Failed to craete mtcp context.\n");
 			return -1;
 		}
+		g_forwarder[i] = new forwarder(0,0,i,g_mctx[i]);
 
 		/* init monitor */
 		InitMonitor(g_mctx[i], ev_new_syn);
