@@ -407,6 +407,8 @@ void parse_args_and_init(int argc, char **argv){
     }
 }
 
+NF *forwarder::_nf = nullptr;
+
 int
 main(int argc, char **argv)
 {
