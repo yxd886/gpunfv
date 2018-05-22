@@ -352,7 +352,7 @@ void parse_args_and_init(int argc, char **argv){
 
     argvopt = argv;
 
-    while ((opt = getopt_long(argc, argvopt, "c:f:b",
+    while ((opt = getopt_long(argc, argvopt, "c:f:b:",
                 lgopts, &option_index)) != EOF) {
 
         switch (opt) {
