@@ -244,8 +244,8 @@ Change_eth_addr(mctx_t mctx, int msock, int side,
                         (uint8_t*)mac_dst_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
        // mtcp_setlastpkt(mctx, msock, side, 6,
        //                 (uint8_t*)mac_src_str, 6, MOS_ETH_HDR | MOS_OVERWRITE);
-        g_forwarder[mctx->cpu]->dispath_flow(ptx);
-        //g_forwarder[mctx->cpu]->send_pkt(ptx);
+        //g_forwarder[mctx->cpu]->dispath_flow(ptx);
+        g_forwarder[mctx->cpu]->send_pkt(ptx);
     }else if(side == MOS_SIDE_SVR){
         //printf("from server!!!!!!!\n");
         uint8_t mac_dst_str[6]={0x3c, 0xfd, 0xfe, 0x06, 0x08, 0x00};
