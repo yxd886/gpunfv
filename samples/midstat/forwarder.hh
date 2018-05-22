@@ -130,7 +130,7 @@ public:
 
         void forward_pkts(uint64_t index){
             for(unsigned int i=0;i<packets[index].size();i++){
-                _f.send_pkt(std::move(packets[index][i]));
+                _f.send_pkt(packets[index][i]);
             }
             packets[index].clear();
             assert(packets[index].size()==0);
@@ -189,7 +189,7 @@ public:
                 }
 
                 _f._pkt_counter++;
-                packets[_f._batch.current_idx].push_back(std::move(pkt));
+                packets[_f._batch.current_idx].push_back(pkt);
 
                 /*if(_f._pkt_counter>=_batch_size){
                      _f._pkt_counter=0;
