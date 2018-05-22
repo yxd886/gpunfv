@@ -302,6 +302,7 @@ public:
 
     void drop_pkt(struct pkt_ctx * pkt){
        // rte_pktmbuf_free(pkt.get_packet());
+        printf("drop pkt!\n");
     }
 
 
