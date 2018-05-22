@@ -93,12 +93,6 @@ static void
 cb_creation(mctx_t mctx, int sock, int side, uint64_t events, filter_arg_t *arg)
 {
 	//printf("cb_creation\n");
-    struct pkt_ctx * ptx=NULL;
-    mtcp_getlastpkt(mctx, sock, side, &ptx);
-    if (side == MOS_SIDE_CLI) {
-
-        g_forwarder[mctx->cpu]->dispath_flow(ptx);
-    }
 
     socklen_t addrslen = sizeof(struct sockaddr) * 2;
 	struct connection *c;
@@ -465,7 +459,7 @@ main(int argc, char **argv)
 			fprintf(stderr, "Failed to craete mtcp context.\n");
 			return -1;
 		}
-		g_forwarder[i] = new forwarder(0,0,i,g_mctx[i]);
+		g_forwarder[i] = new forwarder(0,0,i,g_mtcp[i]);
 
 		/* init monitor */
 		InitMonitor(g_mctx[i], ev_new_syn);
