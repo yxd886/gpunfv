@@ -144,7 +144,7 @@ public:
         }
 
         void process_pkt(struct pkt_ctx * pkt, nf_flow_state* fs){
-            _nf->nf_logic(pkt->p.ethh, fs);
+           // _nf->nf_logic(pkt->p.ethh, fs);
         }
 
         void update_state(uint64_t index){
