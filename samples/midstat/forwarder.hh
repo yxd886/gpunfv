@@ -443,7 +443,7 @@ public:
         	 schedule_timer_tsc[lcore_id] = 0;
         	if(unlikely(_profile_num<100)){
         		_profile_num++;
-        		printf("lcore_id: %d, Profiling......\n",lcore_id);
+        		//printf("lcore_id: %d, Profiling......\n",lcore_id);
         	}else{
         		if(unlikely(_profileing&&lcore_id ==0&& dynamic_adjust)){
         		    _batch_size = 1024;
