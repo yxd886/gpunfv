@@ -452,6 +452,7 @@ main(int argc, char **argv)
 
 	/* Register signal handler */
 	mtcp_register_signal(SIGINT, sigint_handler);
+	forwarder::_nf = new NF;
 
 	for (i = 0; i < g_max_cores; i++) {
 		/* Run mOS for each CPU core */
