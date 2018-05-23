@@ -167,14 +167,14 @@ public:
             auto iph = pkt.get_header<iphdr>(sizeof(ether_hdr));
             auto h = pkt.get_header<tcp_hdr>(sizeof(ether_hdr)+(iph->ihl*4));
            // auto h = seastar::net::tcp_hdr::read(th);
-            auto f_syn=(h->th_flags>>1)&1;
+            auto f_syn=(h->tcp_flags>>1)&1;
 
             // Third, check for the syn packet.
             if(f_syn && !_seen_syn) {
                 // This is a syn packet.
                 // Set up the initial values.
                 _seen_syn = true;
-                uint32_t seg_seq = ntohl(h->th_seq);
+                uint32_t seg_seq = ntohl(h->sent_seq);
                 _rcv_next = seg_seq + 1;
                 _rcv_initial = seg_seq;
 
@@ -183,9 +183,10 @@ public:
 
             if(_seen_syn) {
                 // Try to reconstruct the payload here.
-                unsigned header_length = sizeof(ether_hdr)+(iph->ihl*4)+(h->th_x2 * 4);
+                auto data_offset = h->data_off >> 4;
+                unsigned header_length = sizeof(ether_hdr)+(iph->ihl*4)+(data_offset * 4);
                 unsigned seg_len = pkt.len()-header_length;
-                uint32_t seg_seq = ntohl(h->th_seq);
+                uint32_t seg_seq = ntohl(h->sent_seq);
 
                 auto result = segment_acceptable(seg_seq, seg_len);
                 if(!result) {
@@ -217,7 +218,7 @@ public:
 
 
                 }else{
-                    tcp_reorder_debug("Receive segment with seg_seq=%d and seq_len=%d, in order.\n", seg_seq, seg_len);
+                   // tcp_reorder_debug("Receive segment with seg_seq=%d and seq_len=%d, in order.\n", seg_seq, seg_len);
                     _rcv_data.push_back(std::move(pkt));
                     _rcv_next += seg_len;
                     merge_out_of_order();
