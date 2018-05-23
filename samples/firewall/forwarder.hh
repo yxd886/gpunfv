@@ -238,22 +238,16 @@ public:
 
             }
 
-            ge.event_happen(tcp_reorder_events::pkt_in);
-            if(_t.armed()) {
-                _t.cancel();
-                _t.arm(std::chrono::seconds(async_flow_config::flow_expire_seconds));
-            }
-            return ge;
         }
 
-        seastar::net::packet read_reordering_buffer() {
+     /*   seastar::net::packet read_reordering_buffer() {
             seastar::net::packet p;
             for (auto&& q : _rcv_data) {
                 p.append(std::move(q));
             }
             _rcv_data.clear();
             return p;
-        }
+        }*/
     };
 
     class flow_operator {
