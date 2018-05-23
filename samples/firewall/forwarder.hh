@@ -167,14 +167,14 @@ public:
             auto iph = pkt.get_header<iphdr>(sizeof(ether_hdr));
             auto h = pkt.get_header<tcp_hdr>(sizeof(ether_hdr)+(iph->ihl*4));
            // auto h = seastar::net::tcp_hdr::read(th);
-            auto f_syn=(h.th_flags>>1)&1;
+            auto f_syn=(h->th_flags>>1)&1;
 
             // Third, check for the syn packet.
             if(f_syn && !_seen_syn) {
                 // This is a syn packet.
                 // Set up the initial values.
                 _seen_syn = true;
-                uint32_t seg_seq = ntohl(h.th_seq);
+                uint32_t seg_seq = ntohl(h->th_seq);
                 _rcv_next = seg_seq + 1;
                 _rcv_initial = seg_seq;
 
@@ -183,9 +183,9 @@ public:
 
             if(_seen_syn) {
                 // Try to reconstruct the payload here.
-                unsigned header_length = sizeof(ether_hdr)+(iph->ihl*4)+(h.th_x2 * 4);
+                unsigned header_length = sizeof(ether_hdr)+(iph->ihl*4)+(h->th_x2 * 4);
                 unsigned seg_len = pkt.len()-header_length;
-                uint32_t seg_seq = ntohl(h.th_seq);
+                uint32_t seg_seq = ntohl(h->th_seq);
 
                 auto result = segment_acceptable(seg_seq, seg_len);
                 if(!result) {
@@ -225,7 +225,7 @@ public:
                 }
 
                 // check for rst flag
-           /*     if(h.f_rst) {
+           /*     if(h->f_rst) {
                     // Performa an active close.
                     ge.event_happen(tcp_reorder_events::pkt_in);
                     ge.close_event_happen();
