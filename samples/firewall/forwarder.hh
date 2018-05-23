@@ -4,6 +4,8 @@
 #include "nf.hh"
 #include <omp.h>
 #include <future>
+#include <map>
+#include <deque>
 #include "../include/gpu_interface.hh"
 
 extern uint64_t _batch_size;
@@ -82,6 +84,176 @@ public:
     struct query_key {
         uint64_t v1;
         uint64_t v2;
+    };
+
+    class tcp_reorder{
+    private:
+        bool _is_client;
+        bool _seen_syn;
+        uint64_t _rcv_next;
+        uint64_t _rcv_initial;
+        uint32_t _rcv_window;
+        std::deque<rte_packet> _rcv_data;
+        std::map<uint64_t,rte_packet> _rcv_out_of_order;
+    public:
+        tcp_reorder(bool is_client):_is_client(is_client),_seen_syn(false),_rcv_next(0),_rcv_initial(0),_rcv_window(3737600){
+
+        }
+    private:
+        bool segment_acceptable(uint64_t seg_seq, unsigned seg_len) {
+            if (seg_len == 0 && _rcv_window == 0) {
+                // SEG.SEQ = RCV.NXT
+                return seg_seq == _rcv_next;
+            } else if (seg_len == 0 && _rcv_window > 0) {
+                // RCV.NXT =< SEG.SEQ < RCV.NXT+RCV.WND
+                return (_rcv_next <= seg_seq) && (seg_seq < _rcv_next + _rcv_window);
+            } else if (seg_len > 0 && _rcv_window > 0) {
+                // RCV.NXT =< SEG.SEQ < RCV.NXT+RCV.WND
+                //    or
+                // RCV.NXT =< SEG.SEQ+SEG.LEN-1 < RCV.NXT+RCV.WND
+                bool x = (_rcv_next <= seg_seq) && seg_seq < (_rcv_next + _rcv_window);
+                bool y = (_rcv_next <= seg_seq + seg_len - 1) && (seg_seq + seg_len - 1 < _rcv_next + _rcv_window);
+                return x || y;
+            } else  {
+                // SEG.LEN > 0 RCV.WND = 0, not acceptable
+                return false;
+            }
+        }
+
+        void insert_out_of_order(uint64_t seg, rte_packet p) {
+            _rcv_out_of_order[seg]= std::move(p);
+        }
+        bool merge_out_of_order() {
+            bool merged = false;
+            if (_rcv_out_of_order.empty()) {
+                return merged;
+            }
+            for (auto it = _rcv_out_of_order.begin(); it != _rcv_out_of_order.end();) {
+                auto& p = it->second;
+                auto seg_beg = it->first;
+                auto seg_len = p.len();
+                auto seg_end = seg_beg + seg_len;
+                if (seg_beg <= _rcv_next && _rcv_next < seg_end) {
+                    // This segment has been received out of order and its previous
+                    // segment has been received now
+                   /* auto trim = _rcv_next - seg_beg;
+                    if (trim) {
+                        p.trim_front(trim);
+                        seg_len -= trim;
+                    }*/
+                    _rcv_next += seg_len;
+                    _rcv_data.push_back(std::move(p));
+                    // Since c++11, erase() always returns the value of the following element
+                    it = _rcv_out_of_order.erase(it);
+                    merged = true;
+                } else if (_rcv_next >= seg_end) {
+                    // This segment has been receive already, drop it
+                    it = _rcv_out_of_order.erase(it);
+                } else {
+                    // seg_beg > _rcv.need, can not merge. Note, seg_beg can grow only,
+                    // so we can stop looking here.
+                    it++;
+                    break;
+                }
+            }
+            return merged;
+        }
+    public:
+        void order_pkt(rte_packet& pkt){
+
+
+            // The reordering processing start from here.
+            // Note this is a full packet, with eth/ip/tcp
+            auto iph = pkt.get_header<iphdr>(sizeof(ether_hdr));
+            auto h = pkt.get_header<tcp_hdr>(sizeof(ether_hdr)+(iph->ihl*4));
+           // auto h = seastar::net::tcp_hdr::read(th);
+            auto f_syn=(h.th_flags>>1)&1;
+
+            // Third, check for the syn packet.
+            if(f_syn && !_seen_syn) {
+                // This is a syn packet.
+                // Set up the initial values.
+                _seen_syn = true;
+                uint32_t seg_seq = ntohl(h.th_seq);
+                _rcv_next = seg_seq + 1;
+                _rcv_initial = seg_seq;
+
+              //  tcp_reorder_debug("Receive syn packet. _rcv_next=%d, _rcv_initial=%d.\n", _rcv_next, _rcv_initial);
+            }
+
+            if(_seen_syn) {
+                // Try to reconstruct the payload here.
+                unsigned header_length = sizeof(ether_hdr)+(iph->ihl*4)+(h.th_x2 * 4);
+                unsigned seg_len = pkt.len()-header_length;
+                uint32_t seg_seq = ntohl(h.th_seq);
+
+                auto result = segment_acceptable(seg_seq, seg_len);
+                if(!result) {
+                    return;
+                }
+
+                // At this time, translate to packet
+              //  auto pkt_opt = pkt.get_packet();
+                // If the translation fails, we may have a problem, do an assertion.
+              //  assert(pkt_opt);
+               // rte_packet p(std::move(*pkt_opt));
+
+                // p initially has ip/eth/tcp, trim useless field
+              //  p.trim_front(header_length);
+              //  assert(p.len() == seg_len);
+
+                // Do an adjustment.
+          /*      if (seg_seq < _rcv_next) {
+                    // ignore already acknowledged data
+                    auto dup = std::min(uint32_t(_rcv_next - seg_seq), seg_len);
+                    p.trim_front(dup);
+                    seg_len -= dup;
+                    seg_seq += dup;
+                }
+*/
+                if (seg_seq != _rcv_next) {
+                   // tcp_reorder_debug("Receive segment with seg_seq=%d and seq_len=%d, out of order.\n", seg_seq, seg_len);
+                    insert_out_of_order(seg_seq, std::move(pkt));
+
+
+                }else{
+                    tcp_reorder_debug("Receive segment with seg_seq=%d and seq_len=%d, in order.\n", seg_seq, seg_len);
+                    _rcv_data.push_back(std::move(pkt));
+                    _rcv_next += seg_len;
+                    merge_out_of_order();
+                   // ge.event_happen(tcp_reorder_events::new_data);
+                }
+
+                // check for rst flag
+           /*     if(h.f_rst) {
+                    // Performa an active close.
+                    ge.event_happen(tcp_reorder_events::pkt_in);
+                    ge.close_event_happen();
+                    if(_t.armed()) {
+                        _t.cancel();
+                    }
+                    return ge;
+                }*/
+
+
+            }
+
+            ge.event_happen(tcp_reorder_events::pkt_in);
+            if(_t.armed()) {
+                _t.cancel();
+                _t.arm(std::chrono::seconds(async_flow_config::flow_expire_seconds));
+            }
+            return ge;
+        }
+
+        seastar::net::packet read_reordering_buffer() {
+            seastar::net::packet p;
+            for (auto&& q : _rcv_data) {
+                p.append(std::move(q));
+            }
+            _rcv_data.clear();
+            return p;
+        }
     };
 
     class flow_operator {
