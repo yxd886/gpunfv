@@ -33,7 +33,8 @@ l2fwd_main_loop(void)
 
         return;
     }
-    forwarder flow_forwarder(qconf->rx_queue_list[0].port_id,qconf->rx_queue_list[0].queue_id,lcore_id);
+    forwarder flow_forwarder(!qconf->rx_queue_list[0],qconf->tx_queue_id[!qconf->rx_queue_list[0]],lcore_id);
+    //forwarder flow_forwarder(qconf->rx_queue_list[1].port_id,qconf->rx_queue_list[1].queue_id,lcore_id);
 
 
     while (1) {
