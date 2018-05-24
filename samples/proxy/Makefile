@@ -5,7 +5,7 @@ MAKEFLAGS += --no-builtin-rules
 ################################################################
 
 # target name
-EXEC = l2_forward
+EXEC = proxy
 
 # compilers
 CXX = c++
