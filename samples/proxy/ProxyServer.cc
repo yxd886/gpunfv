@@ -15,6 +15,7 @@
 
 #include "ProxyHandler.hh"
 #include "ProxyStats.hh"
+#include "../include/dpdk_config.hh"
 #include "../include/rte_packet.hh"
 #include "forwarder.hh"
 
