@@ -23,6 +23,14 @@ CUDA = /usr/local/cuda-8.0
 # DPDK path
 DPDK = /home/net/gpunfv/dpdk
 
+#proxygen LD path
+
+PROXYGEN_INC_DIR = /home/net/gpunfv/proxygen/ /home/net/gpunfv/proxygen/proxygen/lib/test/googletest-release-1.8.0/googlemock/include /home/net/gpunfv/proxygen/proxygen/lib/test/googletest-release-1.8.0/googlemock/include /home/net/gpunfv/proxygen/proxygen/lib/test/googletest-release-1.8.0/googletest/include
+
+PROXYGEN_LIB_DIR = /home/net/gpunfv/proxygen/proxygen/lib/http/.libs
+
+#
+
 ###############################################################
 
 # check CXX version
@@ -74,14 +82,14 @@ CUDA_CFLAGS = $(addprefix -I ,$(DPDK_INC_DIR) $(CUDA_INC_DIR))
 CUDA_LDFLAGS = -L$(CUDA)/lib64
 
 # c++ flags
-CXXFLAGS = -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
-	    $(addprefix -isystem ,$(DPDK_INC_DIR) $(CUDA_INC_DIR)) 
+CXXFLAGS = -std=gnu++14 -DHAVE_CONFIG_H -DLIBMC_FBTRACE_DISABLE -g3 -ggdb3 -Ofast -march=native \
+	    $(addprefix -isystem ,$(DPDK_INC_DIR) $(CUDA_INC_DIR) $(PROXYGEN_INC_DIR)) 
 
 # link flags
-LDFLAGS = $(CUDA_LDFLAGS) -L$(DPDK_LIB_DIR)
+LDFLAGS = $(CUDA_LDFLAGS) -L$(DPDK_LIB_DIR) -L$(PROXYGEN_LIB_DIR)
 
 #LIBS += -lcudart -lrte_mempool -lrte_mempool_ring -lrte_mempool_stack -lrte_eal
-LIBS += -lcudart  -Wl,--whole-archive -ldpdk -Wl,--no-whole-archive -lpthread -ldl  
+LIBS += -lproxygenhttpserver -lproxygenhttp -lwangle -lz -lssl -lcrypto -levent -lfolly -lglog -ldouble-conversion -lboost_system -lboost_thread -pthread -lcudart  -Wl,--whole-archive -ldpdk -Wl,--no-whole-archive -lpthread -ldl  
 #LIBS += -lcudart -lpthread  \
  -Wl,--whole-archive -lrte_pmd_i40e \
  -lrte_hash -lrte_kvargs -lrte_mbuf -lrte_ethdev -lrte_eal -lrte_mempool -lrte_mempool_ring -lrte_ring \
