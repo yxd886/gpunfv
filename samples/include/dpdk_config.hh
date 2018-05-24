@@ -84,9 +84,9 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include <linux/udp.h>
-#include <linux/ip.h>
-#include <linux/tcp.h>
+#include <netinet/udp.h>
+#include <netinet/ip.h>
+#include <netinet/tcp.h>
 
 #include <cmdline_parse.h>
 #include <cmdline_parse_etheraddr.h>
