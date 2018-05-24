@@ -33,7 +33,7 @@ extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 #include <sys/socket.h>
 #include <netinet/in.h>
 #endif
-
+extern"C"{
 #include <event2/bufferevent_ssl.h>
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
@@ -45,6 +45,8 @@ extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 #include <openssl/err.h>
 #include <openssl/rand.h>
 #include "openssl-compat.h"
+
+}
 
 static struct event_base *base;
 static struct sockaddr_storage listen_on_addr;
