@@ -21,17 +21,7 @@ LD = c++
 CUDA = /usr/local/cuda-8.0
 
 # DPDK path
-DPDK = /home/net/gpunfv/mOS-networking-stack/drivers/dpdk
-
-# mos parameters
-MTCP_FLD    = /home/net/gpunfv/mOS-networking-stack/core
-MTCP_INC    = $(MTCP_FLD)/include
-MTCP_TARGET = $(MTCP_FLD)/lib/libmtcp.a
-LIBS        += -lmtcp -lssl -lcrypto -lnuma -lpthread -lrt
-MOS_LIB_DIR     += $(MTCP_FLD)/lib
-CMN_DIR     = ../common
-CMN_INC     = $(CMN_DIR)
-UTIL_INC    = /home/net/gpunfv/mOS-networking-stack/util/include
+DPDK = /home/net/gpunfv/dpdk
 
 ###############################################################
 
@@ -45,8 +35,24 @@ endif
 
 # check DPDK and find inc and lib
 RTE_SDK = $(DPDK)
-DPDK_INC_DIR = $(RTE_SDK)/include
-DPDK_LIB_DIR = $(RTE_SDK)/lib
+RTE_TARGET = $(shell uname -m)-native-linuxapp-gcc
+ifneq ($(wildcard $(RTE_SDK)/$(RTE_TARGET)/*),)
+    DPDK_INC_DIR = $(RTE_SDK)/$(RTE_TARGET)/include
+    DPDK_LIB_DIR = $(RTE_SDK)/$(RTE_TARGET)/lib
+else ifneq ($(wildcard $(RTE_SDK)/build/*),)
+    # if the user didn't do "make install" for DPDK
+    DPDK_INC_DIR = $(RTE_SDK)/build/include
+    DPDK_LIB_DIR = $(RTE_SDK)/build/lib
+else
+$(info $(MAKECMDGOALS))
+    ifeq ($(words $(MAKECMDGOALS)),1)
+        ifneq ($(MAKECMDGOALS),clean)
+            $(error DPDK is not available. Make sure $(abspath $(RTE_SDK)) is available and built)
+        endif
+    else
+    	$(error DPDK is not available. Make sure $(abspath $(RTE_SDK)) is available and built)
+    endif
+endif
 
 # CUDA inc path
 CUDA_INC_DIR = $(CUDA)/samples/common/inc $(CUDA)/include
@@ -56,7 +62,6 @@ DEPDIR = .deps
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$(@:.o=.d)
 CUDEPFLAGS = -MT $@ -Xcompiler -MMD,-MP,-MF$(DEPDIR)/$(@:.o=.d)
 $(shell mkdir -p $(DEPDIR) > /dev/null)
-$(shell mkdir -p $(DEPDIR)/../common/ > /dev/null)
 
 #########################################################################################
 
@@ -70,21 +75,21 @@ CUDA_LDFLAGS = -L$(CUDA)/lib64
 
 # c++ flags
 CXXFLAGS = -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
-	    $(addprefix -isystem ,$(DPDK_INC_DIR) $(CUDA_INC_DIR) $(MTCP_INC) $(CMN_INC) $(UTIL_INC)) 
+	    $(addprefix -isystem ,$(DPDK_INC_DIR) $(CUDA_INC_DIR)) 
 
 # link flags
-LDFLAGS = $(CUDA_LDFLAGS) -L$(DPDK_LIB_DIR) -L$(MOS_LIB_DIR)
+LDFLAGS = $(CUDA_LDFLAGS) -L$(DPDK_LIB_DIR)
 
 #LIBS += -lcudart -lrte_mempool -lrte_mempool_ring -lrte_mempool_stack -lrte_eal
-LIBS += -lcudart  -Wl,--whole-archive -ldpdk -Wl,--no-whole-archive -lpthread -ldl
+LIBS += -lcudart  -Wl,--whole-archive -ldpdk -Wl,--no-whole-archive -lpthread -ldl -levent
 #LIBS += -lcudart -lpthread  \
  -Wl,--whole-archive -lrte_pmd_i40e \
  -lrte_hash -lrte_kvargs -lrte_mbuf -lrte_ethdev -lrte_eal -lrte_mempool -lrte_mempool_ring -lrte_ring \
  -lrte_cmdline -lrte_cfgfile -Wl,--no-whole-archive -ldl 
 
 # C++ sources and headers  
-CC_SRCS = $(wildcard *.cc ../common/*.cc)        
-CC_HEADERS =  $(wildcard *.hh ../common/*.hh)
+CC_SRCS = $(wildcard *.cc )        
+CC_HEADERS =  $(wildcard *.hh)
 
 # CUDA sources and headers
 CUDA_SRCS = $(wildcard *.cu)
