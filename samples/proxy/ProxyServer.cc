@@ -13,8 +13,10 @@
 #include <proxygen/httpserver/HTTPServer.h>
 #include <proxygen/httpserver/RequestHandlerFactory.h>
 
-#include "ProxyHandler.h"
-#include "ProxyStats.h"
+#include "ProxyHandler.hh"
+#include "ProxyStats.hh"
+#include "../include/rte_packet.hh"
+#include "forwarder.hh"
 
 using namespace ProxyService;
 using namespace proxygen;
@@ -62,10 +64,12 @@ class ProxyHandlerFactory : public RequestHandlerFactory {
   folly::ThreadLocal<TimerWrapper> timer_;
 };
 
+NF *forwarder::_nf = nullptr;
 int main(int argc, char* argv[]) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
   google::InstallFailureSignalHandler();
+  forwarder::_nf = new NF;
 
   std::vector<HTTPServer::IPConfig> IPs = {
     {SocketAddress(FLAGS_ip, FLAGS_http_port, true), Protocol::HTTP},

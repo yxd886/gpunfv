@@ -13,7 +13,7 @@
 #include <folly/io/async/AsyncSocket.h>
 #include <proxygen/httpserver/RequestHandler.h>
 #include <proxygen/lib/http/HTTPConnector.h>
-#include "SessionWrapper.h"
+#include "SessionWrapper.hh"
 
 namespace proxygen {
 class ResponseHandler;

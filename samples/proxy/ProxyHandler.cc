@@ -16,7 +16,7 @@
 #include <folly/portability/GFlags.h>
 #include <folly/io/async/EventBaseManager.h>
 
-#include "ProxyStats.h"
+#include "ProxyStats.hh"
 
 using namespace proxygen;
 using std::string;
