@@ -2,6 +2,6 @@
 	path = dpdk
 	url = https://github.com/yxd886/dpdk.git
         branch = seastar_use
-[submodule "mOS-networking-stack"]
-	path = mOS-networking-stack
-	url = https://github.com/yxd886/mOS-networking-stack.git
+[submodule "proxygen"]
+	path = proxygen
+	url = https://github.com/facebook/proxygen.git
