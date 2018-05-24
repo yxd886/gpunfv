@@ -24,7 +24,7 @@ CUDA = /usr/local/cuda-8.0
 DPDK = /home/net/gpunfv/dpdk
 
 ###############################################################
-
+LIBEVENT_INC_DIR=/home/net/gpunfv/libevent
 # check CXX version
 # e.g., 4.9.3 -> 40903
 CXXVERSION = $(shell $(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/')
@@ -75,7 +75,7 @@ CUDA_LDFLAGS = -L$(CUDA)/lib64
 
 # c++ flags
 CXXFLAGS = -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
-	    $(addprefix -isystem ,$(DPDK_INC_DIR) $(CUDA_INC_DIR)) 
+	    $(addprefix -isystem ,$(DPDK_INC_DIR) $(CUDA_INC_DIR) $(LIBEVENT_INC_DIR)) 
 
 # link flags
 LDFLAGS = $(CUDA_LDFLAGS) -L$(DPDK_LIB_DIR)

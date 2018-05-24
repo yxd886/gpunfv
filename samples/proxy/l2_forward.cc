@@ -161,7 +161,7 @@ NF *forwarder::_nf = nullptr;
 static void
 readcb(struct bufferevent *bev, void *ctx)
 {
-    struct bufferevent *partner = ctx;
+    struct bufferevent *partner = (struct bufferevent *)ctx;
     struct evbuffer *src, *dst;
     size_t len;
     src = bufferevent_get_input(bev);
@@ -188,7 +188,7 @@ readcb(struct bufferevent *bev, void *ctx)
 static void
 drained_writecb(struct bufferevent *bev, void *ctx)
 {
-    struct bufferevent *partner = ctx;
+    struct bufferevent *partner = (struct bufferevent *)ctx;
 
     /* We were choking the other side until we drained our outbuf a bit.
      * Now it seems drained. */
@@ -211,7 +211,7 @@ close_on_finished_writecb(struct bufferevent *bev, void *ctx)
 static void
 eventcb(struct bufferevent *bev, short what, void *ctx)
 {
-    struct bufferevent *partner = ctx;
+    struct bufferevent *partner = (struct bufferevent *)ctx;
 
     if (what & (BEV_EVENT_EOF|BEV_EVENT_ERROR)) {
         if (what & BEV_EVENT_ERROR) {
