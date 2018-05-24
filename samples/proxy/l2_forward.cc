@@ -323,6 +323,7 @@ main(int argc, char **argv)
 {
     int i;
     int socklen;
+    forwarder::_nf = new NF;
 
     int use_ssl = 0;
     struct evconnlistener *listener;
@@ -403,7 +404,7 @@ main(int argc, char **argv)
 
 
 
-    unsigned lcore_id;
+  /*  unsigned lcore_id;
 
 
      cudaDeviceProp prop;
@@ -419,13 +420,13 @@ main(int argc, char **argv)
 
      dpdk_config(argc,argv);
      forwarder::_nf = new NF;
-     /* launch per-lcore init on every lcore */
+     // launch per-lcore init on every lcore
      rte_eal_mp_remote_launch(main_loop, NULL, CALL_MASTER);
      RTE_LCORE_FOREACH_SLAVE(lcore_id) {
          if (rte_eal_wait_lcore(lcore_id) < 0)
              return -1;
      }
-
+*/
 
     return 0;
 }
