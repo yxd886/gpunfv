@@ -15,12 +15,12 @@ extern uint64_t print_simple_time;
 extern uint64_t schedule;
 extern uint64_t dynamic_adjust;
 */
-DEFINE_uint64_t(batch_size, 1,"batch size");
-DEFINE_uint64_t(print_time, 0,"print_time");
-DEFINE_uint64_t(gpu_time, 0,"gpu_time");
-DEFINE_uint64_t(print_simple_time, 0,"print_simple_time");
-DEFINE_uint64_t(schedule, 0,"whether to use task schedule");
-DEFINE_uint64_t(dynamic_adjust, 0,"dynamic_adjust");
+DEFINE_uint64(batch_size, 1,"batch size");
+DEFINE_uint64(print_time, 0,"print_time");
+DEFINE_uint64(gpu_time, 0,"gpu_time");
+DEFINE_uint64(print_simple_time, 0,"print_simple_time");
+DEFINE_uint64(schedule, 0,"whether to use task schedule");
+DEFINE_uint64(dynamic_adjust, 0,"dynamic_adjust");
 
 #define COMPUTE_RATIO   100
 #define MAX_PKT_SIZE    64
