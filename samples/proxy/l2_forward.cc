@@ -163,6 +163,7 @@ NF *forwarder::_nf = nullptr;
 static void
 readcb(struct bufferevent *bev, void *ctx)
 {
+    printf("readcb\n");
     struct bufferevent *partner = (struct bufferevent *)ctx;
     struct evbuffer *src, *dst;
     size_t len;
