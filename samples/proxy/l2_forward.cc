@@ -159,11 +159,12 @@ NF *forwarder::_nf = nullptr;
 
 class cb_arg{
 public:
-    cb_arg(struct bufferevent* bev,bool is_client):bev(bev),is_client(is_client){
+    cb_arg(struct bufferevent* bev,bool is_client,forwarder* f):bev(bev),is_client(is_client),f(f){
 
     }
     struct bufferevent* bev;
     bool is_client;
+    forwarder* f;
 };
 
 
@@ -201,7 +202,7 @@ readcb(struct bufferevent *bev, void *ctx)
          * pass it on.  Stop reading here until we have drained the
          * other side to MAX_OUTPUT/2 bytes. */
         bufferevent_setcb(partner, readcb, drained_writecb,
-            eventcb, new cb_arg(bev,!arg->is_client));
+            eventcb, new cb_arg(bev,!arg->is_client,arg->f));
         bufferevent_setwatermark(partner, EV_WRITE, MAX_OUTPUT/2,
             MAX_OUTPUT);
         bufferevent_disable(bev, EV_READ);
@@ -216,7 +217,7 @@ drained_writecb(struct bufferevent *bev, void *ctx)
 
     /* We were choking the other side until we drained our outbuf a bit.
      * Now it seems drained. */
-    bufferevent_setcb(bev, readcb, NULL, eventcb, new cb_arg(partner,arg->is_client));
+    bufferevent_setcb(bev, readcb, NULL, eventcb, new cb_arg(partner,arg->is_client,arg->f));
     bufferevent_setwatermark(bev, EV_WRITE, 0, 0);
     if (partner)
         bufferevent_enable(partner, EV_READ);
@@ -299,6 +300,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     struct bufferevent *b_out, *b_in;
     /* Create two linked bufferevent objects: one to connect, one for the
      * new connection */
+    forwarder* f0 = (forwarder*)p;
     b_in = bufferevent_socket_new(base, fd,
         BEV_OPT_CLOSE_ON_FREE|BEV_OPT_DEFER_CALLBACKS);
 
@@ -337,8 +339,8 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
         b_out = b_ssl;
     }
 
-    bufferevent_setcb(b_in, readcb, NULL, eventcb, new cb_arg(b_out,true));
-    bufferevent_setcb(b_out, readcb, NULL, eventcb, new cb_arg(b_in,false));
+    bufferevent_setcb(b_in, readcb, NULL, eventcb, new cb_arg(b_out,true,f0));
+    bufferevent_setcb(b_out, readcb, NULL, eventcb, new cb_arg(b_in,false,f0));
 
     bufferevent_enable(b_in, EV_READ|EV_WRITE);
     bufferevent_enable(b_out, EV_READ|EV_WRITE);
@@ -350,6 +352,7 @@ main(int argc, char **argv)
     int i;
     int socklen;
     forwarder::_nf = new NF;
+    forwarder f0(0,0,0);
 
     int use_ssl = 0;
     struct evconnlistener *listener;
@@ -414,7 +417,7 @@ main(int argc, char **argv)
         ssl_ctx = SSL_CTX_new(TLS_method());
     }
 
-    listener = evconnlistener_new_bind(base, accept_cb, NULL,
+    listener = evconnlistener_new_bind(base, accept_cb, &f0,
         LEV_OPT_CLOSE_ON_FREE|LEV_OPT_CLOSE_ON_EXEC|LEV_OPT_REUSEABLE,
         -1, (struct sockaddr*)&listen_on_addr, socklen);
 
