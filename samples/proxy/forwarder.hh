@@ -348,7 +348,7 @@ public:
         profile_elements _profile_elements;
         parameters _parameters;
 
-        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true),_profile_num(0),_period_profile(false),_period_profile_num(0){
+        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(false),_profile_num(0),_period_profile(false),_period_profile_num(0){
             create_stream(&stream);
             lcore_id = 0;
             gpu_malloc_host((void**)(&gpu_pkts[0]),sizeof(char)*MAX_THRESHOLD);
