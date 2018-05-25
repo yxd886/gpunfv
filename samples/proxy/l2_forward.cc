@@ -100,7 +100,7 @@ readcb(struct bufferevent *bev, void *ctx)
     }
     dst = bufferevent_get_output(partner);
     //evbuffer_add_buffer(dst, src);
-    char msg[4096];
+    char* msg=(char*)malloc(4096*sizeof(char));
     size_t leng = 0;
     leng=bufferevent_read(bev,msg,4096);
   //  printf("recv %d bytes\n",leng);
