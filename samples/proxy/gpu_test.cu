@@ -19,7 +19,7 @@ struct PKT{
 	char pkt[MAX_PKT_SIZE];
 };
 
-size_t align_access(size_t a,size_t radix){
+__device__ size_t align_access(size_t a,size_t radix){
 	return ((a+radix-1)/radix)*radix;
 }
 
