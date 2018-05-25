@@ -73,6 +73,8 @@ public:
     forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id) :_pkt_counter(0),
         _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id){
 
+        _batch.lcore_id = _lcore_id;
+
     }
     enum process_type{
         hybernate,
@@ -341,7 +343,7 @@ public:
 
         batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true),_profile_num(0),_period_profile(false),_period_profile_num(0){
             create_stream(&stream);
-            lcore_id = rte_lcore_id();
+            lcore_id = 0;
             gpu_malloc_host((void**)(&gpu_pkts[0]),sizeof(PKT)*MAX_THRESHOLD*40);
             gpu_malloc_host((void**)(&gpu_pkts[1]),sizeof(PKT)*MAX_THRESHOLD*40);
             gpu_malloc_host((void**)(&gpu_states[0]),sizeof(nf_flow_state)*MAX_FLOW_NUM);
