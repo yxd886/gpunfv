@@ -202,8 +202,9 @@ public:
                 }
 
                 _f._pkt_counter+=pkt.len();
-                packets[_f._batch.current_idx].push_back(std::move(pkt));
                 _current_byte[_f._batch.current_idx]+=pkt.len();
+                packets[_f._batch.current_idx].push_back(std::move(pkt));
+
 
                 /*if(_f._pkt_counter>=_batch_size){
                      _f._pkt_counter=0;
