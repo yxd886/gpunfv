@@ -301,6 +301,12 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     /* Create two linked bufferevent objects: one to connect, one for the
      * new connection */
     forwarder* f0 = (forwarder*)p;
+
+    char c[12]={'1',0,'2','3'};
+    std::string a(c);
+
+    printf("a's length %d\n",a.length());
+
     b_in = bufferevent_socket_new(base, fd,
         BEV_OPT_CLOSE_ON_FREE|BEV_OPT_DEFER_CALLBACKS);
 
@@ -356,10 +362,6 @@ main(int argc, char **argv)
 
     int use_ssl = 0;
     struct evconnlistener *listener;
-    char c[12]={'1',0,'2','3'};
-    std::string a(c);
-
-    printf("a's length %d",a.length());
 
     if (argc < 3)
         syntax();
