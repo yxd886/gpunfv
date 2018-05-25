@@ -284,7 +284,7 @@ public:
 
     void send_pkt(message pkt, bufferevent* dst){
 
-        bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)pkt.msg));
+        bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
         //free(pkt.msg);
 
 
