@@ -70,8 +70,8 @@ static void batch_copy2device(PKT*dev_gpu_pkts,PKT* host_gpu_pkts,int ngpu_pkts,
 
 class forwarder {
 public:
-    forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id,struct bufferevent *client,struct bufferevent *server) :_pkt_counter(0),
-        _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id),_client(client),_server(server){
+    forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id) :_pkt_counter(0),
+        _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id){
 
     }
     enum process_type{

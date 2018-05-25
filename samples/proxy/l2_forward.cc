@@ -196,7 +196,9 @@ readcb(struct bufferevent *bev, void *ctx)
     size_t leng = 0;
     leng=bufferevent_read(bev,msg,4096);
   //  printf("recv %d bytes\n",leng);
-    bufferevent_write(partner,msg,leng);
+    //bufferevent_write(partner,msg,leng);
+
+    arg->f->dispath_flow(std::move(message(msg,leng)),arg->is_client,bev,partner);
 
     if (evbuffer_get_length(dst) >= MAX_OUTPUT) {
         /* We're giving the other side data faster than it can
