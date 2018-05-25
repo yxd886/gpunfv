@@ -157,14 +157,28 @@ main_loop(__attribute__((unused)) void *dummy)
 
 NF *forwarder::_nf = nullptr;
 
+class cb_arg{
+public:
+    cb_arg(struct bufferevent* bev,bool is_client):bev(bev),is_client(is_client){
 
+    }
+    struct bufferevent* bev;
+    bool is_client;
+};
 
 
 static void
 readcb(struct bufferevent *bev, void *ctx)
 {
     //printf("readcb\n");
-    struct bufferevent *partner = (struct bufferevent *)ctx;
+    cb_arg* arg = (cb_arg *)ctx;
+    struct bufferevent *partner = arg->bev;
+    if(arg->is_client){
+        printf("from client\n");
+    }else{
+        printf("from server\n");
+    }
+
     struct evbuffer *src, *dst;
     size_t len;
     src = bufferevent_get_input(bev);
@@ -187,7 +201,7 @@ readcb(struct bufferevent *bev, void *ctx)
          * pass it on.  Stop reading here until we have drained the
          * other side to MAX_OUTPUT/2 bytes. */
         bufferevent_setcb(partner, readcb, drained_writecb,
-            eventcb, bev);
+            eventcb, new cb_arg(bev,!arg->is_client));
         bufferevent_setwatermark(partner, EV_WRITE, MAX_OUTPUT/2,
             MAX_OUTPUT);
         bufferevent_disable(bev, EV_READ);
@@ -197,11 +211,12 @@ readcb(struct bufferevent *bev, void *ctx)
 static void
 drained_writecb(struct bufferevent *bev, void *ctx)
 {
-    struct bufferevent *partner = (struct bufferevent *)ctx;
+    cb_arg* arg = (cb_arg *)ctx;
+    struct bufferevent *partner = arg->bev;
 
     /* We were choking the other side until we drained our outbuf a bit.
      * Now it seems drained. */
-    bufferevent_setcb(bev, readcb, NULL, eventcb, partner);
+    bufferevent_setcb(bev, readcb, NULL, eventcb, new cb_arg(partner,arg->is_client));
     bufferevent_setwatermark(bev, EV_WRITE, 0, 0);
     if (partner)
         bufferevent_enable(partner, EV_READ);
@@ -220,7 +235,8 @@ close_on_finished_writecb(struct bufferevent *bev, void *ctx)
 static void
 eventcb(struct bufferevent *bev, short what, void *ctx)
 {
-    struct bufferevent *partner = (struct bufferevent *)ctx;
+    cb_arg* arg = (cb_arg *)ctx;
+    struct bufferevent *partner = arg->bev;
 
     if (what & (BEV_EVENT_EOF|BEV_EVENT_ERROR)) {
         if (what & BEV_EVENT_ERROR) {
@@ -273,6 +289,8 @@ syntax(void)
     exit(1);
 }
 
+
+
 static void
 accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     struct sockaddr *a, int slen, void *p)
@@ -318,8 +336,8 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
         b_out = b_ssl;
     }
 
-    bufferevent_setcb(b_in, readcb, NULL, eventcb, b_out);
-    bufferevent_setcb(b_out, readcb, NULL, eventcb, b_in);
+    bufferevent_setcb(b_in, readcb, NULL, eventcb, new cb_arg(b_out,true));
+    bufferevent_setcb(b_out, readcb, NULL, eventcb, new cb_arg(b_in,false));
 
     bufferevent_enable(b_in, EV_READ|EV_WRITE);
     bufferevent_enable(b_out, EV_READ|EV_WRITE);
