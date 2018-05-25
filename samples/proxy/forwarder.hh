@@ -70,8 +70,8 @@ static void batch_copy2device(PKT*dev_gpu_pkts,PKT* host_gpu_pkts,int ngpu_pkts,
 
 class forwarder {
 public:
-    forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id) :_pkt_counter(0),
-        _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id){
+    forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id,struct bufferevent *client,struct bufferevent *server) :_pkt_counter(0),
+        _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id),_client(client),_server(server){
 
     }
     enum process_type{
@@ -87,24 +87,37 @@ public:
     class flow_operator {
     public:
         forwarder& _f;
+        bool _is_from_client;
+        struct bufferevent *_dst;
 
         // nf_flow_state _fs;
         nf_flow_state _fs;
 
-        std::vector<rte_packet> packets[2];
+        std::vector<message> packets[2];
         bool _initialized;
+        size_t _current_byte[2];
 
-        flow_operator(forwarder& f):
+
+
+        flow_operator(forwarder& f,bool is_from_client,struct bufferevent *dst):
             _f(f)
-            ,_initialized(false){
+            ,_is_from_client(is_from_client)
+            ,_dst(dst)
+            ,_initialized(false)
+            {
 
             _nf->init_automataState(_fs);
+            _current_byte[0]=0;
+            _current_byte[1]=0;
         }
         flow_operator(const flow_operator& other) = delete;
         flow_operator(flow_operator&& other) noexcept
-            :_f(other._f),_fs(other._fs) ,_initialized(other._initialized){
+            :_f(other._f),_fs(other._fs),_dst(other._dst),_is_from_client(other._is_from_client),_initialized(other._initialized){
             packets[0] = std::move(other.packets[0]);
             packets[1] = std::move(other.packets[1]);
+            _current_byte[0]=other._current_byte[0];
+            _current_byte[1]=other._current_byte[1];
+
             _nf->init_automataState(_fs);
         }
         ~flow_operator() {}
@@ -125,7 +138,7 @@ public:
 
         void forward_pkts(uint64_t index){
             for(unsigned int i=0;i<packets[index].size();i++){
-                _f.send_pkt(std::move(packets[index][i]));
+                _f.send_pkt(std::move(packets[index][i]),_dst);
             }
             packets[index].clear();
             assert(packets[index].size()==0);
@@ -138,8 +151,9 @@ public:
             forward_pkts(index);
         }
 
-        void process_pkt(rte_packet* pkt, nf_flow_state* fs){
-            _nf->nf_logic(pkt->get_header<unsigned char>(), fs);
+        void process_pkt(message* pkt, nf_flow_state* fs){
+            //_nf->nf_logic(pkt->msg, fs);
+            printf("process messages\n");
         }
 
         void update_state(uint64_t index){
@@ -173,7 +187,7 @@ public:
             }
         }
 
-        void per_flow_enqueue(rte_packet pkt,process_type type) {
+        void per_flow_enqueue(message pkt,process_type type) {
             //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
             update_state(_f._batch.current_idx);
                                    //update the flow state when receive the first pkt of this flow in this batch.
@@ -193,7 +207,7 @@ public:
                  }*/
             }else if(type == process_type::cpu_only){
                 process_pkt(&pkt,&_fs);
-                _f.send_pkt(std::move(pkt));
+                _f.send_pkt(std::move(pkt),_dst);
             }
 
         }
@@ -224,141 +238,59 @@ public:
 
     }
 
-    void dispath_flow(rte_packet pkt){
+    void dispath_flow(message pkt, bool is_from_client, bufferevent* src, bufferevent* dst){
 
         process_type type = process_type::hybernate;
         if(_lcore_id>=MAX_GPU_THREAD ){
             //printf("lore_id >2 :%d",_lcore_id);
             type = process_type::cpu_only;
         }
-        auto eth_h = pkt.get_header<ether_hdr>(0);
-        if(!eth_h) {
-            drop_pkt(std::move(pkt));
-        }
-        if(_pkt_counter==1){
+
+        if(_pkt_counter==0){
             lt_started[_batch.current_idx] = steady_clock_type::now();
          }
-        if(ntohs(eth_h->ether_type) == static_cast<uint16_t>(eth_protocol_num::ipv4)) {
-            auto ip_h = pkt.get_header<iphdr>(sizeof(ether_hdr));
-            if(!ip_h) {
-                drop_pkt(std::move(pkt));
-            }
 
             // The following code blocks checks and regulates
             // incoming IP packets.
-            unsigned ip_len = ntohs(ip_h->tot_len);
-            unsigned iphdr_len = ip_h->ihl * 4;
-            unsigned pkt_len = pkt.len() - sizeof(ether_hdr);
-            auto frag= ntohs(ip_h->frag_off);
-            auto offset = frag<<3;
-            auto mf = frag & (1 << 13);
-            if (pkt_len > ip_len) {
-                pkt.trim_back(pkt_len - ip_len);
-            } else if (pkt_len < ip_len) {
-                drop_pkt(std::move(pkt));
-            }
-            if (mf == true || offset != 0) {
-                drop_pkt(std::move(pkt));
-            }
 
-            if(ip_h->protocol == static_cast<uint8_t>(ip_protocol_num::udp)) {
-                auto udp_h =
-                        pkt.get_header<udp_hdr>(
-                                sizeof(ether_hdr)+iphdr_len);
-                if(!udp_h) {
-                    drop_pkt(std::move(pkt));
-                }
 
-                flow_key fk{ntohl(ip_h->daddr),
-                                        ntohl(ip_h->saddr),
-                                        ntohs(udp_h->dst_port),
-                                        ntohs(udp_h->src_port)};
-                auto afi = _flow_table.find(fk);
-                if(afi == _flow_table.end()) {
+        auto afi = _flow_table.find(src);
+        if(afi == _flow_table.end()) {
 
-                    auto impl_lw_ptr =  new flow_operator(*this);
-                    auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
-                    assert(succeed);
-                    impl_lw_ptr->per_flow_enqueue(std::move(pkt),type);
-                }
-                else {
-                    afi->second->per_flow_enqueue(std::move(pkt),type);
-                }
+            auto impl_lw_ptr =  new flow_operator(*this,is_from_client,dst);
+            auto succeed = _flow_table.insert({src, impl_lw_ptr}).second;
+            assert(succeed);
+            impl_lw_ptr->per_flow_enqueue(std::move(pkt),type);
 
-                if(_pkt_counter>=_batch_size){
-                     _pkt_counter=0;
-                     _batch.current_idx=!_batch.current_idx;
-                     _batch.schedule_task(!_batch.current_idx);
-                 }
-
-                return;
-            }
-            else if(ip_h->protocol == static_cast<uint8_t>(ip_protocol_num::tcp)) {
-                auto tcp_h =
-                        pkt.get_header<tcp_hdr>(
-                                sizeof(ether_hdr)+iphdr_len);
-                if(!tcp_h) {
-                    drop_pkt(std::move(pkt));
-                }
-
-                auto data_offset = tcp_h->data_off >> 4;
-                if (size_t(data_offset * 4) < 20) {
-                    drop_pkt(std::move(pkt));
-                }
-
-                flow_key fk{ntohl(ip_h->daddr),
-                                        ntohl(ip_h->saddr),
-                                        ntohs(tcp_h->dst_port),
-                                        ntohs(tcp_h->src_port)};
-                auto afi = _flow_table.find(fk);
-                if(afi == _flow_table.end()) {
-
-                    auto impl_lw_ptr =  new flow_operator(*this);
-                    auto succeed = _flow_table.insert({fk, impl_lw_ptr}).second;
-                    assert(succeed);
-                    impl_lw_ptr->per_flow_enqueue(std::move(pkt),type);
-
-                }
-                else {
-                    afi->second->per_flow_enqueue(std::move(pkt),type);
-                }
-                if(_pkt_counter>=_batch_size){
-                     _pkt_counter=0;
-                     _batch.current_idx=!_batch.current_idx;
-                     _batch.schedule_task(!_batch.current_idx);
-                 }
-
-                return;
-            }
-            else{
-                drop_pkt(std::move(pkt));
-            }
         }
-        else{
-            drop_pkt(std::move(pkt));
+        else {
+            afi->second->per_flow_enqueue(std::move(pkt),type);
         }
+        if(_pkt_counter>=_batch_size){
+             _pkt_counter=0;
+             _batch.current_idx=!_batch.current_idx;
+             _batch.schedule_task(!_batch.current_idx);
+         }
+
+        }
+
+
+
+    void send_pkt(message pkt, bufferevent* dst){
+
+        bufferevent_write(dst,pkt.msg,pkt.len);
+        free(pkt.msg);
+
 
     }
 
-    void send_pkt(rte_packet pkt){
-        _send_buffer.push_back(pkt.get_packet());
-        if(_send_buffer.size()==MAX_PKT_BURST){
-
-            rte_mbuf** buf_addr=&_send_buffer[0];
-
-            send_brust(_port_id,_queue_id,_lcore_id, buf_addr);
-
-            _send_buffer.clear();
-        }
-    }
-
-    void drop_pkt(rte_packet pkt){
-        rte_pktmbuf_free(pkt.get_packet());
+    void drop_pkt(message pkt){
+        //rte_pktmbuf_free(pkt.get_packet());
     }
 
 
     static bool CompLess(const flow_operator* lhs, const flow_operator* rhs) {
-        return lhs->packets[!lhs->_f._batch.current_idx].size() < rhs->packets[!lhs->_f._batch.current_idx].size();
+        return lhs->_current_byte[!lhs->_f._batch.current_idx] < rhs->_current_byte[!lhs->_f._batch.current_idx];
     }
 
     class batch {
@@ -980,7 +912,7 @@ public:
     uint16_t _queue_id;
     uint16_t _lcore_id;
     std::vector<rte_mbuf*> _send_buffer;
-    std::unordered_map<flow_key,flow_operator*,HashFunc,EqualKey> _flow_table;
+    std::unordered_map<bufferevent*,flow_operator*> _flow_table;
     std::chrono::time_point<std::chrono::steady_clock> lt_started[2];
 };
 

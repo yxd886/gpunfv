@@ -302,11 +302,6 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
      * new connection */
     forwarder* f0 = (forwarder*)p;
 
-    char c[4]={'1',0,'2','3'};
-    std::string ab(&c[0],&(c[3]));
-
-    printf("a's length %d\n",ab.length());
-
     b_in = bufferevent_socket_new(base, fd,
         BEV_OPT_CLOSE_ON_FREE|BEV_OPT_DEFER_CALLBACKS);
 
