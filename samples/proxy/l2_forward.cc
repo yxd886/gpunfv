@@ -267,6 +267,29 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     bufferevent_enable(b_out, EV_READ|EV_WRITE);
 }
 
+class gpu_timer{
+public:
+    event* ev;
+    forwarder* f;
+    gpu_timer(event* ev, forwarder* f):ev(ev),f(f){
+
+    }
+};
+
+static void timeout_cb(evutil_socket_t fd, short events, void *arg) {
+
+    printf("timeout trigger\n");
+    gpu_timer* ctx =(gpu_timer*)arg;
+    ctx->f->time_trigger_schedule();
+    struct event* ev_time = ctx->ev;
+    struct timeval tv;
+    evutil_timerclear(&tv);
+    tv.tv_usec=100000;
+    //tv.tv_sec = 2;
+    event_add(ev_time, &tv);
+
+}
+
 int
 main(int argc, char **argv)
 {
@@ -343,6 +366,16 @@ main(int argc, char **argv)
         event_base_free(base);
         return 1;
     }
+
+    struct event ev_time;
+    event_assign(&ev_time, base, -1, EV_PERSIST, timeout_cb, (void*) new gpu_timer(&ev_time,&f0));
+
+    struct timeval tv;
+    evutil_timerclear(&tv);
+    tv.tv_usec=100000;
+    event_add(&ev_time, &tv);
+
+
     event_base_dispatch(base);
 
     evconnlistener_free(listener);
