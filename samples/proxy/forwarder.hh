@@ -247,7 +247,7 @@ public:
     void dispath_flow(message pkt, bool is_from_client, bufferevent* src, bufferevent* dst){
 
         process_type type = process_type::hybernate;
-        if(_lcore_id>=MAX_GPU_THREAD ){
+        if(_lcore_id>=0 ){
             //printf("lore_id >2 :%d",_lcore_id);
             type = process_type::cpu_only;
         }
