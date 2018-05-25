@@ -107,7 +107,7 @@ readcb(struct bufferevent *bev, void *ctx)
     //bufferevent_write(partner,msg,leng);
     if(leng){
         *((size_t*)msg_tmp) = leng;
-        arg->f->dispath_flow(std::move(message(msg_tmp,leng+sizeof(size_t))),arg->is_client,bev,partner);
+        arg->f->dispath_flow(std::move(message(msg_tmp,((leng+sizeof(size_t)+sizeof(size_t)-1)/sizeof(size_t))*sizeof(size_t))),arg->is_client,bev,partner);
 
     }else{
         bufferevent_write(partner,msg_tmp+sizeof(size_t),leng);
