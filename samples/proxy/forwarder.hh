@@ -144,6 +144,7 @@ public:
                 _f.send_pkt(std::move(packets[index][i]),_dst);
             }
             packets[index].clear();
+            _current_byte[index]=0;
             assert(packets[index].size()==0);
         }
 
@@ -200,8 +201,9 @@ public:
                     _f._batch._flows[_f._batch.current_idx].push_back(this);
                 }
 
-                _f._pkt_counter++;
+                _f._pkt_counter+=pkt.len();
                 packets[_f._batch.current_idx].push_back(std::move(pkt));
+                _current_byte[_f._batch.current_idx]+=pkt.len();
 
                 /*if(_f._pkt_counter>=_batch_size){
                      _f._pkt_counter=0;
