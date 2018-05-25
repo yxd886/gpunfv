@@ -19,6 +19,10 @@ struct PKT{
 	char pkt[MAX_PKT_SIZE];
 };
 
+size_t align_access(size_t a,size_t radix){
+	return ((a+radix-1)/radix)*radix;
+}
+
 __global__ void gpu_nf_logic(char *pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows) {
 
 	__shared__ nf_flow_state gpu_nf_flow_state[32];
@@ -33,7 +37,7 @@ __global__ void gpu_nf_logic(char *pkt_batch, char *state_batch, char *extra_inf
 
 	// Copy state to shared memory
 	gpu_nf_flow_state[id%32] = states[id];
-	size_t len = *((size_t*)messages);
+	size_t len = align_access(*((size_t*)messages),sizeof(size_t));
 	printf("gpuside len:%d\n",len);
 	size_t total_len = 0;
 	while(len) {
@@ -44,7 +48,7 @@ __global__ void gpu_nf_logic(char *pkt_batch, char *state_batch, char *extra_inf
 		if(total_len>=flowDim){
 			break;
 		}
-		len = *((size_t*)messages);
+		len = align_access(*((size_t*)messages),sizeof(size_t));
 	}
 
 	// Copy state back from shared memory
