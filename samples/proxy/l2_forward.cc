@@ -163,7 +163,7 @@ NF *forwarder::_nf = nullptr;
 static void
 readcb(struct bufferevent *bev, void *ctx)
 {
-    printf("readcb\n");
+    //printf("readcb\n");
     struct bufferevent *partner = (struct bufferevent *)ctx;
     struct evbuffer *src, *dst;
     size_t len;
@@ -174,7 +174,12 @@ readcb(struct bufferevent *bev, void *ctx)
         return;
     }
     dst = bufferevent_get_output(partner);
-    evbuffer_add_buffer(dst, src);
+    //evbuffer_add_buffer(dst, src);
+    char msg[2048];
+    size_t leng = 0;
+    leng=bufferevent_read(bev,msg,2048);
+    printf("recv %d bytes\n",leng);
+    bufferevent_write(partner,msg,leng);
 
     if (evbuffer_get_length(dst) >= MAX_OUTPUT) {
         /* We're giving the other side data faster than it can
