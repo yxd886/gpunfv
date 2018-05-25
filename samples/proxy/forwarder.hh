@@ -20,7 +20,8 @@ extern uint64_t dynamic_adjust;
 #define MAX_FLOW_NUM    40000
 #define MAX_GPU_THREAD  10
 #define THREADPERBLOCK  256
-#define MAX_THRESHOLD  40000
+#define MAX_THRESHOLD  40000*300
+
 
 std::chrono::time_point<std::chrono::steady_clock> started[10];
 std::chrono::time_point<std::chrono::steady_clock> stoped[10];
@@ -39,14 +40,14 @@ public:
     nf_flow_state* dev_state_batch_ptr;
 
     cuda_mem_allocator(){
-        gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(PKT)*MAX_THRESHOLD*40);
+        gpu_malloc((void**)(&dev_pkt_batch_ptr),sizeof(char)*MAX_THRESHOLD);
         gpu_malloc((void**)(&dev_state_batch_ptr),sizeof(nf_flow_state)*MAX_FLOW_NUM);
     }
 
     ~cuda_mem_allocator(){}
 
     PKT* gpu_pkt_batch_alloc(int size) {
-        if(size>MAX_THRESHOLD*40) {
+        if(size>MAX_THRESHOLD) {
             return nullptr;
         }else{
             return dev_pkt_batch_ptr;
@@ -280,7 +281,7 @@ public:
 
     void send_pkt(message pkt, bufferevent* dst){
 
-        bufferevent_write(dst,pkt.msg,pkt.len());
+        bufferevent_write(dst,pkt.msg+sizeof(size_t),pkt.len()-sizeof(size_t));
         //free(pkt.msg);
 
 
@@ -320,9 +321,9 @@ public:
 
     public:
         std::vector<flow_operator*> _flows[2];
-        PKT* gpu_pkts[2];
+        char* gpu_pkts[2];
         nf_flow_state* gpu_states[2];
-        PKT* dev_gpu_pkts;
+        char* dev_gpu_pkts;
         nf_flow_state* dev_gpu_states;
         uint64_t current_idx;
         cudaStream_t stream;
@@ -344,13 +345,13 @@ public:
         batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true),_profile_num(0),_period_profile(false),_period_profile_num(0){
             create_stream(&stream);
             lcore_id = 0;
-            gpu_malloc_host((void**)(&gpu_pkts[0]),sizeof(PKT)*MAX_THRESHOLD*40);
-            gpu_malloc_host((void**)(&gpu_pkts[1]),sizeof(PKT)*MAX_THRESHOLD*40);
+            gpu_malloc_host((void**)(&gpu_pkts[0]),sizeof(char)*MAX_THRESHOLD);
+            gpu_malloc_host((void**)(&gpu_pkts[1]),sizeof(char)*MAX_THRESHOLD);
             gpu_malloc_host((void**)(&gpu_states[0]),sizeof(nf_flow_state)*MAX_FLOW_NUM);
             gpu_malloc_host((void**)(&gpu_states[1]),sizeof(nf_flow_state)*MAX_FLOW_NUM);
 
-            memset(gpu_pkts[0], 0, sizeof(PKT)*MAX_THRESHOLD*40);
-            memset(gpu_pkts[1], 0, sizeof(PKT)*MAX_THRESHOLD*40);
+            memset(gpu_pkts[0], 0, sizeof(char)*MAX_THRESHOLD);
+            memset(gpu_pkts[1], 0, sizeof(char)*MAX_THRESHOLD);
             memset(gpu_states[0], 0, sizeof(nf_flow_state)*MAX_FLOW_NUM);
             memset(gpu_states[1], 0, sizeof(nf_flow_state)*MAX_FLOW_NUM);
 
@@ -360,7 +361,7 @@ public:
             destory_stream(stream);
         }
         void reset_batch(uint64_t index){
-            memset(gpu_pkts[index], 0, sizeof(PKT)*MAX_THRESHOLD*40);
+            memset(gpu_pkts[index], 0, sizeof(char)*MAX_THRESHOLD);
             memset(gpu_states[index], 0, sizeof(nf_flow_state)*MAX_FLOW_NUM);
         }
 
@@ -478,9 +479,9 @@ public:
 
             if(partition>0) {
 
-                int max_pkt_num_per_flow=_flows[index][partition-1]->packets[index].size();
-                int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(PKT);
-                if(print_time)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(PKT)<<std::endl;
+                int max_pkt_num_per_flow=_flows[index][partition-1]->_current_byte[index]+sizeof(size_t);
+                int ngpu_pkts = partition * max_pkt_num_per_flow * sizeof(char);
+                if(print_time)std::cout<<"ngpu_pkts:"<<ngpu_pkts/sizeof(char)<<std::endl;
                 int ngpu_states = partition * sizeof(nf_flow_state);
                 //gpu_pkts[index] = (PKT*)malloc(ngpu_pkts);
                 //gpu_states[index] = (nf_flow_state*)malloc(ngpu_states);
@@ -499,10 +500,12 @@ public:
 //#pragma omp parallel for
 
                 for(int i = 0; i < partition; i++){
+                    size_t len=0;
 
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
 
-                        rte_memcpy(gpu_pkts[index][i*max_pkt_num_per_flow+j].pkt,(_flows[index][i]->packets[index][j].msg),_flows[index][i]->packets[index][j].len());
+                        rte_memcpy(gpu_pkts[index]+i*max_pkt_num_per_flow+len,(_flows[index][i]->packets[index][j].msg),_flows[index][i]->packets[index][j].len());
+                        len += _flows[index][i]->packets[index][j].len();
                     }
                 }
 
@@ -534,9 +537,11 @@ public:
                         //assert(gpu_states[!index][i]._dfa_id<200);
                         rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(nf_flow_state));
 
-                     //   for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                     //       rte_memcpy(reinterpret_cast<char*>(_flows[!index][i]->packets[!index][j].get_header<ether_hdr>(0)),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
-                     //   }
+                        size_t len=0;
+                        for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
+                            rte_memcpy((_flows[!index][i]->packets[!index][j].msg),gpu_pkts[!index]+i*(pre_max_pkt_num_per_flow)+len,_flows[!index][i]->packets[!index][j].len());
+                            len+=_flows[!index][i]->packets[!index][j].len();
+                        }
                     }
 
                     gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
@@ -613,7 +618,7 @@ public:
                 pre_max_pkt_num_per_flow=max_pkt_num_per_flow;
                 pre_partition=partition;
 
-                dev_gpu_pkts=_cuda_mem_allocator.gpu_pkt_batch_alloc(ngpu_pkts/sizeof(PKT));
+                dev_gpu_pkts=_cuda_mem_allocator.gpu_pkt_batch_alloc(ngpu_pkts/sizeof(char));
                 dev_gpu_states=_cuda_mem_allocator.gpu_state_batch_alloc(ngpu_states/sizeof(nf_flow_state));
                 assert(dev_gpu_pkts!=nullptr&&dev_gpu_states!=nullptr);
 
@@ -715,9 +720,10 @@ public:
                         //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
                         //assert(gpu_states[!index][i]._dfa_id<200);
                         rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(nf_flow_state));
-
+                            size_t len=0;
                         for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                            rte_memcpy((_flows[!index][i]->packets[!index][j].msg),gpu_pkts[!index][i*(pre_max_pkt_num_per_flow)+j].pkt,_flows[!index][i]->packets[!index][j].len());
+                            rte_memcpy((_flows[!index][i]->packets[!index][j].msg),gpu_pkts[!index]+i*(pre_max_pkt_num_per_flow)+len,_flows[!index][i]->packets[!index][j].len());
+                            len+=_flows[!index][i]->packets[!index][j].len();
                         }
                     }
                     gpu_memset_async(dev_gpu_pkts,0, pre_ngpu_pkts,stream);
