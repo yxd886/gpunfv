@@ -4,13 +4,13 @@
 class message{
 public:
     char* msg;
-    size_t len;
+    size_t length;
 
    // Explicit constructors.
     message(char* _msg, size_t _len) {
        assert(msg);
        msg = _msg;
-       len=_len;
+       length=_len;
    }
 
    // Deconstructors
@@ -24,9 +24,9 @@ public:
 
    // Move construct/asign
    message(message&& other) noexcept
-       : msg(other.msg),len(other.len) {
+       : msg(other.msg),length(other.len) {
        other.msg = nullptr;
-       other.len = 0;
+       other.length = 0;
    }
    message& operator=(message&& other) noexcept {
        if(this != &other) {
@@ -34,6 +34,10 @@ public:
            new (this) message(std::move(other));
        }
        return *this;
+   }
+
+   size_t len(){
+       return length;
    }
 
 };
