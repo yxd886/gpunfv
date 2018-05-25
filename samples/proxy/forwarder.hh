@@ -273,6 +273,7 @@ public:
             afi->second->per_flow_enqueue(std::move(pkt),type);
         }
         if(_pkt_counter>=_batch_size){
+
              _pkt_counter=0;
              _batch.current_idx=!_batch.current_idx;
              _batch.schedule_task(!_batch.current_idx);
