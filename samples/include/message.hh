@@ -15,10 +15,10 @@ public:
 
    // Deconstructors
    ~message() {
-       printf("in ~message\n");
+      /* printf("in ~message\n");
        if(msg)
            free(msg);
-       msg = nullptr;
+       msg = nullptr;*/
    }
 
    // Copy construct/assign
