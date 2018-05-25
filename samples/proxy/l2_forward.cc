@@ -1,12 +1,4 @@
 //GPUNFV system include file
-#include "../include/dpdk_config.hh"
-#include "../include/rte_packet.hh"
-#include "forwarder.hh"
-
-extern uint64_t timer_period;
-extern uint64_t schedule_period;
-extern uint64_t schedule_timer_tsc[10];
-extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
 /*
   This example code shows how to write an (optionally encrypting) SSL proxy
@@ -47,6 +39,15 @@ extern"C"{
 #include "openssl-compat.h"
 
 }
+#include "../include/dpdk_config.hh"
+#include "../include/rte_packet.hh"
+#include "../include/message.hh"
+#include "forwarder.hh"
+
+extern uint64_t timer_period;
+extern uint64_t schedule_period;
+extern uint64_t schedule_timer_tsc[10];
+extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
 static struct event_base *base;
 static struct sockaddr_storage listen_on_addr;
