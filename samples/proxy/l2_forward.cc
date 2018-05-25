@@ -356,10 +356,8 @@ main(int argc, char **argv)
 
     int use_ssl = 0;
     struct evconnlistener *listener;
-    std::string a;
-    a = 1;
-    a+=0;
-    a +=1;
+    char c[12]={'1',0,'2','3'};
+    std::string a(c);
 
     printf("a's length %d",a.length());
 
