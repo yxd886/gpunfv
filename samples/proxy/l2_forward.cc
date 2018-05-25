@@ -242,6 +242,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
     if (what & (BEV_EVENT_EOF|BEV_EVENT_ERROR)) {
         if (what & BEV_EVENT_ERROR) {
             unsigned long err;
+            printf("in error\n");
             while ((err = (bufferevent_get_openssl_error(bev)))) {
                 const char *msg = (const char*)
                     ERR_reason_error_string(err);
