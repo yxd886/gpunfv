@@ -302,7 +302,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
      * new connection */
     forwarder* f0 = (forwarder*)p;
 
-    char c[12]={'1',0,'2','3'};
+    char c[4]={'1',0,'2','3'};
     std::string a(c);
 
     printf("a's length %d\n",a.length());
