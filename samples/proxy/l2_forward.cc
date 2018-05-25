@@ -238,6 +238,11 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
     cb_arg* arg = (cb_arg *)ctx;
     struct bufferevent *partner = arg->bev;
     printf("in eventcb\n");
+      if(arg->is_client){
+          printf("from client\n");
+      }else{
+          printf("from server\n");
+      }
 
     if (what & (BEV_EVENT_EOF|BEV_EVENT_ERROR)) {
         if (what & BEV_EVENT_ERROR) {
