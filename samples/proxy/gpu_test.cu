@@ -34,9 +34,11 @@ __global__ void gpu_nf_logic(char *pkt_batch, char *state_batch, char *extra_inf
 	// Copy state to shared memory
 	gpu_nf_flow_state[id%32] = states[id];
 	size_t len = *((size_t*)messages);
+	printf("gpuside len:%d\n",len);
 	size_t total_len = 0;
 	while(len) {
-		NF::nf_logic(messages, &gpu_nf_flow_state[id % 32], info);
+		//NF::nf_logic(messages, &gpu_nf_flow_state[id % 32], info);
+		printf("gpu process messages\n");
 		messages+=len;
 		total_len+=len;
 		if(total_len>=flowDim){
