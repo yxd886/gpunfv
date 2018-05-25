@@ -173,17 +173,17 @@ readcb(struct bufferevent *bev, void *ctx)
     //printf("readcb\n");
     cb_arg* arg = (cb_arg *)ctx;
     struct bufferevent *partner = arg->bev;
-    if(arg->is_client){
+  /*  if(arg->is_client){
         printf("from client\n");
     }else{
         printf("from server\n");
-    }
+    }*/
 
     struct evbuffer *src, *dst;
     size_t len;
     src = bufferevent_get_input(bev);
     len = evbuffer_get_length(src);
-    printf("recv buffer len:%d\n",len);
+   // printf("recv buffer len:%d\n",len);
     if (!partner) {
         evbuffer_drain(src, len);
         return;
@@ -193,7 +193,7 @@ readcb(struct bufferevent *bev, void *ctx)
     char msg[4096];
     size_t leng = 0;
     leng=bufferevent_read(bev,msg,4096);
-    printf("recv %d bytes\n",leng);
+  //  printf("recv %d bytes\n",leng);
     bufferevent_write(partner,msg,leng);
 
     if (evbuffer_get_length(dst) >= MAX_OUTPUT) {
@@ -237,6 +237,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
 {
     cb_arg* arg = (cb_arg *)ctx;
     struct bufferevent *partner = arg->bev;
+    printf("in eventcb\n");
 
     if (what & (BEV_EVENT_EOF|BEV_EVENT_ERROR)) {
         if (what & BEV_EVENT_ERROR) {
