@@ -258,6 +258,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
 
         if (partner) {
             /* Flush all pending data */
+            printf("partner\n");
             readcb(bev, ctx);
 
             if (evbuffer_get_length(
