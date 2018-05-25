@@ -28,25 +28,21 @@ __global__ void gpu_nf_logic(char *pkt_batch, char *state_batch, char *extra_inf
 	if(id >= nflows) return ;
 
 	Infos *info = (Infos *)extra_info;
-	PKT *pkts = (PKT *)pkt_batch + id * flowDim;
+	char *messages =pkt_batch + id * flowDim;
 	nf_flow_state *states = (nf_flow_state *)state_batch;
 
 	// Copy state to shared memory
 	gpu_nf_flow_state[id%32] = states[id];
-		
-	for(int i = 0; i < flowDim; i++) {
-		if(pkts[i].pkt[0] == 0) {
-			int j;
-			for(j = 1; j < 14; j++) {
-				if(pkts[i].pkt[j] == 0)
-					break;
-			}
-			if(j != 14) // the whole Ethernet header is empty, means a empty packet, break the loop
-				break;
+	size_t len = *((size_t*)messages);
+	size_t total_len = 0;
+	while(len) {
+		NF::nf_logic(messages, &gpu_nf_flow_state[id % 32], info);
+		messages+=len;
+		total_len+=len;
+		if(total_len>=flowDim){
+			break;
 		}
- 			
-		//NF::nf_logic(pkts[i].pkt, &states[id], info);
-		NF::nf_logic(pkts[i].pkt, &gpu_nf_flow_state[id % 32], info);
+		len = *((size_t*)messages);
 	}
 
 	// Copy state back from shared memory
