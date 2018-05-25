@@ -265,32 +265,26 @@ main(int argc, char **argv)
     int socklen;
     forwarder::_nf = new NF;
     forwarder f0(0,0,0);
+    char listen_ip[]="127.0.0.1:8888";
+    char connect_ip[]="127.0.0.1:12345";
 
     int use_ssl = 0;
     struct evconnlistener *listener;
 
-    if (argc < 3)
-        syntax();
-
-    for (i=1; i < argc; ++i) {
+    /*for (i=1; i < argc; ++i) {
         if (!strcmp(argv[i], "-s")) {
             use_ssl = 1;
         } else if (!strcmp(argv[i], "-W")) {
             use_wrapper = 0;
-        } else if (argv[i][0] == '-') {
-            syntax();
         } else
             break;
-    }
-
-    if (i+2 != argc)
-        syntax();
+    }*/
 
     memset(&listen_on_addr, 0, sizeof(listen_on_addr));
     socklen = sizeof(listen_on_addr);
-    if (evutil_parse_sockaddr_port(argv[i],
+    if (evutil_parse_sockaddr_port(listen_ip,
         (struct sockaddr*)&listen_on_addr, &socklen)<0) {
-        int p = atoi(argv[i]);
+        int p = atoi(listen_ip);
         struct sockaddr_in *sin = (struct sockaddr_in*)&listen_on_addr;
         if (p < 1 || p > 65535)
             syntax();
@@ -300,9 +294,11 @@ main(int argc, char **argv)
         socklen = sizeof(struct sockaddr_in);
     }
 
+    parse_args(argc,argv);
+
     memset(&connect_to_addr, 0, sizeof(connect_to_addr));
     connect_to_addrlen = sizeof(connect_to_addr);
-    if (evutil_parse_sockaddr_port(argv[i+1],
+    if (evutil_parse_sockaddr_port(connect_ip,
         (struct sockaddr*)&connect_to_addr, &connect_to_addrlen)<0)
         syntax();
 
