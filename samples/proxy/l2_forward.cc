@@ -114,16 +114,16 @@ readcb(struct bufferevent *bev, void *ctx)
     }*/
     bufferevent_write(partner,msg_tmp+sizeof(size_t),leng);
 
-    if (evbuffer_get_length(dst) >= MAX_OUTPUT) {
-        /* We're giving the other side data faster than it can
-         * pass it on.  Stop reading here until we have drained the
-         * other side to MAX_OUTPUT/2 bytes. */
+   /* if (evbuffer_get_length(dst) >= MAX_OUTPUT) {
+        //We're giving the other side data faster than it can
+        //pass it on.  Stop reading here until we have drained the
+        // other side to MAX_OUTPUT/2 bytes.
         bufferevent_setcb(partner, readcb, drained_writecb,
             eventcb, new cb_arg(bev,!arg->is_client,arg->f));
         bufferevent_setwatermark(partner, EV_WRITE, MAX_OUTPUT/2,
             MAX_OUTPUT);
         bufferevent_disable(bev, EV_READ);
-    }
+    }*/
 }
 
 static void
