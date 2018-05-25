@@ -8,7 +8,7 @@ public:
 
    // Explicit constructors.
     message(char* _msg, size_t _len) {
-       assert(msg);
+       assert(_msg);
        msg = _msg;
        length=_len;
    }
