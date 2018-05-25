@@ -100,14 +100,14 @@ readcb(struct bufferevent *bev, void *ctx)
     }
     dst = bufferevent_get_output(partner);
     //evbuffer_add_buffer(dst, src);
-    //char* msg=(char*)malloc(4096*sizeof(char));
+    char* msg=(char*)malloc((4096+sizeof(size_t))*sizeof(char));
     size_t leng = 0;
-    leng=bufferevent_read(bev,msg_tmp+sizeof(size_t),4096);
+    leng=bufferevent_read(bev,msg+sizeof(size_t),4096);
   //  printf("recv %d bytes\n",leng);
     //bufferevent_write(partner,msg,leng);
     if(leng){
         *((size_t*)msg_tmp) = leng;
-        arg->f->dispath_flow(std::move(message(msg_tmp,((leng+sizeof(size_t)+sizeof(size_t)-1)/sizeof(size_t))*sizeof(size_t))),arg->is_client,bev,partner);
+        arg->f->dispath_flow(std::move(message(msg,((leng+sizeof(size_t)+sizeof(size_t)-1)/sizeof(size_t))*sizeof(size_t))),arg->is_client,bev,partner);
 
     }else{
         bufferevent_write(partner,msg_tmp+sizeof(size_t),leng);
