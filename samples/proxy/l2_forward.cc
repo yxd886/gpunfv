@@ -258,7 +258,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
 
         if (partner) {
             /* Flush all pending data */
-            printf("partner\n");
+            //printf("partner\n");
             readcb(bev, ctx);
 
             if (evbuffer_get_length(
@@ -356,6 +356,12 @@ main(int argc, char **argv)
 
     int use_ssl = 0;
     struct evconnlistener *listener;
+    std::string a;
+    a = 1;
+    a+=0;
+    a +=1;
+
+    printf("a's length %d",a.length());
 
     if (argc < 3)
         syntax();
