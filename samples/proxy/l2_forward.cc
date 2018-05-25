@@ -76,7 +76,7 @@ public:
     forwarder* f;
 };
 
-
+char msg_tmp[4096];
 static void
 readcb(struct bufferevent *bev, void *ctx)
 {
@@ -100,13 +100,13 @@ readcb(struct bufferevent *bev, void *ctx)
     }
     dst = bufferevent_get_output(partner);
     //evbuffer_add_buffer(dst, src);
-    char* msg=(char*)malloc(4096*sizeof(char));
+    //char* msg=(char*)malloc(4096*sizeof(char));
     size_t leng = 0;
-    leng=bufferevent_read(bev,msg,4096);
+    leng=bufferevent_read(bev,msg_tmp,4096);
   //  printf("recv %d bytes\n",leng);
     //bufferevent_write(partner,msg,leng);
 
-    arg->f->dispath_flow(std::move(message(msg,leng)),arg->is_client,bev,partner);
+    arg->f->dispath_flow(std::move(message(msg_tmp,leng)),arg->is_client,bev,partner);
 
     if (evbuffer_get_length(dst) >= MAX_OUTPUT) {
         /* We're giving the other side data faster than it can
