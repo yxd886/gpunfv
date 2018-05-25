@@ -36,7 +36,7 @@ struct PKT{
 
 class cuda_mem_allocator {
 public:
-    PKT* dev_pkt_batch_ptr;
+    char* dev_pkt_batch_ptr;
     nf_flow_state* dev_state_batch_ptr;
 
     cuda_mem_allocator(){
@@ -46,7 +46,7 @@ public:
 
     ~cuda_mem_allocator(){}
 
-    PKT* gpu_pkt_batch_alloc(int size) {
+    char* gpu_pkt_batch_alloc(int size) {
         if(size>MAX_THRESHOLD) {
             return nullptr;
         }else{
