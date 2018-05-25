@@ -278,7 +278,7 @@ public:
 
     void send_pkt(message pkt, bufferevent* dst){
 
-        bufferevent_write(dst,pkt.msg,pkt.len);
+        bufferevent_write(dst,pkt.msg,pkt.len());
         free(pkt.msg);
 
 

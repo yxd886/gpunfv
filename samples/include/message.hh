@@ -24,7 +24,7 @@ public:
 
    // Move construct/asign
    message(message&& other) noexcept
-       : msg(other.msg),length(other.len) {
+       : msg(other.msg),length(other.length) {
        other.msg = nullptr;
        other.length = 0;
    }
