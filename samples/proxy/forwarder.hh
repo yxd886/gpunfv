@@ -285,7 +285,7 @@ public:
 
     void send_pkt(message pkt, bufferevent* dst){
 
-        printf("pkt.msg+8: %x",pkt.msg+sizeof(size_t));
+        printf("send_buffer: %x\n",dst);
         printf("send len:%d\n",*((size_t*)(pkt.msg)));
 
         bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
