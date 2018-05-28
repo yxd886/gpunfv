@@ -84,11 +84,11 @@ readcb(struct bufferevent *bev, void *ctx)
     //printf("readcb\n");
     cb_arg* arg = (cb_arg *)ctx;
     struct bufferevent *partner = arg->bev;
-    if(arg->is_client){
+    /*if(arg->is_client){
         printf("from client\n");
     }else{
         printf("from server\n");
-    }
+    }*/
 
     struct evbuffer *src, *dst;
     size_t len;
