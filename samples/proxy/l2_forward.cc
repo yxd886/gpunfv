@@ -267,6 +267,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
 
     bufferevent_enable(b_in, EV_READ|EV_WRITE);
     bufferevent_enable(b_out, EV_READ|EV_WRITE);
+    printf("create client and server bufferevent!\n");
 }
 
 class gpu_timer{
