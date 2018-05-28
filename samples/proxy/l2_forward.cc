@@ -177,7 +177,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
         if (partner) {
             arg->f->_flow_table.erase(partner);
             /* Flush all pending data */
-            //printf("partner\n");
+            printf("remove partner\n");
             readcb(bev, ctx);
 
             if (evbuffer_get_length(
@@ -195,6 +195,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
                 bufferevent_free(partner);
             }
         }
+        printf("remove yourself\n");
         arg->f->_flow_table.erase(bev);
         bufferevent_free(bev);
 
