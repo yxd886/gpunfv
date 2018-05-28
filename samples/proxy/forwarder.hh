@@ -272,7 +272,8 @@ public:
         else {
             afi->second->per_flow_enqueue(std::move(pkt),type);
         }
-        if(_pkt_counter>=_batch_size){
+        //if(_pkt_counter>=_batch_size){
+        if(_batch._flows[_batch.current_idx].size()>=_batch_size){
 
              _pkt_counter=0;
              _batch.current_idx=!_batch.current_idx;
