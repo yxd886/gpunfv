@@ -84,11 +84,11 @@ readcb(struct bufferevent *bev, void *ctx)
     //printf("readcb\n");
     cb_arg* arg = (cb_arg *)ctx;
     struct bufferevent *partner = arg->bev;
-  /*  if(arg->is_client){
+    if(arg->is_client){
         printf("from client\n");
     }else{
         printf("from server\n");
-    }*/
+    }
 
     struct evbuffer *src, *dst;
     size_t len;
@@ -106,7 +106,7 @@ readcb(struct bufferevent *bev, void *ctx)
     leng=bufferevent_read(bev,msg+sizeof(size_t),4096);
   //  printf("recv %d bytes\n",leng);
     //bufferevent_write(partner,msg,leng);
-    if(leng){
+    if(leng&&arg->is_client){
         *((size_t*)msg) = leng;
         arg->f->dispath_flow(std::move(message(msg,((leng+sizeof(size_t)+sizeof(size_t)-1)/sizeof(size_t))*sizeof(size_t))),arg->is_client,bev,partner);
 
