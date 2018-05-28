@@ -177,7 +177,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
         if (partner) {
             arg->f->_flow_table.erase(partner);
             /* Flush all pending data */
-            printf("remove partner:%x \n",partner);
+            //printf("remove partner:%x \n",partner);
             readcb(bev, ctx);
 
             if (evbuffer_get_length(
@@ -195,7 +195,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
                 bufferevent_free(partner);
             }
         }
-        printf("remove yourself: %x\n",bev);
+        //printf("remove yourself: %x\n",bev);
         arg->f->_flow_table.erase(bev);
         bufferevent_free(bev);
 
@@ -267,8 +267,8 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
 
     bufferevent_enable(b_in, EV_READ|EV_WRITE);
     bufferevent_enable(b_out, EV_READ|EV_WRITE);
-    printf("create client bufferevent: %x\n",b_in);
-    printf("create server bufferevent: %x\n",b_out);
+    //printf("create client bufferevent: %x\n",b_in);
+    //printf("create server bufferevent: %x\n",b_out);
 }
 
 class gpu_timer{
