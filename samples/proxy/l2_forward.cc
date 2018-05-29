@@ -258,7 +258,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     struct bufferevent *b_out, *b_in;
     /* Create two linked bufferevent objects: one to connect, one for the
      * new connection */
-    set_keepalive(fd,1,1,5);
+    set_keepalive(fd,1);
     accept_arg* arg = (accept_arg*)p;
     forwarder* f0 =arg->f;
     struct event_base *base = arg->base;
