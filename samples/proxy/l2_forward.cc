@@ -243,16 +243,10 @@ public:
 
 };
 int
-set_keepalive(int fd, int keepalive, int cnt, int intvl) {
+set_keepalive(int fd, int keepalive) {
     int res = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive));
     assert(res == 0);
 
-    res = setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &idle, sizeof(idle));
-    assert(res == 0);
-
-
-    res = setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &intvl, sizeof(intvl));
-    assert(res == 0);
 
     return res;
 }
