@@ -396,7 +396,7 @@ int thread_main(int core_id){
     }
 
     listener = evconnlistener_new_bind(base, accept_cb, new accept_arg(&f0,base,&listen_on_addr,&connect_to_addr,connect_to_addrlen),
-        LEV_OPT_CLOSE_ON_FREE|LEV_OPT_CLOSE_ON_EXEC|LEV_OPT_REUSEABLE,
+        LEV_OPT_CLOSE_ON_FREE|LEV_OPT_CLOSE_ON_EXEC|LEV_OPT_REUSEABLE|LEV_OPT_REUSEABLE_PORT,
         -1, (struct sockaddr*)&listen_on_addr, socklen);
 
     if (! listener) {
