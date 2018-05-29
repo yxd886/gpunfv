@@ -27,6 +27,7 @@
 #include <netinet/in.h>
 #endif
 extern"C"{
+#include <event.h>
 #include <event2/bufferevent_ssl.h>
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
