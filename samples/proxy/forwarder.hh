@@ -143,7 +143,7 @@ public:
 
         void process_pkt(message* pkt, nf_flow_state* fs){
             //_nf->nf_logic(pkt->msg, fs);
-            printf("process messages\n");
+            //printf("process messages\n");
         }
 
         void update_state(uint64_t index){
