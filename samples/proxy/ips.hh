@@ -16,9 +16,9 @@
 #define DFA_NUM 50
 
 struct ips_flow_state {
-    uint16_t _state[DFA_NUM];
-    int _dfa_id[DFA_NUM];
-    bool _alert[DFA_NUM];
+    uint16_t _state[1];
+    int _dfa_id[1];
+    bool _alert[1];
 
 };
 
