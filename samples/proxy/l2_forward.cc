@@ -335,7 +335,9 @@ int thread_main(int core_id){
     int socklen;
 
     forwarder f0(0,0,core_id);
-    char listen_ip[]="127.0.0.1:8888";
+    string _listen("127.0.0.1:110");
+    _listen+=std::to_string(core_id);
+    char listen_ip[]=_listen.c_str();
     char connect_ip[]="127.0.0.1:12345";
 
     int use_ssl = 0;
