@@ -106,7 +106,7 @@ readcb(struct bufferevent *bev, void *ctx)
     size_t leng = 0;
     leng=bufferevent_read(bev,msg+sizeof(size_t),4096);
   //  printf("recv %d bytes\n",leng);
-    bufferevent_write(partner,msg,leng);
+    bufferevent_write(partner,msg+sizeof(size_t),leng);
     /*if(leng&&arg->is_client){
         *((size_t*)msg) = leng;
         arg->f->dispath_flow(std::move(message(msg,((leng+sizeof(size_t)+sizeof(size_t)-1)/sizeof(size_t))*sizeof(size_t))),arg->is_client,bev,partner);
