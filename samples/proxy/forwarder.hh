@@ -230,6 +230,14 @@ public:
 
     }
 
+    void create_flow_operator(bool is_from_client, bufferevent* src, bufferevent* dst){
+        auto afi = _flow_table.find(src);
+        assert(afi==_flow_table.end());
+        auto impl_lw_ptr =  new flow_operator(*this,is_from_client,dst);
+        auto succeed = _flow_table.insert({src, impl_lw_ptr}).second;
+        assert(succeed);
+    }
+
     void dispath_flow(message pkt, bool is_from_client, bufferevent* src, bufferevent* dst){
 
         process_type type = process_type::hybernate;
@@ -249,10 +257,12 @@ public:
         auto afi = _flow_table.find(src);
         if(afi == _flow_table.end()) {
 
-            auto impl_lw_ptr =  new flow_operator(*this,is_from_client,dst);
-            auto succeed = _flow_table.insert({src, impl_lw_ptr}).second;
-            assert(succeed);
-            impl_lw_ptr->per_flow_enqueue(std::move(pkt),type);
+          //  auto impl_lw_ptr =  new flow_operator(*this,is_from_client,dst);
+          //  auto succeed = _flow_table.insert({src, impl_lw_ptr}).second;
+          //  assert(succeed);
+          //  impl_lw_ptr->per_flow_enqueue(std::move(pkt),type);
+            printf("already removed!!\n");
+            exit(-1);
 
         }
         else {
@@ -276,7 +286,7 @@ public:
         //printf("send len:%d\n",*((size_t*)(pkt.msg)));
         assert(dst);
         //printf("send_buffer: %x\n",dst);
-        if(_flow_table.find(dst)!=_flow_table.end()&&bufferevent_get_output(dst)){
+        if(bufferevent_get_output(dst)){
             bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
         }
 
