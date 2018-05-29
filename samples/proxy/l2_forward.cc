@@ -25,7 +25,7 @@
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netinet/tcp.h>
+
 #endif
 extern"C"{
 #include <event2/event.h>
