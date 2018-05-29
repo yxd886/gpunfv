@@ -51,7 +51,7 @@ extern uint64_t schedule_period;
 extern uint64_t schedule_timer_tsc[10];
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
-static int connect_to_addrlen;
+
 static int use_wrapper = 1;
 
 static SSL_CTX *ssl_ctx = NULL;
@@ -226,7 +226,18 @@ syntax(void)
     exit(1);
 }
 
+class accept_arg{
+public:
+    forwarder* f;
+    struct event_base *base;
+    struct sockaddr_storage* listen_on_addr;
+    struct sockaddr_storage* connect_to_addr;
+    int connect_to_addrlen;
+    accept_arg(forwarder* f,struct event_base *base,struct sockaddr_storage* listen_on_addr,struct sockaddr_storage* connect_to_addr):f(f),base(base),listen_on_addr(listen_on_addr),connect_to_addr(connect_to_addr),connect_to_addrlen(connect_to_addrlen){
 
+    }
+
+};
 
 static void
 accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
@@ -235,7 +246,11 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     struct bufferevent *b_out, *b_in;
     /* Create two linked bufferevent objects: one to connect, one for the
      * new connection */
-    forwarder* f0 = (forwarder*)p;
+    accept_arg* arg = (accept_arg*)p;
+    forwarder* f0 =arg->f;
+    struct event_base *base = arg->base;
+    struct sockaddr_storage* connect_to_addr = arg->connect_to_addr;
+    int connect_to_addrlen = arg->connect_to_addrlen;
 
     b_in = bufferevent_socket_new(base, fd,
         BEV_OPT_CLOSE_ON_FREE|BEV_OPT_DEFER_CALLBACKS);
@@ -253,7 +268,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     assert(b_in && b_out);
 
     if (bufferevent_socket_connect(b_out,
-        (struct sockaddr*)&connect_to_addr, connect_to_addrlen)<0) {
+        (struct sockaddr*)connect_to_addr, connect_to_addrlen)<0) {
         perror("bufferevent_socket_connect");
         bufferevent_free(b_out);
         bufferevent_free(b_in);
@@ -315,6 +330,7 @@ int thread_main(int core_id){
     struct event_base *base;
     struct sockaddr_storage listen_on_addr;
     struct sockaddr_storage connect_to_addr;
+    int connect_to_addrlen;
     int i;
     int socklen;
 
@@ -379,7 +395,7 @@ int thread_main(int core_id){
         ssl_ctx = SSL_CTX_new(TLS_method());
     }
 
-    listener = evconnlistener_new_bind(base, accept_cb, &f0,
+    listener = evconnlistener_new_bind(base, accept_cb, new accept_arg(&f0,base,&listen_on_addr,&connect_to_addr,connect_to_addrlen),
         LEV_OPT_CLOSE_ON_FREE|LEV_OPT_CLOSE_ON_EXEC|LEV_OPT_REUSEABLE,
         -1, (struct sockaddr*)&listen_on_addr, socklen);
 
