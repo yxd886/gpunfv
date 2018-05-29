@@ -340,7 +340,7 @@ public:
         profile_elements _profile_elements;
         parameters _parameters;
 
-        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(false),_profile_num(0),_period_profile(false),_period_profile_num(0){
+        batch():dev_gpu_pkts(nullptr),dev_gpu_states(nullptr),current_idx(0),pre_ngpu_pkts(0),pre_ngpu_states(0),pre_max_pkt_num_per_flow(0),pre_partition(0),_profileing(true),_profile_num(0),_period_profile(false),_period_profile_num(0){
             create_stream(&stream);
             lcore_id = 0;
             gpu_malloc_host((void**)(&gpu_pkts[0]),sizeof(char)*MAX_THRESHOLD);
@@ -819,10 +819,10 @@ public:
 
                 _profile_elements.gpu_flow_num = _flows[index].size()/2;
                 _profile_elements.cpu_total_pkt_num = 0;
-                _profile_elements.max_pkt_num_gpu_flow = _flows[index][_flows[index].size()/2]->packets[index].size();
+                _profile_elements.max_pkt_num_gpu_flow = _flows[index][_flows[index].size()/2]->_current_byte[index];
 
                 for(int j=_profile_elements.gpu_flow_num;j<(int)_flows[index].size();j++){
-                        _profile_elements.cpu_total_pkt_num+=_flows[index][j]->packets[index].size();
+                        _profile_elements.cpu_total_pkt_num+=_flows[index][j]->_current_byte[index];
                     }
                 _profile_elements.gpu_total_pkt_num = _batch_size - _profile_elements.cpu_total_pkt_num ;
                 return _profile_elements.gpu_flow_num;
