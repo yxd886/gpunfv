@@ -51,8 +51,9 @@ public:
     __device__ inline static void process_batch(char *pkt, ips_flow_state *ips_state, const aho_dfa *dfa_arr) {
         int  j;
 
-        uint16_t len = packetParser::get_size(pkt);
+        uint16_t len = *(size_t*)pkt;
         struct aho_state *st_arr = NULL;
+        char* content = pkt+sizeof(size_t);
 
         //#pragma unroll (5)
         for(int times=0;times<DFA_NUM;times++){
@@ -63,7 +64,7 @@ public:
             for(j = 0; j < len; j++) {
                 int count = st_arr[state].output.count;
                 ips_state->_alert[times] =(count != 0||ips_state->_alert[times]==true)?true:ips_state->_alert[times];
-                int inp = pkt[j];
+                int inp = content[j];
                 state = st_arr[state].G[inp]; 
             }
             ips_state->_state[times] = state;
