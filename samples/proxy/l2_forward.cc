@@ -11,7 +11,7 @@
 #if defined(__APPLE__) && defined(__clang__)
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
-#define __cplusplus
+
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
