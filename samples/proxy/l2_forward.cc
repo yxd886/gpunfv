@@ -46,7 +46,7 @@ extern"C"{
 #include "../include/rte_packet.hh"
 #include "../include/message.hh"
 #include "forwarder.hh"
-
+using namespace std;
 extern uint64_t timer_period;
 extern uint64_t schedule_period;
 extern uint64_t schedule_timer_tsc[10];
