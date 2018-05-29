@@ -88,7 +88,7 @@ public:
 
     class flow_operator {
     public:
-        forwarder& _f;
+        forwarder* _f;
         bool _is_from_client;
         struct bufferevent *_dst;
 
@@ -127,7 +127,7 @@ public:
 
         void forward_pkts(uint64_t index){
             for(unsigned int i=0;i<packets[index].size();i++){
-                _f.send_pkt(std::move(packets[index][i]),_dst);
+                _f->send_pkt(std::move(packets[index][i]),_dst);
             }
             packets[index].clear();
             _current_byte[index]=0;
@@ -179,17 +179,17 @@ public:
 
         void per_flow_enqueue(message pkt,process_type type) {
             //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
-            update_state(_f._batch.current_idx);
+            update_state(_f->_batch.current_idx);
                                    //update the flow state when receive the first pkt of this flow in this batch.
 
             if(likely(type==process_type::hybernate)){
-                if(packets[_f._batch.current_idx].empty()){
-                    _f._batch._flows[_f._batch.current_idx].push_back(this);
+                if(packets[_f->_batch.current_idx].empty()){
+                    _f->_batch._flows[_f->_batch.current_idx].push_back(this);
                 }
 
-                _f._pkt_counter+=pkt.len();
-                _current_byte[_f._batch.current_idx]+=pkt.len();
-                packets[_f._batch.current_idx].push_back(std::move(pkt));
+                _f->_pkt_counter+=pkt.len();
+                _current_byte[_f->_batch.current_idx]+=pkt.len();
+                packets[_f->_batch.current_idx].push_back(std::move(pkt));
 
 
                 /*if(_f._pkt_counter>=_batch_size){
@@ -199,7 +199,7 @@ public:
                  }*/
             }else if(type == process_type::cpu_only){
                 process_pkt(&pkt,&_fs);
-                _f.send_pkt(std::move(pkt),_dst);
+                _f->send_pkt(std::move(pkt),_dst);
             }
 
         }
@@ -233,7 +233,7 @@ public:
     void create_flow_operator(bool is_from_client, bufferevent* src, bufferevent* dst){
         auto afi = _flow_table.find(src);
         assert(afi==_flow_table.end());
-        auto impl_lw_ptr =  new flow_operator(*this,is_from_client,dst);
+        auto impl_lw_ptr =  new flow_operator(this,is_from_client,dst);
         //auto succeed = _flow_table.insert({src, impl_lw_ptr}).second;
         //assert(succeed);
     }
@@ -595,7 +595,7 @@ public:
                         _flows[!index][i]->forward_pkts(!index);
                     }
                     auto time = steady_clock_type::now();
-                    auto el = time - _flows[!index][0]->_f.lt_started[!index] ;
+                    auto el = time - _flows[!index][0]->_f->lt_started[!index] ;
                     if(print_simple_time) printf("lcore: %d,batch unmap time: %f\n", lcore_id,static_cast<double>(el.count() / 1.0));
 
                    /* if(gpu_pkts[!index]){
@@ -687,7 +687,7 @@ public:
                 }
                 started[lcore_id] = steady_clock_type::now();
                 gpu_launch((char *)dev_gpu_pkts, (char *)dev_gpu_states, 
-                    (char *)(_flows[0][index]->_f._nf->info_for_gpu), max_pkt_num_per_flow, partition,stream);
+                    (char *)(_flows[0][index]->_f->_nf->info_for_gpu), max_pkt_num_per_flow, partition,stream);
 
                 stoped[lcore_id] = steady_clock_type::now();
                 elapsed = stoped[lcore_id] - started[lcore_id];
