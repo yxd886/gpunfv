@@ -333,8 +333,12 @@ static void timeout_cb(evutil_socket_t fd, short events, void *arg) {
     }
 
 
+    if( ctx->f->_batch._timer_reactivate==false){
+        ctx->f->time_trigger_schedule();
+    }else{
+        ctx->f->_batch._timer_reactivate=false;
+    }
 
-    ctx->f->time_trigger_schedule();
     struct event* ev_time = ctx->ev;
     struct timeval tv;
     evutil_timerclear(&tv);
@@ -455,7 +459,7 @@ int thread_main(int core_id){
     evutil_timerclear(&tv);
     tv.tv_sec=1;
     event_add(&ev_time, &tv);
-    evtimer_del(&ev_time);
+    //evtimer_del(&ev_time);
 
 
 /*if(core_id==0){
