@@ -74,7 +74,6 @@ public:
     forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id) :_pkt_counter(0),
         _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id){
 
-        _batch.lcore_id = _lcore_id;
 
     }
     enum process_type{

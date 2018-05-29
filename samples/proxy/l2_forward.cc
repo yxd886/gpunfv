@@ -360,6 +360,7 @@ int thread_main(int core_id){
     int socklen;
 
     forwarder f0(0,0,core_id);
+    f0._batch.lcore_id = core_id;
     string _listen("127.0.0.1:110");
     _listen+=std::to_string(core_id);
     const char *listen_ip=_listen.c_str();
