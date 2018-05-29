@@ -338,7 +338,7 @@ static void print_throughput(evutil_socket_t fd, short events, void *arg) {
     for(int i = 0; i<core_num;i++){
         uint64_t per_throughput=0;
         per_throughput= g_throughput[i] - pre_g_throughput[i];
-        printf("core_id: %d throughput: %d reqs/s\n",i, per_throughput);
+        printf("core_id: %d throughput: %d reqs/s  ",i, per_throughput);
         throughput += per_throughput;
         pre_g_throughput[i] = g_throughput[i];
     }
