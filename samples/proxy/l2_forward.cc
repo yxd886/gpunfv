@@ -317,6 +317,7 @@ public:
 static void timeout_cb(evutil_socket_t fd, short events, void *arg) {
 
     //printf("timeout trigger\n");
+    if(!arg) return;
     gpu_timer* ctx =(gpu_timer*)arg;
     ctx->f->time_trigger_schedule();
     struct event* ev_time = ctx->ev;
