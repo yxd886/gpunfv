@@ -125,19 +125,6 @@ public:
         }
         ~flow_operator() {}
 
-        void post_process(){
-            _f._pkt_counter-=packets[_f._batch.current_idx].size();
-            assert(_f._pkt_counter>=0);
-            process_pkts(_f._batch.current_idx);
-
-            std::vector<flow_operator*>::iterator it;
-            for(it=_f._batch._flows[_f._batch.current_idx].begin();it!=_f._batch._flows[_f._batch.current_idx].end();it++){
-                if(*it==this){
-                    _f._batch._flows[_f._batch.current_idx].erase(it);
-                    break;
-                }
-            }
-        }
 
         void forward_pkts(uint64_t index){
             for(unsigned int i=0;i<packets[index].size();i++){
@@ -286,9 +273,10 @@ public:
 
     void send_pkt(message pkt, bufferevent* dst){
 
-        //printf("send_buffer: %x\n",dst);
+
         //printf("send len:%d\n",*((size_t*)(pkt.msg)));
         assert(dst);
+        printf("send_buffer: %x\n",dst);
 
         bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
         free(pkt.msg);
