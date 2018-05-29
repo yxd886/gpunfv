@@ -233,7 +233,7 @@ public:
     void create_flow_operator(bool is_from_client, bufferevent* src, bufferevent* dst){
         auto afi = _flow_table.find(src);
         assert(afi==_flow_table.end());
-        //auto impl_lw_ptr =  new flow_operator(*this,is_from_client,dst);
+        auto impl_lw_ptr =  new flow_operator(*this,is_from_client,dst);
         //auto succeed = _flow_table.insert({src, impl_lw_ptr}).second;
         //assert(succeed);
     }
