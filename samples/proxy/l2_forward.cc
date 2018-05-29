@@ -454,6 +454,7 @@ int thread_main(int core_id){
     evutil_timerclear(&tv);
     tv.tv_sec=1;
     event_add(&ev_time, &tv);
+    event_remove_timer(&ev_time);
 
 /*if(core_id==0){
     struct event ev_print_throughput;
