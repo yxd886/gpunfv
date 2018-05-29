@@ -53,6 +53,8 @@ extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 extern int core_num;
 
 static int use_wrapper = 1;
+uint64_t g_throughput[10];
+uint64_t pre_g_throughput[10];
 
 static SSL_CTX *ssl_ctx = NULL;
 
@@ -325,7 +327,28 @@ static void timeout_cb(evutil_socket_t fd, short events, void *arg) {
     event_add(ev_time, &tv);
 
 }
+static void print_throughput(evutil_socket_t fd, short events, void *arg) {
 
+
+    struct event* ev_time = (struct event* )arg;
+    uint64_t throughput=0;
+
+    for(int i = 0; i<core_num;i++){
+        uint64_t per_throughput=0;
+        per_throughput= g_throughput[i] - pre_g_throughput[i];
+        printf("core_id: %d throughput: %d reqs/s\n",i, per_throughput);
+        throughput += per_throughput;
+        pre_g_throughput[i] = g_throughput[i];
+    }
+    printf("Total throughput: %d reqs/s\n", throughput);
+
+
+    struct timeval tv;
+    evutil_timerclear(&tv);
+    tv.tv_sec=1;
+    event_add(ev_time, &tv);
+
+}
 int thread_main(int core_id){
     struct event_base *base;
     struct sockaddr_storage listen_on_addr;
@@ -415,6 +438,17 @@ int thread_main(int core_id){
     tv.tv_usec=100000;
     event_add(&ev_time, &tv);
 
+if(core_id==0){
+    struct event ev_print_throughput;
+    event_assign(&ev_print_throughput, base, -1, EV_PERSIST, print_throughput, (void*)&ev_print_throughput);
+
+    struct timeval tv1;
+    evutil_timerclear(&tv1);
+    tv.tv_sec=1;
+    event_add(&ev_time, &tv1);
+
+
+}
 
     event_base_dispatch(base);
 
