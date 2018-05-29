@@ -101,7 +101,7 @@ public:
 
 
 
-        flow_operator(forwarder& f,bool is_from_client,struct bufferevent *dst):
+        flow_operator(forwarder* f,bool is_from_client,struct bufferevent *dst):
             _f(f)
             ,_is_from_client(is_from_client)
             ,_dst(dst)
@@ -234,8 +234,8 @@ public:
         auto afi = _flow_table.find(src);
         assert(afi==_flow_table.end());
         auto impl_lw_ptr =  new flow_operator(this,is_from_client,dst);
-        //auto succeed = _flow_table.insert({src, impl_lw_ptr}).second;
-        //assert(succeed);
+        auto succeed = _flow_table.insert({src, impl_lw_ptr}).second;
+        assert(succeed);
     }
 
     void dispath_flow(message pkt, bool is_from_client, bufferevent* src, bufferevent* dst){
@@ -302,7 +302,7 @@ public:
 
 
     static bool CompLess(const flow_operator* lhs, const flow_operator* rhs) {
-        return lhs->_current_byte[!lhs->_f._batch.current_idx] < rhs->_current_byte[!lhs->_f._batch.current_idx];
+        return lhs->_current_byte[!lhs->_f->_batch.current_idx] < rhs->_current_byte[!lhs->_f->_batch.current_idx];
     }
 
     class batch {
