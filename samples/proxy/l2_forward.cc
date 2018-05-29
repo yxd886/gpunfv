@@ -248,12 +248,13 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     struct bufferevent *b_out, *b_in;
     /* Create two linked bufferevent objects: one to connect, one for the
      * new connection */
+
     accept_arg* arg = (accept_arg*)p;
     forwarder* f0 =arg->f;
     struct event_base *base = arg->base;
     struct sockaddr_storage* connect_to_addr = arg->connect_to_addr;
     int connect_to_addrlen = arg->connect_to_addrlen;
-
+    g_throughput[f0->_lcore_id]++;
     b_in = bufferevent_socket_new(base, fd,
         BEV_OPT_CLOSE_ON_FREE|BEV_OPT_DEFER_CALLBACKS);
 
@@ -444,8 +445,8 @@ if(core_id==0){
 
     struct timeval tv1;
     evutil_timerclear(&tv1);
-    tv.tv_sec=1;
-    event_add(&ev_time, &tv1);
+    tv1.tv_sec=1;
+    event_add(&ev_print_throughput, &tv1);
 
 
 }
