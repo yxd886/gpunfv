@@ -233,7 +233,7 @@ public:
     struct sockaddr_storage* listen_on_addr;
     struct sockaddr_storage* connect_to_addr;
     int connect_to_addrlen;
-    accept_arg(forwarder* f,struct event_base *base,struct sockaddr_storage* listen_on_addr,struct sockaddr_storage* connect_to_addr):f(f),base(base),listen_on_addr(listen_on_addr),connect_to_addr(connect_to_addr),connect_to_addrlen(connect_to_addrlen){
+    accept_arg(forwarder* f,struct event_base *base,struct sockaddr_storage* listen_on_addr,struct sockaddr_storage* connect_to_addr,int connect_to_addrlen):f(f),base(base),listen_on_addr(listen_on_addr),connect_to_addr(connect_to_addr),connect_to_addrlen(connect_to_addrlen){
 
     }
 
