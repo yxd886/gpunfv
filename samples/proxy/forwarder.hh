@@ -277,7 +277,7 @@ public:
         //printf("send len:%d\n",*((size_t*)(pkt.msg)));
         assert(dst);
         //printf("send_buffer: %x\n",dst);
-        if(_flow_table.find(dst)!=_flow_table.end()){
+        if(_flow_table.find(dst)!=_flow_table.end()&&dst->output){
             bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
         }
 
