@@ -1,10 +1,11 @@
 #ifndef NF_CUH
 #define NF_CUH
 
-#include "firewall.cuh"
+#include "ips.cuh"
 
-typedef class Firewall NF;						// specify NF class
-typedef class firewall_flow_state nf_flow_state;	// specify NF state class
-typedef class Rules Infos;
+typedef class IPS NF;						// specify NF class
+typedef class ips_flow_state nf_flow_state;	// specify NF state class
+typedef class gpu_IPS Infos;
+
 
 #endif // NF_CUH
