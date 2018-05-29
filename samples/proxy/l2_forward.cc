@@ -380,10 +380,10 @@ int thread_main(int core_id){
 
     forwarder f0(0,0,core_id);
     f0._batch.lcore_id = core_id;
-    string _listen("10.28.0.17:110");
+    string _listen("10.28.1.17:110");
     _listen+=std::to_string(core_id);
     const char *listen_ip=_listen.c_str();
-    char connect_ip[]="10.28.0.17:12345";
+    char connect_ip[]="10.28.1.17:12345";
 
     int use_ssl = 0;
     struct evconnlistener *listener;
@@ -443,7 +443,7 @@ int thread_main(int core_id){
     }
 
     listener = evconnlistener_new_bind(base, accept_cb, new accept_arg(&f0,base,&listen_on_addr,&connect_to_addr,connect_to_addrlen),
-        LEV_OPT_CLOSE_ON_FREE|LEV_OPT_CLOSE_ON_EXEC|LEV_OPT_REUSEABLE|LEV_OPT_REUSEABLE_PORT,
+        LEV_OPT_CLOSE_ON_FREE|LEV_OPT_CLOSE_ON_EXEC|LEV_OPT_REUSEABLE,
         -1, (struct sockaddr*)&listen_on_addr, socklen);
 
     if (! listener) {
