@@ -1,10 +1,9 @@
 #ifndef NF_HH
 #define NF_HH
 
-#include "ips.hh"
+#include "firewall.hh"
 
-using NF = IPS;                         // specify NF class
-using nf_flow_state = ips_flow_state;   // specify NF state class
-
+typedef class Firewall NF;						// specify NF class
+typedef class firewall_flow_state nf_flow_state;	// specify NF state class
 
 #endif
