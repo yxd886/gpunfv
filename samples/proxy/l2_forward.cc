@@ -11,7 +11,7 @@
 #if defined(__APPLE__) && defined(__clang__)
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
-
+#define __cplusplus
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -27,7 +27,7 @@
 #include <netinet/in.h>
 #endif
 extern"C"{
-#include <event.h>
+#include <event2/event.h>
 #include <event2/bufferevent_ssl.h>
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
@@ -456,6 +456,7 @@ int thread_main(int core_id){
     tv.tv_sec=1;
     event_add(&ev_time, &tv);
     event_remove_timer(&ev_time);
+
 
 /*if(core_id==0){
     struct event ev_print_throughput;
