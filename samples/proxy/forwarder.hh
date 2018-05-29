@@ -36,7 +36,6 @@ extern uint64_t dynamic_adjust;
 #define THREADPERBLOCK  256
 #define MAX_THRESHOLD  40000*300
 
-struct bufferevent;
 std::chrono::time_point<std::chrono::steady_clock> started[10];
 std::chrono::time_point<std::chrono::steady_clock> stoped[10];
 std::chrono::time_point<std::chrono::steady_clock> simple_started[10];
