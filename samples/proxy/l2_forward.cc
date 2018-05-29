@@ -187,7 +187,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
                 perror("connection error");
         }
 
-        /*if (partner) {
+        if (partner) {
 
             readcb(bev, ctx);
 
@@ -215,7 +215,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
         arg->f->_flow_table.erase(bev);
         bufferevent_free(bev);
         bev = nullptr;
-*/
+
     }
 }
 
