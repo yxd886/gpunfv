@@ -486,7 +486,7 @@ int
 main(int argc, char **argv)
 {
 
-    forwarder::_nf = nullptr;
+    forwarder::_nf = new NF;
     parse_args(argc,argv);
     for(int i=1;i<core_num;i++){
         std::thread a(thread_main,i);
