@@ -429,7 +429,7 @@ main(int argc, char **argv)
     forwarder::_nf = new NF;
     parse_args(argc,argv);
     for(int i=1;i<1;i++){
-        std::thread a(thread_main(i));
+        std::thread a(thread_main,i);
         a.detach();
     }
     thread_main(0);
