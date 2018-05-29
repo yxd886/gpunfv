@@ -294,8 +294,8 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
         b_out = b_ssl;
     }
 
-    //f0->create_flow_operator(true,b_in,b_out);
-    //f0->create_flow_operator(false,b_out,b_in);
+    f0->create_flow_operator(true,b_in,b_out);
+    f0->create_flow_operator(false,b_out,b_in);
 
     bufferevent_setcb(b_in, readcb, NULL, eventcb, new cb_arg(b_out,true,f0));
     bufferevent_setcb(b_out, readcb, NULL, eventcb, new cb_arg(b_in,false,f0));
