@@ -441,7 +441,7 @@ int thread_main(int core_id){
     tv.tv_usec=100000;
     event_add(&ev_time, &tv);
 
-if(core_id==0){
+/*if(core_id==0){
     struct event ev_print_throughput;
     event_assign(&ev_print_throughput, base, -1, EV_PERSIST, print_throughput, (void*)&ev_print_throughput);
 
@@ -451,7 +451,7 @@ if(core_id==0){
     event_add(&ev_print_throughput, &tv1);
 
 
-}
+}*/
 
     event_base_dispatch(base);
 
