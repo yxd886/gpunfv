@@ -337,7 +337,7 @@ int thread_main(int core_id){
     forwarder f0(0,0,core_id);
     string _listen("127.0.0.1:110");
     _listen+=std::to_string(core_id);
-    char listen_ip[_listen.size()]=_listen.c_str();
+    char *listen_ip=_listen.c_str();
     char connect_ip[]="127.0.0.1:12345";
 
     int use_ssl = 0;
