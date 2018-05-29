@@ -186,24 +186,24 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
                 perror("connection error");
         }
 
-        if (partner) {
+       /* if (partner) {
 
             readcb(bev, ctx);
 
             if (evbuffer_get_length(
                     bufferevent_get_output(partner))) {
-                /* We still have to flush data from the other
-                 * side, but when that's done, close the other
-                 * side. */
+                // We still have to flush data from the other
+                // side, but when that's done, close the other
+                // side.
                 bufferevent_setcb(partner,
                     NULL, close_on_finished_writecb,
                     eventcb, new cb_arg(bev,!arg->is_client,arg->f));
                 bufferevent_disable(partner, EV_READ);
             } else {
-                /* We have nothing left to say to the other
-                 * side; close it. */
+                // We have nothing left to say to the other
+                 // side; close it.
                 arg->f->_flow_table.erase(partner);
-                /* Flush all pending data */
+                // Flush all pending data
                 //printf("remove partner:%x \n",partner);
                 bufferevent_free(partner);
                 partner = nullptr;
@@ -214,7 +214,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
         arg->f->_flow_table.erase(bev);
         bufferevent_free(bev);
         bev = nullptr;
-
+*/
     }
 }
 
