@@ -5,21 +5,7 @@
 #include <omp.h>
 #include <future>
 #include "../include/gpu_interface.hh"
-extern"C"{
-#include <event2/bufferevent_ssl.h>
-#include <event2/bufferevent.h>
-#include <event2/buffer.h>
-#include <event2/listener.h>
-#include <event2/util.h>
-#include <event2/event_struct.h>
 
-#include "util-internal.h"
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/rand.h>
-#include "openssl-compat.h"
-
-}
 extern uint64_t _batch_size;
 extern uint64_t print_time;
 extern uint64_t gpu_time;
@@ -290,7 +276,7 @@ public:
         //printf("send len:%d\n",*((size_t*)(pkt.msg)));
         assert(dst);
         //printf("send_buffer: %x\n",dst);
-        if(_flow_table.find(dst)!=_flow_table.end()&&dst->output){
+        if(_flow_table.find(dst)!=_flow_table.end()&&bufferevent_get_output(dst)){
             bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
         }
 
