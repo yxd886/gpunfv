@@ -319,11 +319,25 @@ static void timeout_cb(evutil_socket_t fd, short events, void *arg) {
     //printf("timeout trigger\n");
     if(!arg) return;
     gpu_timer* ctx =(gpu_timer*)arg;
+    if( ctx->f->_lcore_id==0){
+        uint64_t throughput=0;
+        for(int i = 0; i<core_num;i++){
+            uint64_t per_throughput=0;
+            per_throughput= g_throughput[i] - pre_g_throughput[i];
+            printf("core_id: %d throughput: %d reqs/s  ",i, per_throughput);
+            throughput += per_throughput;
+            pre_g_throughput[i] = g_throughput[i];
+        }
+        printf("Total throughput: %d reqs/s\n", throughput);
+    }
+
+
+
     ctx->f->time_trigger_schedule();
     struct event* ev_time = ctx->ev;
     struct timeval tv;
     evutil_timerclear(&tv);
-    tv.tv_usec=100000;
+    tv.tv_sec=1;
     //tv.tv_sec = 2;
 
     event_add(ev_time, &tv);
@@ -438,7 +452,7 @@ int thread_main(int core_id){
 
     struct timeval tv;
     evutil_timerclear(&tv);
-    tv.tv_usec=100000;
+    tv.tv_sec=1;
     event_add(&ev_time, &tv);
 
 /*if(core_id==0){
