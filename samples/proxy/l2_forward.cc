@@ -187,7 +187,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
                 perror("connection error");
         }
 
-       /* if (partner) {
+        if (partner) {
 
             readcb(bev, ctx);
 
@@ -215,7 +215,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
         arg->f->_flow_table.erase(bev);
         bufferevent_free(bev);
         bev = nullptr;
-*/
+
     }
 }
 
@@ -274,16 +274,16 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     int connect_to_addrlen = arg->connect_to_addrlen;
     g_throughput[f0->_lcore_id]++;
     b_in = bufferevent_socket_new(base, fd,
-        BEV_OPT_DEFER_CALLBACKS);
+            BEV_OPT_CLOSE_ON_FREE|BEV_OPT_DEFER_CALLBACKS);
 
     if (!ssl_ctx || use_wrapper)
         b_out = bufferevent_socket_new(base, -1,
-            BEV_OPT_DEFER_CALLBACKS);
+                BEV_OPT_CLOSE_ON_FREE|BEV_OPT_DEFER_CALLBACKS);
     else {
         SSL *ssl = SSL_new(ssl_ctx);
         b_out = bufferevent_openssl_socket_new(base, -1, ssl,
             BUFFEREVENT_SSL_CONNECTING,
-            BEV_OPT_DEFER_CALLBACKS);
+            BEV_OPT_CLOSE_ON_FREE|BEV_OPT_DEFER_CALLBACKS);
     }
 
     assert(b_in && b_out);
@@ -301,7 +301,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
         SSL *ssl = SSL_new(ssl_ctx);
         b_ssl = bufferevent_openssl_filter_new(base,
             b_out, ssl, BUFFEREVENT_SSL_CONNECTING,
-            BEV_OPT_DEFER_CALLBACKS);
+            BEV_OPT_CLOSE_ON_FREE|BEV_OPT_DEFER_CALLBACKS);
         if (!b_ssl) {
             perror("Bufferevent_openssl_new");
             bufferevent_free(b_out);
