@@ -436,7 +436,7 @@ public:
         void schedule_task(uint64_t index){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-        	 schedule_timer_tsc[lcore_id] = 0;
+        	 //schedule_timer_tsc[lcore_id] = 0;
         	if(unlikely(_profile_num<5)){
         		_profile_num++;
         		printf("lcore_id: %d, Profiling......\n",lcore_id);
