@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <thread>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -50,9 +51,6 @@ extern uint64_t schedule_period;
 extern uint64_t schedule_timer_tsc[10];
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 
-static struct event_base *base;
-static struct sockaddr_storage listen_on_addr;
-static struct sockaddr_storage connect_to_addr;
 static int connect_to_addrlen;
 static int use_wrapper = 1;
 
@@ -313,13 +311,14 @@ static void timeout_cb(evutil_socket_t fd, short events, void *arg) {
 
 }
 
-int
-main(int argc, char **argv)
-{
+int thread_main(int core_id){
+    struct event_base *base;
+    struct sockaddr_storage listen_on_addr;
+    struct sockaddr_storage connect_to_addr;
     int i;
     int socklen;
-    forwarder::_nf = new NF;
-    forwarder f0(0,0,0);
+
+    forwarder f0(0,0,core_id);
     char listen_ip[]="127.0.0.1:8888";
     char connect_ip[]="127.0.0.1:12345";
 
@@ -349,7 +348,7 @@ main(int argc, char **argv)
         socklen = sizeof(struct sockaddr_in);
     }
 
-    parse_args(argc,argv);
+
 
     memset(&connect_to_addr, 0, sizeof(connect_to_addr));
     connect_to_addrlen = sizeof(connect_to_addr);
@@ -404,32 +403,19 @@ main(int argc, char **argv)
     evconnlistener_free(listener);
     event_base_free(base);
 
-
-
-  /*  unsigned lcore_id;
-
-
-     cudaDeviceProp prop;
-     int dev;
-     cudaGetDevice(&dev);
-     cudaGetDeviceProperties(&prop,dev);
-     printf("deviceOverlap :%d\n",prop.deviceOverlap);
-     if(!prop.deviceOverlap)
-     {
-             printf("Device doesn't support overlap\n");
-             return 0;
-     }
-
-     dpdk_config(argc,argv);
-     forwarder::_nf = new NF;
-     // launch per-lcore init on every lcore
-     rte_eal_mp_remote_launch(main_loop, NULL, CALL_MASTER);
-     RTE_LCORE_FOREACH_SLAVE(lcore_id) {
-         if (rte_eal_wait_lcore(lcore_id) < 0)
-             return -1;
-     }
-*/
-
     return 0;
+}
+
+int
+main(int argc, char **argv)
+{
+
+    forwarder::_nf = new NF;
+    parse_args(argc,argv);
+    for(int i=1;i<1;i++){
+        std::thread a(thread_main(i));
+        a.detach();
+    }
+    thread_main(0);
 }
 
