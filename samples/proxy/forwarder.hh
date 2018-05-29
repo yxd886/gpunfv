@@ -259,8 +259,8 @@ public:
         else {
             afi->second->per_flow_enqueue(std::move(pkt),type);
         }
-        //if(_pkt_counter>=_batch_size){
-        if(_batch._flows[_batch.current_idx].size()>=_batch_size){
+        if(_pkt_counter>=_batch_size){
+        //if(_batch._flows[_batch.current_idx].size()>=_batch_size){
 
              _pkt_counter=0;
              _batch.current_idx=!_batch.current_idx;
@@ -836,11 +836,11 @@ public:
             for(int i=_flows[index].size();i>=0;i--){
 
                 if(i>0)
-                    _gpu_max_num=_flows[index][i-1]->packets[index].size();
+                    _gpu_max_num=_flows[index][i-1]->_current_byte[index];
                 if(i ==_flows[index].size() ){
                     cpu_pkt_num = 0;
                 }else{
-                    cpu_pkt_num+=_flows[index][i]->packets[index].size();
+                    cpu_pkt_num+=_flows[index][i]->_current_byte[index];
                 }
                 _gpu_pkt_num = _batch_size - cpu_pkt_num;
                 _gpu_time = compute_gpu_time(i,_gpu_pkt_num,_gpu_max_num);
