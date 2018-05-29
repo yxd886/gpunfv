@@ -243,10 +243,18 @@ public:
 
 };
 int
-set_keepalive(int fd, int keepalive) {
+set_keepalive(int fd, int keepalive, int cnt, int idle, int intvl) {
     int res = setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(keepalive));
     assert(res == 0);
 
+    res = setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &cnt, sizeof(cnt));
+    assert(res == 0);
+
+    res = setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(idle));
+    assert(res == 0);
+
+    res = setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &intvl, sizeof(intvl));
+    assert(res == 0);
 
     return res;
 }
@@ -258,7 +266,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     struct bufferevent *b_out, *b_in;
     /* Create two linked bufferevent objects: one to connect, one for the
      * new connection */
-    set_keepalive(fd,1);
+    set_keepalive(fd,1,1,5,5);
     accept_arg* arg = (accept_arg*)p;
     forwarder* f0 =arg->f;
     struct event_base *base = arg->base;
