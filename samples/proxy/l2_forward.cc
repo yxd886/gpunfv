@@ -50,7 +50,7 @@ extern uint64_t timer_period;
 extern uint64_t schedule_period;
 extern uint64_t schedule_timer_tsc[10];
 extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
-
+extern int core_num;
 
 static int use_wrapper = 1;
 
@@ -430,7 +430,7 @@ main(int argc, char **argv)
 
     forwarder::_nf = new NF;
     parse_args(argc,argv);
-    for(int i=1;i<1;i++){
+    for(int i=1;i<core_num;i++){
         std::thread a(thread_main,i);
         a.detach();
     }

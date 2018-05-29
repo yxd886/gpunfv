@@ -12,6 +12,7 @@
 
 
 uint64_t _batch_size=1;
+int core_num;
 uint64_t schedule = 0;
 uint64_t print_time = 0;
 uint64_t print_simple_time = 0;
@@ -337,7 +338,7 @@ int parse_args(int argc, char **argv){
 
     argvopt = argv;
 
-    while ((opt = getopt_long(argc, argvopt, "p:b:P",
+    while ((opt = getopt_long(argc, argvopt, "p:b:c:P",
                 lgopts, &option_index)) != EOF) {
 
         switch (opt) {
@@ -359,6 +360,9 @@ int parse_args(int argc, char **argv){
                 _batch_size = 10000;
                 dynamic_adjust = true;
             }
+            break;
+        case 'c':
+            core_num = parse_batchsize(optarg);
             break;
         case 'P':
             printf("Promiscuous mode selected\n");
