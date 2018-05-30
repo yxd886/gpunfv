@@ -193,7 +193,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
                 perror("connection error");
         }
 
-        if (partner) {
+       /* if (partner) {
 
             readcb(bev, ctx);
 
@@ -222,7 +222,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
         arg->f->free_flow_operator(bev);
         bufferevent_free(bev);
         bev = nullptr;
-
+*/
     }
     //delete arg;
 }
