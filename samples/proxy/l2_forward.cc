@@ -111,10 +111,11 @@ readcb(struct bufferevent *bev, void *ctx)
   //  printf("recv %d bytes\n",leng);
     //bufferevent_write(partner,msg+sizeof(size_t),leng);
     if(leng){
+        g_throughput[arg->f->_lcore_id]++;
         *((size_t*)msg) = leng;
         arg->f->dispath_flow(std::move(message(msg,((leng+sizeof(size_t)+sizeof(size_t)-1)/sizeof(size_t))*sizeof(size_t))),arg->is_client,bev,partner);
 
-    }else{
+    }else{f->
         bufferevent_write(partner,msg+sizeof(size_t),leng);
     }
     //bufferevent_write(partner,msg_tmp+sizeof(size_t),leng);
@@ -280,7 +281,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     struct event_base *base = arg->base;
     struct sockaddr_storage* connect_to_addr = arg->connect_to_addr;
     int connect_to_addrlen = arg->connect_to_addrlen;
-    g_throughput[f0->_lcore_id]++;
+
     b_in = bufferevent_socket_new(base, fd,
             BEV_OPT_CLOSE_ON_FREE|BEV_OPT_DEFER_CALLBACKS);
 
