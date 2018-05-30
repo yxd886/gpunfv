@@ -233,6 +233,7 @@ public:
     }
 
     void create_flow_operator(bool is_from_client, bufferevent* src, bufferevent* dst){
+        assert(_free_flow_operators.size()!=0);
         auto afi = _flow_table.find(src);
         assert(afi==_flow_table.end());
         auto impl_lw_ptr =  _free_flow_operators.back();
