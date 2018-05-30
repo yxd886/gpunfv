@@ -127,7 +127,7 @@ readcb(struct bufferevent *bev, void *ctx)
             MAX_OUTPUT);
         bufferevent_disable(bev, EV_READ);
     }
-    delete arg;
+    //delete arg;
 }
 
 static void
@@ -142,7 +142,7 @@ drained_writecb(struct bufferevent *bev, void *ctx)
     bufferevent_setwatermark(bev, EV_WRITE, 0, 0);
     if (partner)
         bufferevent_enable(partner, EV_READ);
-    delete arg;
+    //delete arg;
 }
 
 static void
@@ -160,7 +160,7 @@ close_on_finished_writecb(struct bufferevent *bev, void *ctx)
         bev = nullptr;
 
     }
-    delete arg;
+    //delete arg;
 }
 
 static void
@@ -222,7 +222,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
         bev = nullptr;
 
     }
-    delete arg;
+    //delete arg;
 }
 
 static void
@@ -327,7 +327,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     bufferevent_enable(b_out, EV_READ|EV_WRITE);
     //printf("create client bufferevent: %x\n",b_in);
     //printf("create server bufferevent: %x\n",b_out);
-    delete arg;
+    //delete arg;
 }
 
 class gpu_timer{
