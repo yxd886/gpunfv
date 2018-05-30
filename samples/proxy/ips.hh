@@ -13,7 +13,7 @@
 #include "../include/packet_parser.hh"
 
 
-#define DFA_NUM 1
+#define DFA_NUM 50
 
 struct ips_flow_state {
     uint16_t _state[DFA_NUM];
