@@ -941,7 +941,7 @@ public:
     uint16_t _lcore_id;
     std::vector<rte_mbuf*> _send_buffer;
     std::unordered_map<bufferevent*,flow_operator*> _flow_table;
-    std::deque<flow_operator*> _free_flow_operators;
+    std::vector<flow_operator*> _free_flow_operators;
     std::chrono::time_point<std::chrono::steady_clock> lt_started[2];
 };
 
