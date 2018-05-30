@@ -325,8 +325,8 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     bufferevent_setcb(b_in, readcb, NULL, eventcb, new cb_arg(b_out,true,f0));
     bufferevent_setcb(b_out, readcb, NULL, eventcb, new cb_arg(b_in,false,f0));
 
-    bufferevent_enable(b_in, EV_READ|EV_WRITE|EV_PERSIST);
-    bufferevent_enable(b_out, EV_READ|EV_WRITE|EV_PERSIST);
+    bufferevent_enable(b_in, EV_READ|EV_WRITE);
+    bufferevent_enable(b_out, EV_READ|EV_WRITE);
     //printf("create client bufferevent: %x\n",b_in);
     //printf("create server bufferevent: %x\n",b_out);
     //delete arg;
