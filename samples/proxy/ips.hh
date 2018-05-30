@@ -114,10 +114,10 @@ public:
     };
 
     void parse_pkt(void *pkt, struct ips_flow_state* state,struct aho_pkt*  aho_pkt){
-        uint16_t len = packetParser::get_size(pkt);
+        uint16_t len = *(size_t*)pkt;
 
        aho_pkt->content=(uint8_t*)malloc(len);
-       memcpy(aho_pkt->content, pkt, len-1);
+       memcpy(aho_pkt->content, pkt+sizeof(size_t), len);
        aho_pkt->dfa_id=state->_dfa_id;
        aho_pkt->len = len;
 
