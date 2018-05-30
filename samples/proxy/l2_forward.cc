@@ -110,7 +110,7 @@ readcb(struct bufferevent *bev, void *ctx)
     leng=bufferevent_read(bev,msg+sizeof(size_t),4096);
   //  printf("recv %d bytes\n",leng);
     //bufferevent_write(partner,msg+sizeof(size_t),leng);
-    if(leng){
+    if(leng&&arg->is_client){
         *((size_t*)msg) = leng;
         arg->f->dispath_flow(std::move(message(msg,((leng+sizeof(size_t)+sizeof(size_t)-1)/sizeof(size_t))*sizeof(size_t))),arg->is_client,bev,partner);
 
@@ -170,11 +170,11 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
 {
     cb_arg* arg = (cb_arg *)ctx;
     struct bufferevent *partner = arg->bev;
-    /*if(arg->is_client){
+    if(arg->is_client){
         printf("from client\n");
     }else{
         printf("from server\n");
-    }*/
+    }
 
     if (what & (BEV_EVENT_EOF|BEV_EVENT_ERROR)) {
         if (what & BEV_EVENT_ERROR) {
@@ -193,7 +193,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
                 perror("connection error");
         }
 
-       /* if (partner) {
+        if (partner) {
 
             readcb(bev, ctx);
 
@@ -222,7 +222,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
         arg->f->free_flow_operator(bev);
         bufferevent_free(bev);
         bev = nullptr;
-*/
+
     }
     //delete arg;
 }
