@@ -243,9 +243,9 @@ public:
         assert(succeed);
     }
     void free_flow_operator(bufferevent* src){
-        flow_operator* afi = _flow_table.find(src);
+        auto afi = _flow_table.find(src);
         assert(afi!=_flow_table.end());
-        _free_flow_operators.push_back(afi);
+        _free_flow_operators.push_back(afi->second);
         _flow_table.erase(src);
     }
 
