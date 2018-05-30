@@ -297,8 +297,19 @@ public:
         //printf("send len:%d\n",*((size_t*)(pkt.msg)));
         assert(dst);
         //printf("send_buffer: %x\n",dst);
-        if(bufferevent_get_output(dst)){
+        bufferevent_data_cb* readcb_ptr = nullptr;
+        bufferevent_data_cb* writecb_ptr = nullptr;
+        bufferevent_event_cb *eventcb_ptr = nullptr;
+        void *cbarg_ptr;
+        bufferevent_getcb(dst,
+             readcb_ptr,
+            writecb_ptr,
+            eventcb_ptr,
+            &cbarg_ptr);
+        if(readcb_ptr){
             bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
+        }else{
+            printf("already freed!\n");
         }
 
         free(pkt.msg);
