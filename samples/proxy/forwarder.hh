@@ -73,7 +73,9 @@ class forwarder {
 public:
     forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id) :_pkt_counter(0),
         _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id){
-
+        for(int i = 0;i<5000;i++){
+            _free_flow_operators.push_back(new flow_operator(this, false,nullptr));
+        }
 
     }
     enum process_type{
@@ -233,9 +235,18 @@ public:
     void create_flow_operator(bool is_from_client, bufferevent* src, bufferevent* dst){
         auto afi = _flow_table.find(src);
         assert(afi==_flow_table.end());
-        auto impl_lw_ptr =  new flow_operator(this,is_from_client,dst);
+        auto impl_lw_ptr =  _free_flow_operators.back();
+        impl_lw_ptr->_is_from_client = is_from_client;
+        impl_lw_ptr->_dst = dst;
+        _free_flow_operators.pop_back();//new flow_operator(this,is_from_client,dst);
         auto succeed = _flow_table.insert({src, impl_lw_ptr}).second;
         assert(succeed);
+    }
+    void free_flow_operator(bufferevent* src){
+        flow_operator* afi = _flow_table.find(src);
+        assert(afi!=_flow_table.end());
+        _free_flow_operators.push_back(afi);
+        _flow_table.erase(src);
     }
 
     void dispath_flow(message pkt, bool is_from_client, bufferevent* src, bufferevent* dst){
@@ -930,6 +941,7 @@ public:
     uint16_t _lcore_id;
     std::vector<rte_mbuf*> _send_buffer;
     std::unordered_map<bufferevent*,flow_operator*> _flow_table;
+    std::deque<flow_operator*> _free_flow_operators;
     std::chrono::time_point<std::chrono::steady_clock> lt_started[2];
 };
 

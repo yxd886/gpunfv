@@ -150,7 +150,8 @@ close_on_finished_writecb(struct bufferevent *bev, void *ctx)
     cb_arg* arg = (cb_arg *)ctx;
 
     if (evbuffer_get_length(b) == 0) {
-        arg->f->_flow_table.erase(bev);
+        //arg->f->_flow_table.erase(bev);
+        arg->f->free_flow_operator(bev);
         /* Flush all pending data */
         //printf("remove partner:%x \n",bev);
         bufferevent_free(bev);
@@ -203,7 +204,8 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
             } else {
                 // We have nothing left to say to the other
                  // side; close it.
-                arg->f->_flow_table.erase(partner);
+                //arg->f->_flow_table.erase(partner);
+                arg->f->free_flow_operator(partner);
                 // Flush all pending data
                 //printf("remove partner:%x \n",partner);
                 bufferevent_free(partner);
@@ -212,7 +214,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
 
         }
         //printf("remove yourself: %x\n",bev);
-        arg->f->_flow_table.erase(bev);
+        arg->f->free_flow_operator(bev);
         bufferevent_free(bev);
         bev = nullptr;
 
