@@ -157,7 +157,7 @@ close_on_finished_writecb(struct bufferevent *bev, void *ctx)
         //arg->f->_flow_table.erase(bev);
         arg->f->free_flow_operator(bev);
         /* Flush all pending data */
-        //printf("remove partner:%x \n",bev);
+        printf("remove partner:%x \n",bev);
         bufferevent_free(bev);
         bev = nullptr;
 
@@ -212,13 +212,13 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
                 //arg->f->_flow_table.erase(partner);
                 arg->f->free_flow_operator(partner);
                 // Flush all pending data
-                //printf("remove partner:%x \n",partner);
+                printf("remove partner:%x \n",partner);
                 bufferevent_free(partner);
                 partner = nullptr;
             }
 
         }
-        //printf("remove yourself: %x\n",bev);
+        printf("remove yourself: %x\n",bev);
         arg->f->free_flow_operator(bev);
         bufferevent_free(bev);
         bev = nullptr;

@@ -296,7 +296,7 @@ public:
 
         //printf("send len:%d\n",*((size_t*)(pkt.msg)));
         assert(dst);
-        //printf("send_buffer: %x\n",dst);
+        printf("send_buffer: %x\n",dst);
        /* bufferevent_data_cb* readcb_ptr = nullptr;
         bufferevent_data_cb* writecb_ptr = nullptr;
         bufferevent_event_cb *eventcb_ptr = nullptr;
