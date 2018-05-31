@@ -18,7 +18,7 @@
 
 // #define MAX_MATCH 8192
 // #define MAX_PKT_SIZE 64
-#define DFA_NUM 100
+#define DFA_NUM 200
 
 class ips_flow_state{
 public:
