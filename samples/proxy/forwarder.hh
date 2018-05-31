@@ -854,6 +854,7 @@ public:
                 std::cout<<" "<<_flows[index][i]->packets[index].size()<<" ";
             }
             std::cout<<std::endl;*/
+            if(print_time) std::cout<<"max byte: "<<_flows[index][_flows[index].size()-1]->_current_byte[index]<<std::endl;
             if(!schedule) return _flows[index].size();
             if(_profileing||_period_profile){
 
@@ -873,7 +874,7 @@ public:
             int cpu_pkt_num=0;
             int _gpu_pkt_num=0;
             int _gpu_max_num=0;
-            if(print_time) std::cout<<"max byte: "<<_flows[index][_flows[index].size()-1]->_current_byte[index]<<std::endl;
+
             for(int i=_flows[index].size();i>=0;i--){
 
                 if(i>0)
