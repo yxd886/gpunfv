@@ -304,7 +304,7 @@ public:
 
     void send_pkt(message pkt, bufferevent* dst){
 
-
+        printf("msg len:%d\n",pkt.length);
         printf("send len:%d\n",*((size_t*)(pkt.msg)));
         assert(dst);
        // auto f = _flow_table.find(dst);
