@@ -450,7 +450,7 @@ public:
                 return false;
             }
             _period_profile_num ++;
-            if(_period_profile_num==1000){
+            if(_period_profile_num==100){
                 _period_profile_num = 0;
                 printf("periodical profile\n");
                 return true;
