@@ -104,12 +104,12 @@ readcb(struct bufferevent *bev, void *ctx)
         return;
     }
     dst = bufferevent_get_output(partner);
-    //evbuffer_add_buffer(dst, src);
-    char* msg=(char*)malloc((4096+sizeof(size_t))*sizeof(char));
+    evbuffer_add_buffer(dst, src);
+ /*   char* msg=(char*)malloc((4096+sizeof(size_t))*sizeof(char));
     size_t leng = 0;
     leng=bufferevent_read(bev,msg+sizeof(size_t),4096);
   //  printf("recv %d bytes\n",leng);
-    bufferevent_write(partner,msg+sizeof(size_t),leng);
+    bufferevent_write(partner,msg+sizeof(size_t),leng);*/
     if(arg->is_client)
         g_throughput[arg->f->_lcore_id]++;
     /*if(leng){
