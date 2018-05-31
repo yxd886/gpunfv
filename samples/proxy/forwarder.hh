@@ -225,10 +225,12 @@ public:
 
     void time_trigger_schedule(){
         if ((_pkt_counter==0&&_batch._flows[0].size()==0&&_batch._flows[1].size()==0)) return;
-        _pkt_counter=0;
+
         _batch.current_idx=!_batch.current_idx;
         printf("lcore_id: %d, trigger\n",_lcore_id);
-        _batch.schedule_task(!_batch.current_idx);
+        _batch.schedule_task(!_batch.current_idx,_pkt_counter);
+        _pkt_counter=0;
+
 
     }
 
@@ -281,13 +283,16 @@ public:
         }
         else {
             afi->second->per_flow_enqueue(std::move(pkt),type);
-        }
-        if(_pkt_counter>=_batch_size){
-        //if(_batch._flows[_batch.current_idx].size()>=_batch_size){
 
-             _pkt_counter=0;
+        }
+        //if(_pkt_counter>=_batch_size){
+        if(_batch._flows[_batch.current_idx].size()>=_batch_size){
+
+
              _batch.current_idx=!_batch.current_idx;
-             _batch.schedule_task(!_batch.current_idx);
+             _batch.schedule_task(!_batch.current_idx,_pkt_counter);
+             _pkt_counter=0;
+
          }
 
         }
@@ -452,7 +457,7 @@ public:
             return false;
         }
 
-        void schedule_task(uint64_t index){
+        void schedule_task(uint64_t index, uint64_t total_byte){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
         	 //schedule_timer_tsc[lcore_id] = 0;
@@ -489,7 +494,7 @@ public:
             int partition=0;
             if(_batch_size!=1){
                 sort(_flows[index].begin(),_flows[index].end(),CompLess);
-                partition=get_partition(index);
+                partition=get_partition(index,total_byte);
                 if(print_time)printf("lcore %d,partition: %d\n",lcore_id, partition);
                 //partition=_flows[index].size();
                 if(print_time)std::cout<<"lcore_id: "<<lcore_id<<"Total flow_num:"<<_flows[index].size()<<std::endl;
@@ -837,7 +842,7 @@ public:
 
         }
 
-        uint64_t get_partition(uint64_t index){
+        uint64_t get_partition(uint64_t index,uint64_t total_byte){
             float processing_time=0;
             float min_processing_time=10000000000;
             float cpu_processing_num=0;
@@ -856,7 +861,7 @@ public:
                 for(int j=_profile_elements.gpu_flow_num;j<(int)_flows[index].size();j++){
                         _profile_elements.cpu_total_pkt_num+=_flows[index][j]->_current_byte[index];
                     }
-                _profile_elements.gpu_total_pkt_num = _batch_size - _profile_elements.cpu_total_pkt_num ;
+                _profile_elements.gpu_total_pkt_num = total_byte - _profile_elements.cpu_total_pkt_num ;
                 return _profile_elements.gpu_flow_num;
             }
 
@@ -874,7 +879,7 @@ public:
                 }else{
                     cpu_pkt_num+=_flows[index][i]->_current_byte[index];
                 }
-                _gpu_pkt_num = _batch_size - cpu_pkt_num;
+                _gpu_pkt_num = total_byte - cpu_pkt_num;
                 _gpu_time = compute_gpu_time(i,_gpu_pkt_num,_gpu_max_num);
                 cpu_time = compute_cpu_time(cpu_pkt_num);
                 processing_time=std::max(_gpu_time,cpu_time);
