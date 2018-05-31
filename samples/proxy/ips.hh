@@ -141,6 +141,7 @@ public:
 
             }
             for(int i = 0; i<DFA_NUM; i++){
+                printf("dfa_ids[%d]:%d\n",i,dfa_ids[i]);
                 st_arrs[i] = dfa_arr[dfa_ids[i]].root;
                 //__builtin_prefetch(st_arrs[i]);
                 //__builtin_prefetch(&st_arrs[i][states[i]]);
