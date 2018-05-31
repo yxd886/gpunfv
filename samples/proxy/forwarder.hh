@@ -71,8 +71,8 @@ static void batch_copy2device(PKT*dev_gpu_pkts,PKT* host_gpu_pkts,int ngpu_pkts,
 
 class forwarder {
 public:
-    forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id) :_pkt_counter(0),
-        _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id){
+    forwarder(uint16_t port_id, uint16_t queue_id, uint16_t _lcore_id) :_total_byte(0),
+        _port_id(port_id),_queue_id(queue_id),_lcore_id(_lcore_id),_message_counter(0){
         for(int i = 0;i<5000;i++){
             _free_flow_operators.push_back(new flow_operator(this, false,nullptr));
         }
@@ -180,7 +180,7 @@ public:
         }
 
         void per_flow_enqueue(message pkt,process_type type) {
-            //std::cout<<"pkt_num:"<<_f._pkt_counter<<std::endl;
+            //std::cout<<"pkt_num:"<<_f._message_counter<<std::endl;
             update_state(_f->_batch.current_idx);
                                    //update the flow state when receive the first pkt of this flow in this batch.
 
@@ -189,13 +189,14 @@ public:
                     _f->_batch._flows[_f->_batch.current_idx].push_back(this);
                 }
 
-                _f->_pkt_counter+=pkt.len();
+                _f->_total_byte+=pkt.len();
+                _f->_message_counter++;
                 _current_byte[_f->_batch.current_idx]+=pkt.len();
                 packets[_f->_batch.current_idx].push_back(std::move(pkt));
 
 
-                /*if(_f._pkt_counter>=_batch_size){
-                     _f._pkt_counter=0;
+                /*if(_f._total_byte>=_batch_size){
+                     _f._total_byte=0;
                      _f._batch.current_idx=!_f._batch.current_idx;
                      _f._batch.schedule_task(!_f._batch.current_idx);
                  }*/
@@ -224,12 +225,13 @@ public:
     const uint16_t ip_packet_len_max = 65535;
 
     void time_trigger_schedule(){
-        if ((_pkt_counter==0&&_batch._flows[0].size()==0&&_batch._flows[1].size()==0)) return;
+        if ((_total_byte==0&&_batch._flows[0].size()==0&&_batch._flows[1].size()==0)) return;
 
         _batch.current_idx=!_batch.current_idx;
         printf("lcore_id: %d, trigger\n",_lcore_id);
-        _batch.schedule_task(!_batch.current_idx,_pkt_counter);
-        _pkt_counter=0;
+        _batch.schedule_task(!_batch.current_idx,_total_byte);
+        _total_byte=0;
+        _message_counter=0;
 
 
     }
@@ -262,7 +264,7 @@ public:
             type = process_type::cpu_only;
         }
 
-        if(_pkt_counter==0){
+        if(_total_byte==0){
             lt_started[_batch.current_idx] = steady_clock_type::now();
          }
 
@@ -285,13 +287,14 @@ public:
             afi->second->per_flow_enqueue(std::move(pkt),type);
 
         }
-        //if(_pkt_counter>=_batch_size){
-        if(_batch._flows[_batch.current_idx].size()>=_batch_size){
+        //if(_total_byte>=_batch_size){
+        if(_message_counter>=_batch_size){
 
 
              _batch.current_idx=!_batch.current_idx;
-             _batch.schedule_task(!_batch.current_idx,_pkt_counter);
-             _pkt_counter=0;
+             _batch.schedule_task(!_batch.current_idx,_total_byte);
+             _total_byte=0;
+             _message_counter=0;
 
          }
 
@@ -948,7 +951,7 @@ public:
 public:
     static NF* _nf;
     batch _batch;
-    uint64_t _pkt_counter;
+    uint64_t _total_byte;
     uint16_t _port_id;
     uint16_t _queue_id;
     uint16_t _lcore_id;
@@ -956,6 +959,7 @@ public:
     std::unordered_map<bufferevent*,flow_operator*> _flow_table;
     std::vector<flow_operator*> _free_flow_operators;
     std::chrono::time_point<std::chrono::steady_clock> lt_started[2];
+    uint64_t _message_counter;
 };
 
 #endif // FORWARDER_HH
