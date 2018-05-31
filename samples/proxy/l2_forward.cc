@@ -76,6 +76,11 @@ public:
     cb_arg(struct bufferevent* bev,bool is_client,forwarder* f):bev(bev),is_client(is_client),f(f){
 
     }
+    void assign(struct bufferevent* bev,bool is_client,forwarder* f){
+        this->bev = bev;
+        this->is_client = is_client;
+        this->f = f;
+    }
     struct bufferevent* bev;
     bool is_client;
     forwarder* f;
@@ -125,8 +130,11 @@ readcb(struct bufferevent *bev, void *ctx)
         //We're giving the other side data faster than it can
         //pass it on.  Stop reading here until we have drained the
         // other side to MAX_OUTPUT/2 bytes.
+        //cb_arg* _arg = (cb_arg*)malloc(sizeof(cb_arg));
+        //_arg->assign(bev,!arg->is_client,arg->f);
+        arg->is_client = !arg->is_client;
         bufferevent_setcb(partner, readcb, drained_writecb,
-            eventcb, new cb_arg(bev,!arg->is_client,arg->f));
+            eventcb, arg);
         bufferevent_setwatermark(partner, EV_WRITE, MAX_OUTPUT/2,
             MAX_OUTPUT);
         bufferevent_disable(bev, EV_READ);
@@ -142,7 +150,7 @@ drained_writecb(struct bufferevent *bev, void *ctx)
 
     /* We were choking the other side until we drained our outbuf a bit.
      * Now it seems drained. */
-    bufferevent_setcb(bev, readcb, NULL, eventcb, new cb_arg(partner,arg->is_client,arg->f));
+    bufferevent_setcb(bev, readcb, NULL, eventcb, arg);
     bufferevent_setwatermark(bev, EV_WRITE, 0, 0);
     if (partner)
         bufferevent_enable(partner, EV_READ);
@@ -165,6 +173,7 @@ close_on_finished_writecb(struct bufferevent *bev, void *ctx)
 
     }
     //delete arg;
+    free(ctx);
 }
 
 static void
@@ -204,9 +213,11 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
                 // We still have to flush data from the other
                 // side, but when that's done, close the other
                 // side.
+                cb_arg* _arg = (cb_arg*)malloc(sizeof(cb_arg));
+                _arg->assign(arg->bev,!arg->is_client,arg->f);
                 bufferevent_setcb(partner,
                     NULL, close_on_finished_writecb,
-                    eventcb, new cb_arg(bev,!arg->is_client,arg->f));
+                    eventcb, _arg);
                 bufferevent_disable(partner, EV_READ);
             } else {
                 // We have nothing left to say to the other
@@ -224,6 +235,7 @@ eventcb(struct bufferevent *bev, short what, void *ctx)
         arg->f->free_flow_operator(bev);
         bufferevent_free(bev);
         bev = nullptr;
+        free(ctx);
 
     }
     //delete arg;
@@ -249,6 +261,13 @@ public:
     int connect_to_addrlen;
     accept_arg(forwarder* f,struct event_base *base,struct sockaddr_storage* listen_on_addr,struct sockaddr_storage* connect_to_addr,int connect_to_addrlen):f(f),base(base),listen_on_addr(listen_on_addr),connect_to_addr(connect_to_addr),connect_to_addrlen(connect_to_addrlen){
 
+    }
+    void assign(forwarder* f,struct event_base *base,struct sockaddr_storage* listen_on_addr,struct sockaddr_storage* connect_to_addr,int connect_to_addrlen){
+        this->f = f;
+        this->base = base;
+        this->listen_on_addr = listen_on_addr;
+        this ->connect_to_addr = connect_to_addr;
+        this-> connect_to_addrlen = connect_to_addrlen;
     }
 
 };
@@ -323,15 +342,19 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
 
     f0->create_flow_operator(true,b_in,b_out);
     f0->create_flow_operator(false,b_out,b_in);
-
-    bufferevent_setcb(b_in, readcb, NULL, eventcb, new cb_arg(b_out,true,f0));
-    bufferevent_setcb(b_out, readcb, NULL, eventcb, new cb_arg(b_in,false,f0));
+    cb_arg* arg_in = (cb_arg*)malloc(sizeof(cb_arg));
+    arg_in->assign(b_out,true,f0);
+    cb_arg* arg_out = (cb_arg*)malloc(sizeof(cb_arg));
+    arg_out->assign(b_in,false,f0);
+    bufferevent_setcb(b_in, readcb, NULL, eventcb, arg_in);
+    bufferevent_setcb(b_out, readcb, NULL, eventcb, arg_out);
 
     bufferevent_enable(b_in, EV_READ|EV_WRITE);
     bufferevent_enable(b_out, EV_READ|EV_WRITE);
     //printf("create client bufferevent: %x\n",b_in);
     //printf("create server bufferevent: %x\n",b_out);
     //delete arg;
+    free(p);
 
 }
 
@@ -470,8 +493,9 @@ int thread_main(int core_id){
         }
         ssl_ctx = SSL_CTX_new(TLS_method());
     }
-
-    listener = evconnlistener_new_bind(base, accept_cb, new accept_arg(&f0,base,&listen_on_addr,&connect_to_addr,connect_to_addrlen),
+    accept_arg* ac_arg = (accept_arg*)malloc(sizeof(accept_arg));
+    ac_arg->assign(&f0,base,&listen_on_addr,&connect_to_addr,connect_to_addrlen);
+    listener = evconnlistener_new_bind(base, accept_cb, ac_arg,
         LEV_OPT_CLOSE_ON_FREE|LEV_OPT_CLOSE_ON_EXEC|LEV_OPT_REUSEABLE,
         -1, (struct sockaddr*)&listen_on_addr, socklen);
 
