@@ -354,7 +354,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     //printf("create client bufferevent: %x\n",b_in);
     //printf("create server bufferevent: %x\n",b_out);
     //delete arg;
-    free(p);
+    //free(p);
 
 }
 
