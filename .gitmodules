@@ -1,3 +1,4 @@
 [submodule "libevent"]
 	path = libevent
 	url = https://github.com/yxd886/libevent.git
+        branch = gpunfv_use
