@@ -59,8 +59,6 @@
 #include <linux/ip.h>
 #include <linux/tcp.h>
 
-#include <cmdline_parse.h>
-#include <cmdline_parse_etheraddr.h>
 
 
 #include <helper_functions.h>
