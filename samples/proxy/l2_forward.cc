@@ -50,10 +50,6 @@ extern"C"{
 #include "../include/message.hh"
 #include "forwarder.hh"
 using namespace std;
-extern uint64_t timer_period;
-extern uint64_t schedule_period;
-extern uint64_t schedule_timer_tsc[10];
-extern struct lcore_conf lcore_conf[RTE_MAX_LCORE];
 extern int core_num;
 
 static int use_wrapper = 1;
@@ -497,7 +493,7 @@ int thread_main(int core_id){
     ac_arg->assign(&f0,base,&listen_on_addr,&connect_to_addr,connect_to_addrlen);
     listener = evconnlistener_new_bind(base, accept_cb, ac_arg,
         LEV_OPT_CLOSE_ON_FREE|LEV_OPT_CLOSE_ON_EXEC|LEV_OPT_REUSEABLE,
-        -1, (struct sockaddr*)&listen_on_addr, socklen);
+        20000, (struct sockaddr*)&listen_on_addr, socklen);
 
     if (! listener) {
         fprintf(stderr, "Couldn't open listener.\n");
