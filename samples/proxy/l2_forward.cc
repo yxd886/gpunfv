@@ -46,7 +46,7 @@ extern"C"{
 
 }
 #include "../include/dpdk_config.hh"
-#include "../include/rte_packet.hh"
+//#include "../include/rte_packet.hh"
 #include "../include/message.hh"
 #include "forwarder.hh"
 using namespace std;
