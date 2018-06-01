@@ -20,8 +20,6 @@ LD = c++
 # CUDA path
 CUDA = /usr/local/cuda-8.0
 
-# DPDK path
-DPDK = /home/net/gpunfv/dpdk
 
 ###############################################################
 LIBEVENT_INC_DIR=/home/net/gpunfv/libevent
@@ -33,26 +31,6 @@ ifeq "$(CXXVERSION_4_8_OR_HIGHER)" "0"
   $(error g++ 4.8 or higher is required)
 endif
 
-# check DPDK and find inc and lib
-RTE_SDK = $(DPDK)
-RTE_TARGET = $(shell uname -m)-native-linuxapp-gcc
-ifneq ($(wildcard $(RTE_SDK)/$(RTE_TARGET)/*),)
-    DPDK_INC_DIR = $(RTE_SDK)/$(RTE_TARGET)/include
-    DPDK_LIB_DIR = $(RTE_SDK)/$(RTE_TARGET)/lib
-else ifneq ($(wildcard $(RTE_SDK)/build/*),)
-    # if the user didn't do "make install" for DPDK
-    DPDK_INC_DIR = $(RTE_SDK)/build/include
-    DPDK_LIB_DIR = $(RTE_SDK)/build/lib
-else
-$(info $(MAKECMDGOALS))
-    ifeq ($(words $(MAKECMDGOALS)),1)
-        ifneq ($(MAKECMDGOALS),clean)
-            $(error DPDK is not available. Make sure $(abspath $(RTE_SDK)) is available and built)
-        endif
-    else
-    	$(error DPDK is not available. Make sure $(abspath $(RTE_SDK)) is available and built)
-    endif
-endif
 
 # CUDA inc path
 CUDA_INC_DIR = $(CUDA)/samples/common/inc $(CUDA)/include
@@ -70,18 +48,18 @@ $(shell mkdir -p $(DEPDIR) > /dev/null)
 #SEASTAR_LDFLAGS = $(shell pkg-config --libs $(SEASTAR)/build/release/seastar.pc)
 
 # CUDA flags	    
-CUDA_CFLAGS = $(addprefix -I ,$(DPDK_INC_DIR) $(CUDA_INC_DIR)) 
+CUDA_CFLAGS = $(addprefix -I  ,$(CUDA_INC_DIR)) 
 CUDA_LDFLAGS = -L$(CUDA)/lib64
 
 # c++ flags
 CXXFLAGS = -std=gnu++11 -g3 -ggdb3 -Ofast -march=native \
-	    $(addprefix -isystem ,$(DPDK_INC_DIR) $(CUDA_INC_DIR) $(LIBEVENT_INC_DIR)) 
+	    $(addprefix -isystem ,$(CUDA_INC_DIR) $(LIBEVENT_INC_DIR)) 
 
 # link flags
-LDFLAGS = $(CUDA_LDFLAGS) -L$(DPDK_LIB_DIR)
+LDFLAGS = $(CUDA_LDFLAGS)
 
 #LIBS += -lcudart -lrte_mempool -lrte_mempool_ring -lrte_mempool_stack -lrte_eal
-LIBS += -lcudart  -Wl,--whole-archive -ldpdk -Wl,--no-whole-archive -lpthread -ldl -levent -levent_openssl -lssl -lcrypto
+LIBS += -lcudart  -Wl,--whole-archive -Wl,--no-whole-archive -lpthread -ldl -levent -levent_openssl -lssl -lcrypto
 #LIBS += -lcudart -lpthread  \
  -Wl,--whole-archive -lrte_pmd_i40e \
  -lrte_hash -lrte_kvargs -lrte_mbuf -lrte_ethdev -lrte_eal -lrte_mempool -lrte_mempool_ring -lrte_ring \
