@@ -1,7 +1,3 @@
-[submodule "dpdk"]
-	path = dpdk
-	url = https://github.com/yxd886/dpdk.git
-        branch = seastar_use
 [submodule "libevent"]
 	path = libevent
-	url = https://github.com/libevent/libevent.git
+	url = https://github.com/yxd886/libevent.git
