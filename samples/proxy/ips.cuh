@@ -12,7 +12,7 @@
 #include <netinet/udp.h>
 #include <netinet/in.h>
 
-#include "../include/packet_parser.cuh"
+//#include "../include/packet_parser.cuh"
 #include "../../nf/aho-corasick/fpp.h"
 #include "../../nf/aho-corasick/aho.hh"
 
