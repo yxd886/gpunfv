@@ -543,7 +543,7 @@ public:
 
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
 
-                        rte_memcpy(gpu_pkts[index]+i*max_pkt_num_per_flow+len,(_flows[index][i]->packets[index][j].msg),_flows[index][i]->packets[index][j].len());
+                        memcpy(gpu_pkts[index]+i*max_pkt_num_per_flow+len,(_flows[index][i]->packets[index][j].msg),_flows[index][i]->packets[index][j].len());
                         len += _flows[index][i]->packets[index][j].len();
                     }
                 }
@@ -574,11 +574,11 @@ public:
                     for(int i = 0; i < pre_partition; i++){
                         //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
                         //assert(gpu_states[!index][i]._dfa_id<200);
-                        rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(nf_flow_state));
+                        memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(nf_flow_state));
 
                         size_t len=0;
                         for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                            rte_memcpy((_flows[!index][i]->packets[!index][j].msg),gpu_pkts[!index]+i*(pre_max_pkt_num_per_flow)+len,_flows[!index][i]->packets[!index][j].len());
+                            memcpy((_flows[!index][i]->packets[!index][j].msg),gpu_pkts[!index]+i*(pre_max_pkt_num_per_flow)+len,_flows[!index][i]->packets[!index][j].len());
                             len+=_flows[!index][i]->packets[!index][j].len();
                         }
                     }
@@ -648,7 +648,7 @@ public:
 //#pragma omp parallel for
                 for(int i = 0; i < partition; i++){
                     //gpu_states[i] = reinterpret_cast<char*>(&(_flows[index][i]->_fs));
-                    rte_memcpy(&gpu_states[index][i],&(_flows[index][i]->_fs),sizeof(nf_flow_state));
+                    memcpy(&gpu_states[index][i],&(_flows[index][i]->_fs),sizeof(nf_flow_state));
                     //assert(gpu_states[index][i]._dfa_id<200);
                 }
 
@@ -758,10 +758,10 @@ public:
                     for(int i = 0; i < pre_partition; i++){
                         //std::cout<<"CPU_RCV: gpu_states["<<i<<"].dfa_id:"<<gpu_states[i]._dfa_id<<std::endl;
                         //assert(gpu_states[!index][i]._dfa_id<200);
-                        rte_memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(nf_flow_state));
+                        memcpy(&(_flows[!index][i]->_fs),&gpu_states[!index][i],sizeof(nf_flow_state));
                             size_t len=0;
                         for(int j = 0; j < (int)_flows[!index][i]->packets[!index].size(); j++){
-                            rte_memcpy((_flows[!index][i]->packets[!index][j].msg),gpu_pkts[!index]+i*(pre_max_pkt_num_per_flow)+len,_flows[!index][i]->packets[!index][j].len());
+                            memcpy((_flows[!index][i]->packets[!index][j].msg),gpu_pkts[!index]+i*(pre_max_pkt_num_per_flow)+len,_flows[!index][i]->packets[!index][j].len());
                             len+=_flows[!index][i]->packets[!index][j].len();
                         }
                     }
@@ -957,7 +957,6 @@ public:
     uint16_t _port_id;
     uint16_t _queue_id;
     uint16_t _lcore_id;
-    std::vector<rte_mbuf*> _send_buffer;
     std::unordered_map<bufferevent*,flow_operator*> _flow_table;
     std::vector<flow_operator*> _free_flow_operators;
     std::chrono::time_point<std::chrono::steady_clock> lt_started[2];
