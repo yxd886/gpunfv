@@ -184,7 +184,7 @@ public:
             update_state(_f->_batch.current_idx);
                                    //update the flow state when receive the first pkt of this flow in this batch.
 
-            if(likely(type==process_type::hybernate)){
+            if(type==process_type::hybernate){
                 if(packets[_f->_batch.current_idx].empty()){
                     _f->_batch._flows[_f->_batch.current_idx].push_back(this);
                 }
@@ -465,7 +465,7 @@ public:
             //schedule the task, following is the strategy offload all to GPU
         	 //schedule_timer_tsc[lcore_id] = 0;
             _timer_reactivate=true;
-            if(unlikely(_profile_num<5)){
+            if(_profile_num<5){
                 _profile_num++;
                 printf("lcore_id: %d, Profiling......\n",lcore_id);
             }else{
