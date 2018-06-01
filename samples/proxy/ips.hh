@@ -14,6 +14,7 @@
 
 
 #define DFA_NUM 200
+#define MAX_MATCH 8192
 
 struct ips_flow_state {
     uint16_t _state[DFA_NUM];
