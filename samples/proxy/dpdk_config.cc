@@ -73,7 +73,7 @@ int parse_args(int argc, char **argv){
 
     argvopt = argv;
 
-    while ((opt = getopt_long(argc, argvopt, "b:c:P",
+    while ((opt = getopt_long(argc, argvopt, "b:c:",
                 lgopts, &option_index)) != EOF) {
 
         switch (opt) {
@@ -89,10 +89,6 @@ int parse_args(int argc, char **argv){
             break;
         case 'c':
             core_num = parse_batchsize(optarg);
-            break;
-        case 'P':
-            printf("Promiscuous mode selected\n");
-            promiscuous_on = 1;
             break;
 
         /* long options */
