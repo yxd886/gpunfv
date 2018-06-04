@@ -120,10 +120,10 @@ public:
     inline void nf_logic(void *pkt, struct aes_flow_state* state) {   
     	assert(pkt);
 
-    	uint16_t *msg = (uint16_t *)pkt;
-        uint16_t len = msg[0];
+    	//uint16_t *msg = (uint16_t *)pkt;
+        uint16_t len = *(size_t*)pkt;
         uint16_t len_padding = len;
-        uint8_t *content = (uint8_t *)(msg + 1);
+        uint8_t *content = (uint8_t *)(pkt+sizeof(size_t));
         uint8_t *buffer = content;
 
         // padding to 16-byte alignment

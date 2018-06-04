@@ -163,10 +163,10 @@ public:
     __device__ inline static void nf_logic(void *pkt, struct aes_flow_state* state, void *info) {   
         assert(pkt);
 
-        uint16_t *msg = (uint16_t *)pkt;
-        uint16_t len = msg[0];
+    	//uint16_t *msg = (uint16_t *)pkt;
+        uint16_t len = *(size_t*)pkt;
         uint16_t len_padding = len;
-        uint8_t *content = (uint8_t *)(msg + 1);
+        uint8_t *content = (uint8_t *)(pkt+sizeof(size_t));
         uint8_t *buffer = content;
 
         // padding to 16-byte alignment
@@ -198,7 +198,7 @@ public:
      *
      * From Wikipedia's article on the Rijndael key schedule @ https://en.wikipedia.org/wiki/Rijndael_key_schedule#Rcon
      * 
-     * "Only the first some of these constants are actually used – up to rcon[10] for AES-128 (as 11 round keys are needed), 
+     * "Only the first some of these constants are actually used 鈥� up to rcon[10] for AES-128 (as 11 round keys are needed), 
      *  up to rcon[8] for AES-192, up to rcon[7] for AES-256. rcon[0] is not used in AES algorithm."
      */
 
