@@ -139,7 +139,7 @@ public:
 
         void forward_pkts(uint64_t index){
             for(unsigned int i=0;i<packets[index].size();i++){
-                _f->send_pkt(std::move(packets[index][i]),_dst);
+                _f->send_pkt(std::move(packets[index][i]),_dst,_fs.is_encryption);
             }
             packets[index].clear();
             _current_byte[index]=0;
@@ -212,7 +212,7 @@ public:
                  }*/
             }else if(type == process_type::cpu_only){
                 process_pkt(&pkt,&_fs);
-                _f->send_pkt(std::move(pkt),_dst);
+                _f->send_pkt(std::move(pkt),_dst,_fs.is_encryption);
             }
 
         }
@@ -317,7 +317,7 @@ public:
 
 
 
-    void send_pkt(message pkt, bufferevent* dst){
+    void send_pkt(message pkt, bufferevent* dst, bool is_encryption){
 
         //printf("msg len:%d\n",pkt.length);
         //printf("send len:%d\n",*((size_t*)(pkt.msg)));
@@ -325,7 +325,13 @@ public:
        // auto f = _flow_table.find(dst);
        // if(f!=_flow_table.end()){
 
-            bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
+        size_t len = *((size_t*)(pkt.msg));
+        if(is_encryption){
+            bufferevent_write(dst,pkt.msg+sizeof(size_t),((len+15)/16)*16);
+        }else{
+            bufferevent_write(dst,pkt.msg+sizeof(size_t),len);
+        }
+
 
        // }
         //printf("send_buffer: %x\n",dst);
