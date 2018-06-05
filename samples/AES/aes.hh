@@ -145,13 +145,6 @@ public:
             printf("after encrypt\n");
             printf("%.*s\n", len_padding, buffer);
 
-
-            printf("before decrypt\n");
-            printf("%.*s\n", len_padding, buffer);
-            printf("decrypt\n");
-            AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
-            printf("after decrypt\n");
-            printf("%.*s\n", len_padding, buffer);
         }else{
             printf("before decrypt\n");
             printf("%.*s\n", len_padding, buffer);
