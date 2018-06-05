@@ -138,8 +138,8 @@ public:
         struct AES_ctx ctx;
         AES_init_ctx_iv(&ctx, state->key, state->iv);
         if(state->is_encryption){
-            printf("encryption\n");
-            AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
+            //printf("encryption\n");
+            //AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
         }else{
             printf("decryption\n");
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
