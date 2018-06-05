@@ -145,7 +145,7 @@ public:
             printf("after encrypt\n");
             printf("%.*s\n", len_padding, buffer);
 
-
+            AES_init_ctx_iv(&ctx, state->key, state->iv);
             printf("before decrypt\n");
             printf("%.*s\n", len_padding, buffer);
             printf("decrypt\n");
