@@ -129,8 +129,9 @@ public:
         // padding to 16-byte alignment
         if(len % AES_BLOCKLEN != 0) {
         	len_padding = (len / AES_BLOCKLEN + 1) * AES_BLOCKLEN;
-        	buffer = (uint8_t *)malloc(len_padding);
-        	memcpy(buffer, content, len);
+        	//buffer = (uint8_t *)malloc(len_padding);
+        	//memset(buffer,0,len_padding);
+       // 	memcpy(buffer, content, len);
         }
 
         // Initialize context
@@ -144,13 +145,7 @@ public:
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
             printf("after encrypt\n");
             printf("%.*s\n", len_padding, buffer);
-            AES_init_ctx_iv(&ctx, state->key, state->iv);
-            printf("before decrypt\n");
-            printf("%.*s\n", len_padding, buffer);
-            printf("decrypt\n");
-            AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
-            printf("after decrypt\n");
-            printf("%.*s\n", len_padding, buffer);
+
         }else{
             printf("before decrypt\n");
             printf("%.*s\n", len_padding, buffer);
@@ -161,9 +156,9 @@ public:
         }
 
     	// copy back
-        if(len % AES_BLOCKLEN != 0) {
-        	memcpy(content, buffer, len);
-        }
+       // if(len % AES_BLOCKLEN != 0) {
+       // 	memcpy(content, buffer, len);
+       // }
 
     }
 
