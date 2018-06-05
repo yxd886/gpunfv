@@ -326,11 +326,12 @@ public:
        auto f = _flow_table.find(dst);
        if(f!=_flow_table.end()){
             size_t len = *((size_t*)(pkt.msg));
-            if(is_encryption){
+            /*if(is_encryption){
                 bufferevent_write(dst,pkt.msg+sizeof(size_t),((len+15)/16)*16);
             }else{
                 bufferevent_write(dst,pkt.msg+sizeof(size_t),len);
-            }
+            }*/
+            bufferevent_write(dst,pkt.msg+sizeof(size_t),((len+15)/16)*16);
        }
         //printf("send_buffer: %x\n",dst);
 
