@@ -142,7 +142,7 @@ public:
         if(state->is_encryption){
            // printf("before encrypt\n");
            // printf("%.*s\n", len_padding, buffer);
-           // printf("encrypt\n");
+            printf("encrypt\n");
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
           //  printf("after encrypt\n");
            // printf("%.*s\n", len_padding, buffer);
@@ -150,7 +150,7 @@ public:
         }else{
            // printf("before decrypt\n");
            // printf("%.*s\n", len_padding, buffer);
-           // printf("decrypt\n");
+            printf("decrypt\n");
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
            // printf("after decrypt\n");
           //  printf("%.*s\n", len_padding, buffer);
