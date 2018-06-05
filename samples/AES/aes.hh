@@ -134,6 +134,7 @@ public:
         }
 
         // Initialize context
+        printf("lenpadding: %d\n",len_padding);
         struct AES_ctx ctx;
    		AES_init_ctx_iv(&ctx, state->key, state->iv);
 

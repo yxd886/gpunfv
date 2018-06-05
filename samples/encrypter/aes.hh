@@ -133,6 +133,7 @@ public:
         	//memset(buffer,0,len_padding);
        // 	memcpy(buffer, content, len);
         }
+        printf("lenpadding: %d\n",len_padding);
 
         // Initialize context
         struct AES_ctx ctx;
