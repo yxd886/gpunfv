@@ -137,10 +137,14 @@ public:
         //printf("lenpadding: %d\n",len_padding);
         struct AES_ctx ctx;
         AES_init_ctx_iv(&ctx, state->key, state->iv);
-        if(state->is_encryption)
+        if(state->is_encryption){
+            printf("encryption\n");
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
-        else
+        }else{
+            printf("decryption\n");
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
+        }
+
 
 
 
