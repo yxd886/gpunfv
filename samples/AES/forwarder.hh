@@ -113,6 +113,11 @@ public:
             _nf->init_automataState(_fs);
             _current_byte[0]=0;
             _current_byte[1]=0;
+            if(_is_from_client){
+                _fs.is_encryption = false;
+            }else{
+                _fs.is_encryption = true;
+            }
         }
         flow_operator(const flow_operator& other) = delete;
         flow_operator(flow_operator&& other) noexcept
