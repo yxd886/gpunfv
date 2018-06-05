@@ -124,9 +124,9 @@ public:
 
             _nf->init_automataState(_fs);
             if(_is_from_client){
-                _fs.is_encryption = false;
-            }else{
                 _fs.is_encryption = true;
+            }else{
+                _fs.is_encryption = false;
             }
         }
         ~flow_operator() {}
