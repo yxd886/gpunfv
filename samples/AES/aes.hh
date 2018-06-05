@@ -138,10 +138,10 @@ public:
    		AES_init_ctx_iv(&ctx, state->key, state->iv);
 
         if(state->is_encryption){
-            std::cout<<"encrypt"<<std::endl;
+            printf("encrypt\n");
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
         }else{
-            std::cout<<"decrypt"<<std::endl;
+            printf("decrypt\n");
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
         }
 
