@@ -172,8 +172,8 @@ public:
         // padding to 16-byte alignment
         if(len % AES_BLOCKLEN != 0) {
             len_padding = (len / AES_BLOCKLEN + 1) * AES_BLOCKLEN;
-            buffer = (uint8_t *)malloc(len_padding);
-            memcpy(buffer, content, len);
+            //buffer = (uint8_t *)malloc(len_padding);
+            //memcpy(buffer, content, len);
         }
 
         // Initialize context
@@ -186,9 +186,9 @@ public:
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
 
         // copy back
-        if(len % AES_BLOCKLEN != 0) {
-            memcpy(content, buffer, len);
-        }
+       // if(len % AES_BLOCKLEN != 0) {
+       //     memcpy(content, buffer, len);
+        //}
 
     }
 

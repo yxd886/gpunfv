@@ -139,14 +139,9 @@ public:
 
         void forward_pkts(uint64_t index){
 
-            if(_f->_flow_table.find(_dst)!=_f->_flow_table.end()){
-                for(unsigned int i=0;i<packets[index].size();i++){
-                    _f->send_pkt(std::move(packets[index][i]),_dst,_fs.is_encryption);
-                }
-            }else{
-                printf("already removed!!\n");
+            for(unsigned int i=0;i<packets[index].size();i++){
+                _f->send_pkt(std::move(packets[index][i]),_dst,_fs.is_encryption);
             }
-
             packets[index].clear();
             _current_byte[index]=0;
             assert(packets[index].size()==0);
@@ -328,17 +323,15 @@ public:
         //printf("msg len:%d\n",pkt.length);
         //printf("send len:%d\n",*((size_t*)(pkt.msg)));
         assert(dst);
-       // auto f = _flow_table.find(dst);
-       // if(f!=_flow_table.end()){
-        size_t len = *((size_t*)(pkt.msg));
-        if(is_encryption){
-            bufferevent_write(dst,pkt.msg+sizeof(size_t),((len+15)/16)*16);
-        }else{
-            bufferevent_write(dst,pkt.msg+sizeof(size_t),len);
-        }
-
-
-       // }
+       auto f = _flow_table.find(dst);
+       if(f!=_flow_table.end()){
+            size_t len = *((size_t*)(pkt.msg));
+            if(is_encryption){
+                bufferevent_write(dst,pkt.msg+sizeof(size_t),((len+15)/16)*16);
+            }else{
+                bufferevent_write(dst,pkt.msg+sizeof(size_t),len);
+            }
+       }
         //printf("send_buffer: %x\n",dst);
 
 
