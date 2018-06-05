@@ -138,9 +138,15 @@ public:
 
 
         void forward_pkts(uint64_t index){
-            for(unsigned int i=0;i<packets[index].size();i++){
-                _f->send_pkt(std::move(packets[index][i]),_dst,_fs.is_encryption);
+
+            if(_f->_flow_table.find(_dst)!=_f->_flow_table.end()){
+                for(unsigned int i=0;i<packets[index].size();i++){
+                    _f->send_pkt(std::move(packets[index][i]),_dst,_fs.is_encryption);
+                }
+            }else{
+                printf("already removed!!\n");
             }
+
             packets[index].clear();
             _current_byte[index]=0;
             assert(packets[index].size()==0);
