@@ -144,7 +144,6 @@ public:
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
             printf("after encrypt\n");
             printf("%.*s\n", len_padding, buffer);
-
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             printf("before decrypt\n");
             printf("%.*s\n", len_padding, buffer);
