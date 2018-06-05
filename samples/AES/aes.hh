@@ -121,8 +121,8 @@ public:
     	assert(pkt);
 
     	//uint16_t *msg = (uint16_t *)pkt;
-        uint16_t len = *(size_t*)pkt;
-        uint16_t len_padding = len;
+        size_t len = *(size_t*)pkt;
+        size_t len_padding = len;
         uint8_t *content = (uint8_t *)(pkt+sizeof(size_t));
         uint8_t *buffer = content;
 
