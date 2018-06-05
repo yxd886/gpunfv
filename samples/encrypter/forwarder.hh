@@ -255,6 +255,11 @@ public:
         auto impl_lw_ptr =  _free_flow_operators.back();
         impl_lw_ptr->_is_from_client = is_from_client;
         impl_lw_ptr->_dst = dst;
+        if(is_from_client){
+            impl_lw_ptr->_fs.is_encryption = true;
+        }else{
+            impl_lw_ptr->_fs.is_encryption = false;
+        }
         _free_flow_operators.pop_back();//new flow_operator(this,is_from_client,dst);
         auto succeed = _flow_table.insert({src, impl_lw_ptr}).second;
         assert(succeed);
