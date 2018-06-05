@@ -113,11 +113,6 @@ public:
             _nf->init_automataState(_fs);
             _current_byte[0]=0;
             _current_byte[1]=0;
-            if(_is_from_client){
-                _fs.is_encryption = false;
-            }else{
-                _fs.is_encryption = true;
-            }
         }
         flow_operator(const flow_operator& other) = delete;
         flow_operator(flow_operator&& other) noexcept
@@ -128,19 +123,13 @@ public:
             _current_byte[1]=other._current_byte[1];
 
             _nf->init_automataState(_fs);
-            if(_is_from_client){
-                _fs.is_encryption = false;
-            }else{
-                _fs.is_encryption = true;
-            }
         }
         ~flow_operator() {}
 
 
         void forward_pkts(uint64_t index){
-
             for(unsigned int i=0;i<packets[index].size();i++){
-                _f->send_pkt(std::move(packets[index][i]),_dst,_fs.is_encryption);
+                _f->send_pkt(std::move(packets[index][i]),_dst);
             }
             packets[index].clear();
             _current_byte[index]=0;
@@ -155,7 +144,7 @@ public:
         }
 
         void process_pkt(message* pkt, nf_flow_state* fs){
-            //_nf->nf_logic(pkt->msg, fs);
+            _nf->nf_logic(pkt->msg, fs);
             //printf("process messages\n");
         }
 
@@ -213,7 +202,7 @@ public:
                  }*/
             }else if(type == process_type::cpu_only){
                 process_pkt(&pkt,&_fs);
-                _f->send_pkt(std::move(pkt),_dst,_fs.is_encryption);
+                _f->send_pkt(std::move(pkt),_dst);
             }
 
         }
@@ -256,11 +245,6 @@ public:
         auto impl_lw_ptr =  _free_flow_operators.back();
         impl_lw_ptr->_is_from_client = is_from_client;
         impl_lw_ptr->_dst = dst;
-        if(is_from_client){
-            impl_lw_ptr->_fs.is_encryption = false;
-        }else{
-            impl_lw_ptr->_fs.is_encryption = true;
-        }
         _free_flow_operators.pop_back();//new flow_operator(this,is_from_client,dst);
         auto succeed = _flow_table.insert({src, impl_lw_ptr}).second;
         assert(succeed);
@@ -318,21 +302,17 @@ public:
 
 
 
-    void send_pkt(message pkt, bufferevent* dst, bool is_encryption){
+    void send_pkt(message pkt, bufferevent* dst){
 
         //printf("msg len:%d\n",pkt.length);
         //printf("send len:%d\n",*((size_t*)(pkt.msg)));
         assert(dst);
-       auto f = _flow_table.find(dst);
-       if(f!=_flow_table.end()){
-            size_t len = *((size_t*)(pkt.msg));
-            /*if(is_encryption){
-                bufferevent_write(dst,pkt.msg+sizeof(size_t),((len+15)/16)*16);
-            }else{
-                bufferevent_write(dst,pkt.msg+sizeof(size_t),len);
-            }*/
-            bufferevent_write(dst,pkt.msg+sizeof(size_t),((len+15)/16)*16);
-       }
+       // auto f = _flow_table.find(dst);
+       // if(f!=_flow_table.end()){
+
+            bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
+
+       // }
         //printf("send_buffer: %x\n",dst);
 
 
@@ -483,7 +463,7 @@ public:
         void schedule_task(uint64_t index, uint64_t total_byte){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-        	 //schedule_timer_tsc[lcore_id] = 0;
+             //schedule_timer_tsc[lcore_id] = 0;
             _timer_reactivate=true;
             if(_profile_num<5){
                 _profile_num++;
@@ -729,7 +709,7 @@ public:
                 /////////////////////////////////////////////
                 // Launch kernel
                 if(gpu_time||_profileing||_period_profile){
-                	gpu_sync(stream);
+                    gpu_sync(stream);
                 started[lcore_id] = steady_clock_type::now();
                 }
                 started[lcore_id] = steady_clock_type::now();

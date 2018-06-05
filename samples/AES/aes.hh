@@ -138,22 +138,13 @@ public:
         struct AES_ctx ctx;
    		AES_init_ctx_iv(&ctx, state->key, state->iv);
 
-        if(state->is_encryption){
-           // printf("before encrypt\n");
-           // printf("%.*s\n", len_padding, buffer);
-           // printf("encrypt\n");
-            AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
-           // printf("after encrypt\n");
-            //printf("%.*s\n", len_padding, buffer);
+        AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
 
-        }else{
-           // printf("before decrypt\n");
-           // printf("%.*s\n", len_padding, buffer);
-           // printf("decrypt\n");
-            AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
-           // printf("after decrypt\n");
-           // printf("%.*s\n", len_padding, buffer);
-        }
+        AES_init_ctx_iv(&ctx, state->key, state->iv);
+
+        AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
+
+
 
     	// copy back
         //if(len % AES_BLOCKLEN != 0) {
