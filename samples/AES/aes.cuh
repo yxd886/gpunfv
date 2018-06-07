@@ -179,9 +179,10 @@ public:
         // Initialize context
         struct AES_ctx ctx;
         AES_init_ctx_iv(&ctx, state->key, state->iv);
-        AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
-        AES_init_ctx_iv(&ctx, state->key, state->iv);
-        AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
+        if(state->is_encryption)
+      	 	AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
+		else
+    		    AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
 
         // copy back
        // if(len % AES_BLOCKLEN != 0) {
