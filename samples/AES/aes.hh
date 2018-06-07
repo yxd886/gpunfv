@@ -144,11 +144,11 @@ public:
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
             AES_init_ctx_iv(&ctx, state->key, state->iv);
-            AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
+            AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
             AES_init_ctx_iv(&ctx, state->key, state->iv);
-            AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
+            AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
             //printf("after encrypt\n");
@@ -161,11 +161,11 @@ public:
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
             AES_init_ctx_iv(&ctx, state->key, state->iv);
-            AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
+            AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
             AES_init_ctx_iv(&ctx, state->key, state->iv);
-            AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
+            AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
             //printf("after decrypt\n");
