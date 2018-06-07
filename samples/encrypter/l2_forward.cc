@@ -519,8 +519,6 @@ int thread_main(int core_id){
     event_add(&ev_time, &tv);
     //evtimer_del(&ev_time);
 
-
-
     event_base_dispatch(base);
 
     evconnlistener_free(listener);
