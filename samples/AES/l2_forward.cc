@@ -437,7 +437,7 @@ int thread_main(int core_id){
     string _listen("10.28.1.17:110");
     _listen+=std::to_string(core_id);
     const char *listen_ip=_listen.c_str();
-    char connect_ip[]="10.28.1.17:12345";
+    char connect_ip[]="10.28.1.16:12345";
 
     int use_ssl = 0;
     struct evconnlistener *listener;
