@@ -116,7 +116,14 @@ public:
 
     AES() {}
     ~AES() {}
+    size_t get_real_len(void* message, size_t len){
+        uint8_t* msg = (uint8_t*)message;
 
+        while(msg[len-1]==0){
+            len--;
+        }
+        return len;
+    }
     inline void nf_logic(void *pkt, struct aes_flow_state* state) {   
     	assert(pkt);
 
@@ -125,6 +132,7 @@ public:
         size_t len_padding = len;
         uint8_t *content = (uint8_t *)(pkt+sizeof(size_t));
         uint8_t *buffer = content;
+        size_t real_len = 0;
 
         // padding to 16-byte alignment
         if(len % AES_BLOCKLEN != 0) {
@@ -140,20 +148,24 @@ public:
    		AES_init_ctx_iv(&ctx, state->key, state->iv);
 
         if(state->is_encryption){
-            //printf("before encrypt\n");
-            //printf("%.*s\n", len_padding, buffer);
-            //printf("encrypt\n");
+            printf("encrpyt len:%d\n",len);
+            printf("before encrypt\n");
+            printf("%.*s\n", len_padding, buffer);
+            printf("encrypt\n");
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
-            //printf("after encrypt\n");
-            //printf("%.*s\n", len_padding, buffer);
+            printf("after encrypt\n");
+            printf("%.*s\n", len_padding, buffer);
 
         }else{
-            //printf("before decrypt\n");
-            //printf("%.*s\n", len_padding, buffer);
-            //printf("decrypt\n");
+            printf("before decrypt\n");
+            printf("%.*s\n", len_padding, buffer);
+            printf("decrypt\n");
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
-            //printf("after decrypt\n");
-            //printf("%.*s\n", len_padding, buffer);
+            real_len  =get_real_len(buffer,len_padding);
+            printf("real_len:%d\n",real_len);
+            *(size_t*)pkt = real_len;
+            printf("after decrypt\n");
+            printf("%.*s\n", real_len, buffer);
         }
 
     	// copy back

@@ -435,7 +435,7 @@ int thread_main(int core_id){
 
     forwarder f0(0,0,core_id);
     f0._batch.lcore_id = core_id;
-    string _listen("10.28.1.17:120");
+    string _listen("10.28.1.18:110");
     _listen+=std::to_string(core_id);
     const char *listen_ip=_listen.c_str();
     string _connect_ip("10.28.1.17:110");
