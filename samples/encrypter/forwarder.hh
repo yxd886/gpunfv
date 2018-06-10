@@ -331,7 +331,12 @@ public:
         }else{
             bufferevent_write(dst,pkt.msg+sizeof(size_t),len);
         }*/
-        bufferevent_write(dst,pkt.msg+sizeof(size_t),((len+15)/16)*16);
+        if(is_encryption){
+            bufferevent_write(dst,pkt.msg+sizeof(size_t),((len+15)/16)*16);
+
+        }else{
+            bufferevent_write(dst,pkt.msg+sizeof(size_t),len);
+        }
 
 
        // }
