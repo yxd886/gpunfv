@@ -124,7 +124,7 @@ readcb(struct bufferevent *bev, void *ctx)
 
     }else{
 
-        //bufferevent_write(partner,msg+sizeof(size_t),leng);
+        bufferevent_write(partner,msg+sizeof(size_t),leng);
     }
     //bufferevent_write(partner,msg_tmp+sizeof(size_t),leng);
 
