@@ -148,24 +148,24 @@ public:
    		AES_init_ctx_iv(&ctx, state->key, state->iv);
 
         if(state->is_encryption){
-            printf("encrpyt len:%d\n",len);
-            printf("before encrypt\n");
-            printf("%.*s\n", len_padding, buffer);
-            printf("encrypt\n");
+            //printf("encrpyt len:%d\n",len);
+            //printf("before encrypt\n");
+            //printf("%.*s\n", len_padding, buffer);
+            //printf("encrypt\n");
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
-            printf("after encrypt\n");
-            printf("%.*s\n", len_padding, buffer);
+            //printf("after encrypt\n");
+            //printf("%.*s\n", len_padding, buffer);
 
         }else{
-            printf("before decrypt\n");
-            printf("%.*s\n", len_padding, buffer);
-            printf("decrypt\n");
+            //printf("before decrypt\n");
+            //printf("%.*s\n", len_padding, buffer);
+            //printf("decrypt\n");
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
             real_len  =get_real_len(buffer,len_padding);
-            printf("real_len:%d\n",real_len);
+            //printf("real_len:%d\n",real_len);
             *(size_t*)pkt = real_len;
-            printf("after decrypt\n");
-            printf("%.*s\n", real_len, buffer);
+            //printf("after decrypt\n");
+            //printf("%.*s\n", real_len, buffer);
         }
 
     	// copy back

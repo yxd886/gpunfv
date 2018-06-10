@@ -138,10 +138,10 @@ public:
         struct AES_ctx ctx;
 
         if(state->is_encryption){
-            printf("before encrypt\n");
-            printf("%.*s\n", len_padding, buffer);
-            printf("encrypt\n");
-            printf("encrypt len:%d",len);
+            //printf("before encrypt\n");
+            //printf("%.*s\n", len_padding, buffer);
+            //printf("encrypt\n");
+            //printf("encrypt len:%d",len);
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
             /*AES_init_ctx_iv(&ctx, state->key, state->iv);
@@ -152,13 +152,13 @@ public:
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);*/
-            printf("after encrypt\n");
-            printf("%.*s\n", len_padding, buffer);
+            //printf("after encrypt\n");
+            //printf("%.*s\n", len_padding, buffer);
 
         }else{
-            printf("before decrypt\n");
-            printf("%.*s\n", len_padding, buffer);
-            printf("decrypt\n");
+            //printf("before decrypt\n");
+            //printf("%.*s\n", len_padding, buffer);
+            //printf("decrypt\n");
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);
            /* AES_init_ctx_iv(&ctx, state->key, state->iv);
@@ -169,8 +169,8 @@ public:
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);*/
-            printf("after decrypt\n");
-            printf("%.*s\n", len_padding, buffer);
+            //printf("after decrypt\n");
+            //printf("%.*s\n", len_padding, buffer);
         }
 
 
