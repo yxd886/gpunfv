@@ -141,6 +141,7 @@ public:
             printf("before encrypt\n");
             printf("%.*s\n", len_padding, buffer);
             printf("encrypt\n");
+            printf("encrypt len:%d",len);
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
             /*AES_init_ctx_iv(&ctx, state->key, state->iv);
