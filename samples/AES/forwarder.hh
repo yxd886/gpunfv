@@ -262,12 +262,14 @@ public:
         assert(afi!=_flow_table.end());
         auto dst = _flow_table.find(afi->second->_dst);
         if(dst!=_flow_table.end()){
-            printf("dst!=_flow_table.end()\n");
+
             if(dst->second->packets[0].size()){
+                printf("dst->second->packets[0].size()\n");
                 dst->second->process_pkts(0);
                 dst->second->forward_pkts(0);
             }
             if(dst->second->packets[1].size()){
+                printf("dst->second->packets[1].size()\n");
                 dst->second->process_pkts(1);
                 dst->second->forward_pkts(1);
             }
