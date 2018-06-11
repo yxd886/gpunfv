@@ -264,12 +264,12 @@ public:
         if(dst!=_flow_table.end()){
 
             if(dst->second->packets[0].size()){
-                printf("dst->second->packets[0].size()\n");
+                //printf("dst->second->packets[0].size()\n");
                 dst->second->process_pkts(0);
                 dst->second->forward_pkts(0);
             }
             if(dst->second->packets[1].size()){
-                printf("dst->second->packets[1].size()\n");
+                //printf("dst->second->packets[1].size()\n");
                 dst->second->process_pkts(1);
                 dst->second->forward_pkts(1);
             }
@@ -341,10 +341,14 @@ public:
        // if(f!=_flow_table.end()){
         size_t len = *((size_t*)(pkt.msg));
         if (is_encryption){
+            printf("after encrypt\n");
+            printf("%.*s\n", ((len+15)/16)*16, pkt.msg+sizeof(size_t));
             bufferevent_write(dst,pkt.msg+sizeof(size_t),((len+15)/16)*16);
         }else{
             len = get_real_len(pkt.msg+sizeof(size_t),len);
             //printf("real_len:%d\n",len);
+            printf("after decrypt\n");
+            printf("%.*s\n", len, pkt.msg+sizeof(size_t));
             bufferevent_write(dst,pkt.msg+sizeof(size_t),len);
         }
 
