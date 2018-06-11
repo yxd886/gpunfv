@@ -148,7 +148,7 @@ public:
    		AES_init_ctx_iv(&ctx, state->key, state->iv);
 
         if(state->is_encryption){
-            //printf("encrpyt len:%d\n",len);
+            printf("encrpyt len:%d\n",len);
             //printf("before encrypt\n");
             //printf("%.*s\n", len_padding, buffer);
             //printf("encrypt\n");
