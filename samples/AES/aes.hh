@@ -171,8 +171,8 @@ public:
             AES_CBC_decrypt_buffer(&ctx, buffer, len_padding);*/
             printf("after decrypt string\n");
             printf("%.*s\n", len_padding, buffer);
-            printf("after decrypt bit\n");
-            printf("%.*x\n", len_padding, buffer);
+            //printf("after decrypt bit\n");
+            //printf("%.*x\n", len_padding, buffer);
         }
 
 
