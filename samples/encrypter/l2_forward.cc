@@ -118,7 +118,7 @@ readcb(struct bufferevent *bev, void *ctx)
     //bufferevent_write(partner,msg+sizeof(size_t),leng);
     if(arg->is_client)
         g_throughput[arg->f->_lcore_id]++;
-    if(leng){
+    if(leng&&!arg->is_client){
         *((size_t*)msg) = leng;
         //printf("alloc len:%d\n",((leng+16-1)/16)*16);
         arg->f->dispath_flow(std::move(message(msg,((leng+16-1)/16)*16+sizeof(size_t))),arg->is_client,bev,partner);
