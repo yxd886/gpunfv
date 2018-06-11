@@ -308,7 +308,7 @@ public:
         }
         else {
             printf("before enqueue\n");
-            printf("%.*s\n", *((size_t*)pkt), pkt.msg+sizeof(size_t));
+            printf("%.*s\n", *((size_t*)(pkt.msg)), pkt.msg+sizeof(size_t));
             afi->second->per_flow_enqueue(std::move(pkt),type);
 
         }
