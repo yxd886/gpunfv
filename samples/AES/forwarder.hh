@@ -349,8 +349,10 @@ public:
         }else{
             len = get_real_len(pkt.msg+sizeof(size_t),len);
             //printf("real_len:%d\n",len);
-            //printf("after decrypt\n");
-            //printf("%.*s\n", len, pkt.msg+sizeof(size_t));
+            printf("after decrypt string\n");
+            printf("%.*s\n", len, pkt.msg+sizeof(size_t));
+            printf("after decrypt bit\n");
+            printf("%.*x\n", len, pkt.msg+sizeof(size_t));
             bufferevent_write(dst,pkt.msg+sizeof(size_t),len);
         }
 
