@@ -260,7 +260,7 @@ public:
 
         auto afi = _flow_table.find(src);
         assert(afi!=_flow_table.end());
-        /*auto dst = _flow_table.find(afi->second->_dst);
+        auto dst = _flow_table.find(afi->second->_dst);
         if(dst!=_flow_table.end()){
 
             if(dst->second->packets[0].size()){
@@ -273,7 +273,7 @@ public:
                 dst->second->process_pkts(1);
                 dst->second->forward_pkts(1);
             }
-        }*/
+        }
 
         _free_flow_operators.push_back(afi->second);
         _flow_table.erase(src);
