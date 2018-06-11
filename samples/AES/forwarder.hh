@@ -307,6 +307,8 @@ public:
 
         }
         else {
+            printf("before enqueue\n");
+            printf("%.*s\n", *((size_t*)pkt), pkt.msg+sizeof(size_t));
             afi->second->per_flow_enqueue(std::move(pkt),type);
 
         }
@@ -341,14 +343,14 @@ public:
        // if(f!=_flow_table.end()){
         size_t len = *((size_t*)(pkt.msg));
         if (is_encryption){
-            //printf("after encrypt\n");
-            //printf("%.*s\n", ((len+15)/16)*16, pkt.msg+sizeof(size_t));
+            printf("after encrypt\n");
+            printf("%.*s\n", ((len+15)/16)*16, pkt.msg+sizeof(size_t));
             bufferevent_write(dst,pkt.msg+sizeof(size_t),((len+15)/16)*16);
         }else{
             len = get_real_len(pkt.msg+sizeof(size_t),len);
             //printf("real_len:%d\n",len);
-            //printf("after decrypt\n");
-            //printf("%.*s\n", len, pkt.msg+sizeof(size_t));
+            printf("after decrypt\n");
+            printf("%.*s\n", len, pkt.msg+sizeof(size_t));
             bufferevent_write(dst,pkt.msg+sizeof(size_t),len);
         }
 
