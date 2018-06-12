@@ -580,7 +580,7 @@ ssize_t phr_decode_chunked(struct phr_chunked_decoder *decoder, char *buf, size_
                     goto Exit;
                 if (buf[src] != '\015')
                     break;
-            }s
+            }
             if (buf[src++] == '\012')
                 goto Complete;
             decoder->_state = CHUNKED_IN_TRAILERS_LINE_MIDDLE;
