@@ -47,7 +47,7 @@ public:
         int num_threads = 1;
         assert(num_threads >= 1 && num_threads <= AHO_MAX_THREADS);
 
-        gpu_malloc((void**)(&info_for_gpu), sizeof(IPS));
+        gpu_malloc((void**)(&info_for_gpu), sizeof(WAF_AC));
 
         struct stat_t *gpu_stats;
         stats =(struct stat_t *)malloc(num_threads * sizeof(struct stat_t));
