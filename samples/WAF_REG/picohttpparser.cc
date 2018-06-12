@@ -34,7 +34,7 @@
 #include <x86intrin.h>
 #endif
 #endif
-#include "picohttpparser.h"
+#include "picohttpparser.hh"
 
 /* $Id$ */
 
