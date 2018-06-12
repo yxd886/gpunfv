@@ -85,7 +85,7 @@ public:
             aho_preprocess_dfa(&dfa_arr[i]);
         }
 
-        gpu_memcpy_async_h2d(info_for_gpu, this, sizeof(IPS));
+        gpu_memcpy_async_h2d(info_for_gpu, this, sizeof(WAF_AC));
 
         for(i = 0; i < AHO_MAX_DFA; i++) {
             struct aho_state* gpu_root;
