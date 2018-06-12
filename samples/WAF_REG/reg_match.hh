@@ -18,6 +18,10 @@
 #ifndef SIMPLE_RE_MATCH
 #define SIMPLE_RE_MATCH
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int
 match(char *regexp, char *text);
 
@@ -29,5 +33,9 @@ matchstar(int c, char *regexp, char *text);
 
 int
 matchplus(int c, char *regexp, char *text);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
