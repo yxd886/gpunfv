@@ -20,10 +20,9 @@ LD = c++
 # CUDA path
 CUDA = /usr/local/cuda-8.0
 
-# libevent path
-LIBEVENT_INC_DIR=/home/net/gpunfv/libevent
 
 ###############################################################
+LIBEVENT_INC_DIR=/home/net/gpunfv/libevent
 # check CXX version
 # e.g., 4.9.3 -> 40903
 CXXVERSION = $(shell $(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/')

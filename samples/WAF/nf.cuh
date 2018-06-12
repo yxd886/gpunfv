@@ -1,11 +1,11 @@
 #ifndef NF_CUH
 #define NF_CUH
 
-#include "aes.cuh"
+#include "ips.cuh"
 
-typedef class AES NF;						// specify NF class
-typedef class aes_flow_state nf_flow_state;	// specify NF state class
-typedef class AES Infos;
+typedef class IPS NF;						// specify NF class
+typedef class ips_flow_state nf_flow_state;	// specify NF state class
+typedef class gpu_IPS Infos;
 
 
 #endif // NF_CUH

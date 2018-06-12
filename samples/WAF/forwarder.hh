@@ -129,7 +129,7 @@ public:
 
         void forward_pkts(uint64_t index){
             for(unsigned int i=0;i<packets[index].size();i++){
-                _f->send_pkt(std::move(packets[index][i]),_dst,_fs.is_encryption);
+                _f->send_pkt(std::move(packets[index][i]),_dst);
             }
             packets[index].clear();
             _current_byte[index]=0;
@@ -202,7 +202,7 @@ public:
                  }*/
             }else if(type == process_type::cpu_only){
                 process_pkt(&pkt,&_fs);
-                _f->send_pkt(std::move(pkt),_dst,_fs.is_encryption);
+                _f->send_pkt(std::move(pkt),_dst);
             }
 
         }
@@ -245,36 +245,13 @@ public:
         auto impl_lw_ptr =  _free_flow_operators.back();
         impl_lw_ptr->_is_from_client = is_from_client;
         impl_lw_ptr->_dst = dst;
-        if(is_from_client){
-            impl_lw_ptr->_fs.is_encryption = false;
-        }else{
-            impl_lw_ptr->_fs.is_encryption = true;
-        }
         _free_flow_operators.pop_back();//new flow_operator(this,is_from_client,dst);
         auto succeed = _flow_table.insert({src, impl_lw_ptr}).second;
         assert(succeed);
     }
     void free_flow_operator(bufferevent* src){
-
-
-
         auto afi = _flow_table.find(src);
         assert(afi!=_flow_table.end());
-        auto dst = _flow_table.find(afi->second->_dst);
-        if(dst!=_flow_table.end()){
-
-            if(dst->second->packets[0].size()){
-                //printf("dst->second->packets[0].size()\n");
-                dst->second->process_pkts(0);
-                dst->second->forward_pkts(0);
-            }
-            if(dst->second->packets[1].size()){
-                //printf("dst->second->packets[1].size()\n");
-                dst->second->process_pkts(1);
-                dst->second->forward_pkts(1);
-            }
-        }
-
         _free_flow_operators.push_back(afi->second);
         _flow_table.erase(src);
     }
@@ -307,8 +284,6 @@ public:
 
         }
         else {
-            //printf("before enqueue\n");
-            //printf("%.*s\n", *((size_t*)(pkt.msg)), pkt.msg+sizeof(size_t));
             afi->second->per_flow_enqueue(std::move(pkt),type);
 
         }
@@ -325,37 +300,17 @@ public:
 
         }
 
-    size_t get_real_len(void* message, size_t len){
-        uint8_t* msg = (uint8_t*)message;
 
-        while(msg[len-1]==0){
-            len--;
-        }
-        return len;
-    }
 
-    void send_pkt(message pkt, bufferevent* dst,bool is_encryption){
+    void send_pkt(message pkt, bufferevent* dst){
 
         //printf("msg len:%d\n",pkt.length);
         //printf("send len:%d\n",*((size_t*)(pkt.msg)));
         assert(dst);
        // auto f = _flow_table.find(dst);
        // if(f!=_flow_table.end()){
-        size_t len = *((size_t*)(pkt.msg));
-        if (is_encryption){
-            //printf("after encrypt\n");
-            //printf("%.*s\n", ((len+15)/16)*16, pkt.msg+sizeof(size_t));
-            bufferevent_write(dst,pkt.msg+sizeof(size_t),((len+15)/16)*16);
-        }else{
-            len = get_real_len(pkt.msg+sizeof(size_t),len);
-            //printf("real_len:%d\n",len);
-            //printf("after decrypt string\n");
-            //printf("%.*s\n", len, pkt.msg+sizeof(size_t));
-            //printf("after decrypt bit\n");
-            //printf("%.*x\n", len, pkt.msg+sizeof(size_t));
-            bufferevent_write(dst,pkt.msg+sizeof(size_t),len);
-        }
 
+            bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
 
        // }
         //printf("send_buffer: %x\n",dst);
@@ -495,7 +450,7 @@ public:
                 return false;
             }
             _period_profile_num ++;
-            if(_period_profile_num==250){
+            if(_period_profile_num==500){
                 _period_profile_num = 0;
                 printf("periodical profile\n");
                 return true;
@@ -508,7 +463,7 @@ public:
         void schedule_task(uint64_t index, uint64_t total_byte){
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
-             //schedule_timer_tsc[lcore_id] = 0;
+        	 //schedule_timer_tsc[lcore_id] = 0;
             _timer_reactivate=true;
             if(_profile_num<5){
                 _profile_num++;
@@ -754,7 +709,7 @@ public:
                 /////////////////////////////////////////////
                 // Launch kernel
                 if(gpu_time||_profileing||_period_profile){
-                    gpu_sync(stream);
+                	gpu_sync(stream);
                 started[lcore_id] = steady_clock_type::now();
                 }
                 started[lcore_id] = steady_clock_type::now();

@@ -37,20 +37,18 @@ __global__ void gpu_nf_logic(char *pkt_batch, char *state_batch, char *extra_inf
 
 	// Copy state to shared memory
 	gpu_nf_flow_state[id%32] = states[id];
-	size_t len = align_access(*((size_t*)messages),16);
-	len += sizeof(size_t);
+	size_t len = align_access(*((size_t*)messages)+sizeof(size_t),sizeof(size_t));
 	//printf("gpuside len:%d\n",len);
 	size_t total_len = 0;
 	while(len) {
-		NF::nf_logic(messages, &gpu_nf_flow_state[id % 32], extra_info);
+		NF::nf_logic(messages, &gpu_nf_flow_state[id % 32], ((struct gpu_IPS *)extra_info)->dfa_arr);
 		//printf("gpu process messages\n");
 		messages+=len;
 		total_len+=len;
 		if(total_len>=flowDim){
 			break;
 		}
-		len = align_access(*((size_t*)messages),16);
-		len += sizeof(size_t);
+		len = align_access(*((size_t*)messages+sizeof(size_t)),sizeof(size_t));
 	}
 
 	// Copy state back from shared memory

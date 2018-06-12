@@ -111,20 +111,17 @@ readcb(struct bufferevent *bev, void *ctx)
     dst = bufferevent_get_output(partner);
     //evbuffer_add_buffer(dst, src);
     char* msg=(char*)malloc((4096+sizeof(size_t))*sizeof(char));
-    memset(msg,0,4096+sizeof(size_t));
     size_t leng = 0;
     leng=bufferevent_read(bev,msg+sizeof(size_t),4096);
   //  printf("recv %d bytes\n",leng);
     //bufferevent_write(partner,msg+sizeof(size_t),leng);
     if(arg->is_client)
         g_throughput[arg->f->_lcore_id]++;
-    if(leng&&!arg->is_client){
+    if(leng){
         *((size_t*)msg) = leng;
-       // printf("alloc len:%d\n",((leng+16-1)/16)*16);
-        arg->f->dispath_flow(std::move(message(msg,((leng+16-1)/16)*16+sizeof(size_t))),arg->is_client,bev,partner);
+        arg->f->dispath_flow(std::move(message(msg,((leng+sizeof(size_t)+sizeof(size_t)-1)/sizeof(size_t))*sizeof(size_t))),arg->is_client,bev,partner);
 
     }else{
-
         bufferevent_write(partner,msg+sizeof(size_t),leng);
     }
     //bufferevent_write(partner,msg_tmp+sizeof(size_t),leng);
@@ -410,11 +407,11 @@ static void timeout_cb(evutil_socket_t fd, short events, void *arg) {
     }
 
 
-   /* if( ctx->f->_batch._timer_reactivate==false){
+    if( ctx->f->_batch._timer_reactivate==false){
         ctx->f->time_trigger_schedule();
     }else{
         ctx->f->_batch._timer_reactivate=false;
-    }*/
+    }
 
     struct event* ev_time = ctx->ev;
     struct timeval tv;
@@ -536,6 +533,13 @@ main(int argc, char **argv)
     parse_args(argc,argv);
     for(int i=1;i<core_num;i++){
         std::thread a(thread_main,i);
+
+        cpu_set_t cpuset;
+          CPU_ZERO(&cpuset);
+          CPU_SET(i, &cpuset);
+          int rc = pthread_setaffinity_np(a.native_handle(),
+                                          sizeof(cpu_set_t), &cpuset);
+
         a.detach();
     }
     thread_main(0);
