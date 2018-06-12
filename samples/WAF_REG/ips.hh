@@ -13,6 +13,7 @@
 //#include "../include/packet_parser.hh"
 
 #include "picohttpparser.hh"
+#include "reg_match.hh"
 
 
 #define DFA_NUM 200
