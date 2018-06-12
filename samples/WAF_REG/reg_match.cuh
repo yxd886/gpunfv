@@ -1,6 +1,18 @@
 #ifndef GPU_SIMPLE_RE_MATCH
 #define GPU_SIMPLE_RE_MATCH
 
+int
+match(char *regexp, char *text);
+
+int
+matchhere(char *regexp, char *text);
+
+int
+matchstar(int c, char *regexp, char *text);
+
+int
+matchplus(int c, char *regexp, char *text);
+
 /*
  @brief search for regexp anywhere in the text and return the index that matches
  @param regular expression string
