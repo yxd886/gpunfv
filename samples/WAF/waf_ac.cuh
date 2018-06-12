@@ -1,5 +1,5 @@
-#ifndef GPU_IPS_CUH
-#define GPU_IPS_CUH
+#ifndef GPU_WAF_AC_CUH
+#define GPU_WAF_AC_CUH
 
 #include <iostream>
 #include <cstdio>
