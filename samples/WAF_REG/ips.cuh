@@ -16,6 +16,8 @@
 #include "../../nf/aho-corasick/fpp.h"
 #include "../../nf/aho-corasick/aho.hh"
 
+#include "reg_match.cuh"
+
 // #define MAX_MATCH 8192
 // #define MAX_PKT_SIZE 64
 #define DFA_NUM 200
