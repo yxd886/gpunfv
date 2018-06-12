@@ -1,5 +1,5 @@
-#ifndef GPU_WAF_AC_CUH
-#define GPU_WAF_AC_CUH
+#ifndef GPU_IPS_CUH
+#define GPU_IPS_CUH
 
 #include <iostream>
 #include <cstdio>
@@ -20,13 +20,13 @@
 // #define MAX_PKT_SIZE 64
 #define DFA_NUM 200
 
-class waf_ac_flow_state{
+class ips_flow_state{
 public:
     uint16_t _state[DFA_NUM];
     int _dfa_id[DFA_NUM];
     bool _alert[DFA_NUM];
 
-    __device__ waf_ac_flow_state& operator=(const waf_ac_flow_state& s) {
+    __device__ ips_flow_state& operator=(const ips_flow_state& s) {
         for(int i = 0; i < DFA_NUM; i++) {
             _state[i] = s._state[i];
             _dfa_id[i] = s._dfa_id[i];
@@ -37,18 +37,18 @@ public:
     }
 };
 
-struct gpu_WAF_AC{ 
+struct gpu_IPS{ 
     struct aho_dfa dfa_arr[AHO_MAX_DFA];
     struct stat_t *stats;
 };
 
-class WAF_AC {
+class IPS {
 public:
-    __device__ inline static void nf_logic(void *pkt, waf_ac_flow_state *state, aho_dfa *info) {
+    __device__ inline static void nf_logic(void *pkt, ips_flow_state *state, aho_dfa *info) {
         process_batch((char *)pkt, state, info);
     }
 
-    __device__ inline static void process_batch(char *pkt, waf_ac_flow_state *ips_state, const aho_dfa *dfa_arr) {
+    __device__ inline static void process_batch(char *pkt, ips_flow_state *ips_state, const aho_dfa *dfa_arr) {
         int  j;
 
         uint16_t len = *(size_t*)pkt;

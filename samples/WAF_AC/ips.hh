@@ -5,8 +5,8 @@
  *      Author: xiaodongyi
  */
 
-#ifndef WAF_AC_HH
-#define WAF_AC_HH
+#ifndef IPS_HH
+#define IPS_HH
 
 #include "../../nf/aho-corasick/fpp.h"
 #include "../../nf/aho-corasick/aho.h"
@@ -16,20 +16,20 @@
 #define DFA_NUM 200
 #define MAX_MATCH 8192
 
-struct waf_ac_flow_state {
+struct ips_flow_state {
     uint16_t _state[DFA_NUM];
     int _dfa_id[DFA_NUM];
     bool _alert[DFA_NUM];
 
 };
 
-class WAF_AC {
+class IPS {
 public:
     struct aho_dfa dfa_arr[AHO_MAX_DFA];
     struct stat_t *stats;
-    WAF_AC *info_for_gpu;
+    IPS *info_for_gpu;
 
-    inline void init_automataState(struct waf_ac_flow_state& state){
+    inline void init_automataState(struct ips_flow_state& state){
         for(int i = 0; i < DFA_NUM; i++){
             srand((unsigned)time(NULL));
             state._state[i] = 0;
@@ -38,16 +38,16 @@ public:
         }
     }
 
-    inline void nf_logic(void *pkt, struct waf_ac_flow_state* state) {
+    inline void nf_logic(void *pkt, struct ips_flow_state* state) {   
         ips_detect(pkt, state);
     }
 
-    WAF_AC(){
+    IPS(){
         int num_patterns, i;
         int num_threads = 1;
         assert(num_threads >= 1 && num_threads <= AHO_MAX_THREADS);
 
-        gpu_malloc((void**)(&info_for_gpu), sizeof(WAF_AC));
+        gpu_malloc((void**)(&info_for_gpu), sizeof(IPS));
 
         struct stat_t *gpu_stats;
         stats =(struct stat_t *)malloc(num_threads * sizeof(struct stat_t));
@@ -85,7 +85,7 @@ public:
             aho_preprocess_dfa(&dfa_arr[i]);
         }
 
-        gpu_memcpy_async_h2d(info_for_gpu, this, sizeof(WAF_AC));
+        gpu_memcpy_async_h2d(info_for_gpu, this, sizeof(IPS));
 
         for(i = 0; i < AHO_MAX_DFA; i++) {
             struct aho_state* gpu_root;
@@ -101,7 +101,7 @@ public:
         gpu_memcpy_async_h2d(gpu_stats, stats, num_threads * sizeof(struct stat_t));
     }
 
-    ~WAF_AC(){
+    ~IPS(){
         for(int i = 0; i < AHO_MAX_DFA; i++) {
             //gpu_mem_unmap(dfa_arr[i].root);
             free(dfa_arr[i].root);
@@ -114,7 +114,7 @@ public:
         uint16_t ptrn_id[MAX_MATCH];
     };
 
-    void parse_pkt(void *pkt, struct waf_ac_flow_state* state,struct aho_pkt*  aho_pkt){
+    void parse_pkt(void *pkt, struct ips_flow_state* state,struct aho_pkt*  aho_pkt){
         uint16_t len = *(size_t*)pkt;
 
        aho_pkt->content=(uint8_t*)malloc(len);
@@ -125,7 +125,7 @@ public:
    }
 
    void process_batch(const struct aho_dfa *dfa_arr,
-       const struct aho_pkt *pkts, struct mp_list_t *mp_list, struct waf_ac_flow_state* ips_state) {
+       const struct aho_pkt *pkts, struct mp_list_t *mp_list, struct ips_flow_state* ips_state) {
         int I, j;
 
         for(I = 0; I < BATCH_SIZE; I++) {
@@ -183,7 +183,7 @@ public:
     }
 
 
-    void ids_func(struct aho_ctrl_blk *cb,struct waf_ac_flow_state* state) {
+    void ids_func(struct aho_ctrl_blk *cb,struct ips_flow_state* state) {
         int i, j;
         struct aho_dfa *dfa_arr = cb->dfa_arr;
         struct aho_pkt *pkts = cb->pkts;
@@ -207,7 +207,7 @@ public:
         }
    }
 
-   void ips_detect(void *pkt, struct waf_ac_flow_state* state){
+   void ips_detect(void *pkt, struct ips_flow_state* state){
         struct aho_pkt* pkts=(struct aho_pkt* )malloc(sizeof(struct aho_pkt));
 
         parse_pkt(pkt, state,pkts);
