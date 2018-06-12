@@ -1,16 +1,16 @@
 #ifndef GPU_SIMPLE_RE_MATCH
 #define GPU_SIMPLE_RE_MATCH
 
-int
+__device__ int
 match(char *regexp, char *text);
 
-int
+__device__ int
 matchhere(char *regexp, char *text);
 
-int
+__device__ int
 matchstar(int c, char *regexp, char *text);
 
-int
+__device__ int
 matchplus(int c, char *regexp, char *text);
 
 /*
