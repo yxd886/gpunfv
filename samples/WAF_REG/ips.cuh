@@ -17,6 +17,7 @@
 #include "../../nf/aho-corasick/aho.hh"
 
 #include "reg_match.cuh"
+#include "picohttpparser.cuh"
 
 // #define MAX_MATCH 8192
 // #define MAX_PKT_SIZE 64

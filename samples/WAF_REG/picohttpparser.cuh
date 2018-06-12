@@ -160,7 +160,7 @@ static __device__ const char *get_token_to_eol(const char *buf, const char *buf_
         DOIT();
         DOIT();
         DOIT();
-        DOIT();
+        DOIT();s
         DOIT();
 #undef DOIT
         continue;
