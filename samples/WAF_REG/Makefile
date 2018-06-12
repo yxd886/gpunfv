@@ -10,6 +10,7 @@ EXEC = proxy
 # compilers
 CXX = c++
 CUCXX = /usr/local/cuda-8.0/bin/nvcc
+CC = gcc
 
 # linker
 LD = c++
