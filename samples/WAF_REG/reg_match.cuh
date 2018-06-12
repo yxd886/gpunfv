@@ -2,16 +2,16 @@
 #define GPU_SIMPLE_RE_MATCH
 
 __device__ int
-match(char *regexp, char *text);
+gpu_match(char *regexp, char *text);
 
 __device__ int
-matchhere(char *regexp, char *text);
+gpu_matchhere(char *regexp, char *text);
 
 __device__ int
-matchstar(int c, char *regexp, char *text);
+gpu_matchstar(int c, char *regexp, char *text);
 
 __device__ int
-matchplus(int c, char *regexp, char *text);
+gpu_matchplus(int c, char *regexp, char *text);
 
 /*
  @brief search for regexp anywhere in the text and return the index that matches
@@ -19,7 +19,7 @@ matchplus(int c, char *regexp, char *text);
  @param string to perform the regex on
  */
 __device__ int
-match(char *regexp, char *text)
+gpu_match(char *regexp, char *text)
 {
     if (regexp[0] == '^')
         return matchhere(regexp+1, text);
@@ -31,7 +31,7 @@ match(char *regexp, char *text)
 }
 
 __device__ int
-matchhere(char *regexp, char *text)
+gpu_matchhere(char *regexp, char *text)
 {
     if (regexp[0] == '\0')
         return 1;
@@ -48,7 +48,7 @@ matchhere(char *regexp, char *text)
 
 /* matchstar: leftmost longest search for c*regexp */
 __device__ int
-matchstar(int c, char *regexp, char *text)
+gpu_matchstar(int c, char *regexp, char *text)
 {
     char *t;
     for (t = text; *t != '\0' && (*t == c || c == '.'); t++)
@@ -61,7 +61,7 @@ matchstar(int c, char *regexp, char *text)
 }
 
 __device__ int
-matchplus(int c, char *regexp, char *text)
+gpu_matchplus(int c, char *regexp, char *text)
 {
     int i = 0;
     do { //a matches one or more instances
