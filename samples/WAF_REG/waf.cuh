@@ -73,20 +73,20 @@ public:
 		const char* path;
 		int ret;
 
-		/*// First, parse the HTTP request
+		// First, parse the HTTP request
 		ret = phr_parse_request(req_buf,
-								    buf_len,
-									&method,
-									&state->method_len,
-									&path,
-									&state->path_len,
-									&state->minor_version,
-									state->headers,
-									&state->num_headers,
-									0);
+							   buf_len,
+							   &method,
+							   &state->method_len,
+							   &path,
+							   &state->path_len,
+							   &state->minor_version,
+							   state->headers,
+							   &state->num_headers,
+							   0);
 
 		// Remove this assert if it doesn't work.
-		assert(ret == buf_len);*/
+		assert(ret == buf_len);
 
 		// Do some post processing for this HTTP request
 		// ....
@@ -98,7 +98,7 @@ public:
 		assert(buf_len <= (MAX_STR_LENGTH-1));
 
 		// Copy the request buffer, prepare a string.
-		memcpy(state->str, req_buf, buf_len);
+		/*memcpy(state->str, req_buf, buf_len);
 		state->str[buf_len] = '\0';
 
 		// Start regular expression matching
@@ -125,7 +125,7 @@ public:
 		if(ret) {
 			state->is_reg_matched = true;
 			return;
-		}
+		}*/
 	}
 };
 
