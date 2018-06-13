@@ -71,9 +71,10 @@ public:
 		char* req_buf = reinterpret_cast<char*>(pkt+sizeof(size_t));
 		const char* method;
 		const char* path;
+		int ret;
 
 		/*// First, parse the HTTP request
-		int ret = phr_parse_request(req_buf,
+		ret = phr_parse_request(req_buf,
 								    buf_len,
 									&method,
 									&state->method_len,
