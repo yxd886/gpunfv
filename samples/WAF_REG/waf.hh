@@ -48,9 +48,11 @@ struct waf_flow_state {
 
 class WAF {
 public:
+	void *info_for_gpu;
 
 	// Constructor
 	WAF() {
+		info_for_gpu = nullptr;
 	}
 
 	// Deconstructor
