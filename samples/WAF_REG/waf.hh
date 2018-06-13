@@ -56,15 +56,15 @@ public:
 	inline void nf_logic(void *pkt, struct waf_flow_state* state) {
 		size_t buf_len = *(size_t*)pkt;
 		char* req_buf = reinterpret_cast<char*>(pkt+sizeof(size_t));
-		const char** method = &(state->method);
-		const char** path = &(state->path);
+		const char* method;
+		const char* path;
 
 		// First, parse the HTTP request
 		int ret = phr_parse_request(req_buf,
 								    buf_len,
-									method,
+									&method,
 									&state->method_len,
-									path,
+									&path,
 									&state->path_len,
 									&state->minor_version,
 									state->headers,
