@@ -72,7 +72,7 @@ public:
 		const char* method;
 		const char* path;
 
-		// First, parse the HTTP request
+		/*// First, parse the HTTP request
 		int ret = phr_parse_request(req_buf,
 								    buf_len,
 									&method,
@@ -85,7 +85,7 @@ public:
 									0);
 
 		// Remove this assert if it doesn't work.
-		assert(ret == buf_len);
+		assert(ret == buf_len);*/
 
 		// Do some post processing for this HTTP request
 		// ....
