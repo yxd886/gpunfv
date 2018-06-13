@@ -1,11 +1,10 @@
 #ifndef NF_HH
 #define NF_HH
 
-#include "ips.hh"
 #include "waf.hh"
 
-using NF = IPS;                         // specify NF class
-using nf_flow_state = ips_flow_state;   // specify NF state class
+using NF = WAF;                         // specify NF class
+using nf_flow_state = waf_flow_state;   // specify NF state class
 
 
 #endif
