@@ -14,13 +14,13 @@
 #include "reg_match.hh"
 
 #define REG_EXPR_NUM 4
-static const char *reg_expr1 = "1+2+3";
-static const char *reg_expr2 = "w+t+f";
-static const char *reg_expr3 = "4+5+6";
-static const char *reg_expr4 = "H+a+H";
-static const char *reg_expr_array[REG_EXPR_NUM] = {reg_expr1, reg_expr2, reg_expr3, reg_expr4};
+static char *reg_expr1 = "1+2+3";
+static char *reg_expr2 = "w+t+f";
+static char *reg_expr3 = "4+5+6";
+static char *reg_expr4 = "H+a+H";
+static char *reg_expr_array[REG_EXPR_NUM] = {reg_expr1, reg_expr2, reg_expr3, reg_expr4};
 
-#define MAX_STR_LENGTH 128;
+#define MAX_STR_LENGTH 128
 
 struct waf_flow_state {
     // A pointer to the start of the method string
@@ -84,6 +84,23 @@ public:
 
 		// Then apply regular expression matching.
 
+		// Make sure that the length of the buffer does not exceed
+		// the limit.
+		assert(buf_len <= (MAX_STR_LENGTH-1));
+
+		// Copy the request buffer, prepare a string.
+		memcpy(state->str, req_buf, buf_len);
+		state->str[buf_len] = '\0';
+
+		// Start regular expression matching
+		state->is_reg_matched = false;
+		for(int i=0; i<REG_EXPR_NUM; i++) {
+			int ret = match(reg_expr_array[i], state->str);
+			if(ret) {
+				state->is_reg_matched = true;
+				break;
+			}
+		}
 
 	}
 };
