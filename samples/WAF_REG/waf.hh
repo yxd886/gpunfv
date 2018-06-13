@@ -57,6 +57,11 @@ public:
 	~WAF() {
 	}
 
+	// State initialization
+    inline void init_automataState(struct waf_flow_state& state){
+        state.is_reg_matched=false;
+    }
+
 	// WAF entry point
 	inline void nf_logic(void *pkt, struct waf_flow_state* state) {
 		size_t buf_len = *(size_t*)pkt;
