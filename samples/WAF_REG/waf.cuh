@@ -102,7 +102,6 @@ public:
 
 		// Start regular expression matching
 		state->is_reg_matched = false;
-		int ret;
 		
 		// Copy the following text to apply regular expression
 		// matching for different regular expressions.
