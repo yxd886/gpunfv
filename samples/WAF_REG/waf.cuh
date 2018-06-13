@@ -52,7 +52,7 @@ public:
 
 	// Constructor
 	__device__ WAF() {
-		info_for_gpu = nullptr;
+		info_for_gpu = 0;
 	}
 
 	// Deconstructor
