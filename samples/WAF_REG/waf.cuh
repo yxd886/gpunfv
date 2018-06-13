@@ -98,7 +98,7 @@ public:
 		assert(buf_len <= (MAX_STR_LENGTH-1));
 
 		// Copy the request buffer, prepare a string.
-		/*memcpy(state->str, req_buf, buf_len);
+		memcpy(state->str, req_buf, buf_len);
 		state->str[buf_len] = '\0';
 
 		// Start regular expression matching
@@ -125,7 +125,7 @@ public:
 		if(ret) {
 			state->is_reg_matched = true;
 			return;
-		}*/
+		}
 	}
 };
 
