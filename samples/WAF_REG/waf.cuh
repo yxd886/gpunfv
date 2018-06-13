@@ -65,7 +65,7 @@ public:
     }
 
 	// WAF entry point
-	__device__ inline void nf_logic(void *pkt, struct waf_flow_state* state, void* info) {
+	static __device__ inline void nf_logic(void *pkt, struct waf_flow_state* state, void* info) {
 		size_t buf_len = *(size_t*)pkt;
 		char* req_buf = reinterpret_cast<char*>(pkt+sizeof(size_t));
 		const char* method;
