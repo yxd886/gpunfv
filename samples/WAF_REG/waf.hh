@@ -15,10 +15,10 @@
 
 #define REG_EXPR_NUM 4
 
-static const char *reg_expr1 = "";
-static const char *reg_expr2 = "";
-static const char *reg_expr3 = "";
-static const char *reg_expr4 = "";
+static const char *reg_expr1 = "1+2+3";
+static const char *reg_expr2 = "w+t+f";
+static const char *reg_expr3 = "4+5+6";
+static const char *reg_expr4 = "H+a+H";
 
 static const char *reg_expr_array[REG_EXPR_NUM] = {reg_expr1, reg_expr2, reg_expr3, reg_expr4};
 
@@ -54,6 +54,23 @@ public:
 
 	// WAF entry point
 	inline void nf_logic(void *pkt, struct waf_flow_state* state) {
+		size_t buf_len = *(size_t*)pkt;
+		char* req_buf = reinterpret_cast<char*>(pkt+sizeof(size_t));
+
+		// First, parse the HTTP request
+		int ret = phr_parse_request(req_buf,
+								    buf_len,
+									&state->method,
+									&state->method_len,
+									&state->path,
+									&state->path_len,
+									&state->minor_version,
+									state->headers,
+									&state->num_headers,
+									0);
+		// Remove this assert if it doesn't work.
+		assert(ret == buf_len);
+
 
 	}
 };
