@@ -1,10 +1,10 @@
 #ifndef NF_HH
 #define NF_HH
 
-#include "ips.hh"
+#include "aes.hh"
 
-using NF = IPS;                         // specify NF class
-using nf_flow_state = ips_flow_state;   // specify NF state class
+using NF = AES;                         // specify NF class
+using nf_flow_state = aes_flow_state;   // specify NF state class
 
 
 #endif
