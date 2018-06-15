@@ -182,6 +182,14 @@ public:
         if(state->is_encryption){
             AES_init_ctx_iv(&ctx, state->key, state->iv);
             AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
+                        AES_init_ctx_iv(&ctx, state->key, state->iv);
+            AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
+                        AES_init_ctx_iv(&ctx, state->key, state->iv);
+            AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
+                        AES_init_ctx_iv(&ctx, state->key, state->iv);
+            AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
+                        AES_init_ctx_iv(&ctx, state->key, state->iv);
+            AES_CBC_encrypt_buffer(&ctx, buffer, len_padding);
 
         }else{
         		AES_init_ctx_iv(&ctx, state->key, state->iv);
