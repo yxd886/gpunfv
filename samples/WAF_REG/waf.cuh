@@ -25,9 +25,9 @@ __device__ char *reg_expr_array[REG_EXPR_NUM] = {"pageXOffset","encodeURI","enco
                                        "shift","export","exit","unset","AllowGroups","AllowTcpForwarding","AllowUsers","AuthorizedKeysFile","Banner","Batchmode",
                                        "BindAddress","CheckHostIP","ChrootDirectory","Cipher","Ciphers","ClearAllForwardings","ClientAliveCountMax","ClientAliveInterval","Compression","CompressionLevel",
                                        "DenyUsers","DisableBanner","EscapeChar","FallBackToRsh","ForwardX11","GatewayPorts","HostbasedAuthentication","HostbasedUsesNameFromPacketOnly","HostKeyAlgorithms","IgnoreIfUnknown",
-                                       "IgnoreUserKnownHosts","IdentityFile","LoginGraceTime","LookupClientHostnames+","MaxStartups","PAMServiceName","PermitRootLogin","PAMServicePrefix","ProxyCommand","RekeyLimit",
-                                       "RemoteForward","RhostsRSAAuthentication","ServerAliveCountMax","ServerAliveInterval+","Subsystem","UserKnownHostsFile","X11Forwarding","X11UseLocalHost","XAuthLocation","PASSREQ",
-                                       "TIMEOUT","SYSLOG_FAILED_LOGINS","CONSOLE","function","Get-Service","Get-Process+","Parameter","Mandatory+","set-variable","break",
+                                       "IgnoreUserKnownHosts","IdentityFile","LoginGraceTime","LookupClientHostnames","MaxStartups","PAMServiceName","PermitRootLogin","PAMServicePrefix","ProxyCommand","RekeyLimit",
+                                       "RemoteForward","RhostsRSAAuthentication","ServerAliveCountMax","ServerAliveInterval","Subsystem","UserKnownHostsFile","X11Forwarding","X11UseLocalHost","XAuthLocation","PASSREQ",
+                                       "TIMEOUT","SYSLOG_FAILED_LOGINS","CONSOLE","function","Get-Service","Get-Process","Parameter","Mandatory","set-variable","break",
                                        "continue","elseif","foreach","int","xml","hashtable","switch","$Args","$Error","$PSHome",
                                        "$Home","write-output","Hidden","MemberType","MemberSet","Method","GetHashCode","Collections","Property","string"};
 
