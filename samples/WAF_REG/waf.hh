@@ -20,7 +20,7 @@ static char *reg_expr3 = "4+5+6";
 static char *reg_expr4 = "H+a+H";
 static char *reg_expr_array[REG_EXPR_NUM] = {reg_expr1, reg_expr2, reg_expr3, reg_expr4};
 
-#define MAX_STR_LENGTH 128
+#define MAX_STR_LENGTH 65535
 
 struct waf_flow_state {
     // A pointer to the start of the method string
