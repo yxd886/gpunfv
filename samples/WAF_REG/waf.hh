@@ -85,7 +85,7 @@ public:
 									0);
 
 		// Remove this assert if it doesn't work.
-		assert(ret == buf_len);
+		//assert(ret == buf_len);
 
 		// Do some post processing for this HTTP request
 		// ....
