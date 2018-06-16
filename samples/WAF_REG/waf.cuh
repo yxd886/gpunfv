@@ -19,7 +19,7 @@
 //static __device__ char *reg_expr3 = "4+5+6";
 //static __device__ char *reg_expr4 = "H+a+H";
 
-char *reg_expr_array[REG_EXPR_NUM] = {"1+2+3", "w+t+f", "4+5+6", "H+a+H"};
+__device__ char *reg_expr_array[REG_EXPR_NUM] = {"1+2+3", "w+t+f", "4+5+6", "H+a+H"};
 
 #define MAX_STR_LENGTH 2048
 
