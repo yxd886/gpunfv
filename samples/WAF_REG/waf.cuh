@@ -14,12 +14,12 @@
 #include "reg_match.cuh"
 
 #define REG_EXPR_NUM 4
-static __device__ char *reg_expr1 = "1+2+3";
-static __device__ char *reg_expr2 = "w+t+f";
-static __device__ char *reg_expr3 = "4+5+6";
-static __device__ char *reg_expr4 = "H+a+H";
+//static __device__ char *reg_expr1 = "1+2+3";
+//static __device__ char *reg_expr2 = "w+t+f";
+//static __device__ char *reg_expr3 = "4+5+6";
+//static __device__ char *reg_expr4 = "H+a+H";
 
-// static __device__ char *reg_expr_array[REG_EXPR_NUM] = {reg_expr1, reg_expr2, reg_expr3, reg_expr4};
+char *reg_expr_array[REG_EXPR_NUM] = {"1+2+3", "w+t+f", "4+5+6", "H+a+H"};
 
 #define MAX_STR_LENGTH 2048
 
@@ -102,11 +102,11 @@ public:
 		str[buf_len] = '\0';
 
 		// Start regular expression matching
-		state->is_reg_matched = false;
+		//state->is_reg_matched = false;
 		
 		// Copy the following text to apply regular expression
 		// matching for different regular expressions.
-		ret = match(reg_expr1, str);
+		/*ret = match(reg_expr1, str);
 		if(ret) {
 			state->is_reg_matched = true;
 			return;
@@ -125,6 +125,14 @@ public:
 		if(ret) {
 			state->is_reg_matched = true;
 			return;
+		}*/
+		state->is_reg_matched = false;
+		for(int i=0; i<REG_EXPR_NUM; i++) {
+			int ret = match(reg_expr_array[i], str);
+			if(ret) {
+				state->is_reg_matched = true;
+				break;
+			}
 		}
 	}
 };
