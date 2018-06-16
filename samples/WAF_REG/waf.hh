@@ -13,12 +13,9 @@
 #include "picohttpparser.hh"
 #include "reg_match.hh"
 
-#define REG_EXPR_NUM 4
-static char *reg_expr1 = "1+2+3";
-static char *reg_expr2 = "w+t+f";
-static char *reg_expr3 = "4+5+6";
-static char *reg_expr4 = "H+a+H";
-static char *reg_expr_array[REG_EXPR_NUM] = {reg_expr1, reg_expr2, reg_expr3, reg_expr4};
+#define REG_EXPR_NUM 20
+char *reg_expr_array[REG_EXPR_NUM] = {"pageXOffset","encodeURI","encodeURIComponent","1+2+3", "w+t+f", "4+5+6", "H+a+H","outerHeight","setInterval","decodeURIComponent",
+                                      "offscreenBuffering","innerWidth","pageYOffset","onmouseup","propertyIsEnum","clearTimeout","isPrototypeOf","hasOwnProperty","isPrototypeOf","isFinite" };
 
 #define MAX_STR_LENGTH 2048
 
