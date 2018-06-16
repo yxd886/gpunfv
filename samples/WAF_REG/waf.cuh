@@ -21,7 +21,7 @@ static __device__ char *reg_expr4 = "H+a+H";
 
 // static __device__ char *reg_expr_array[REG_EXPR_NUM] = {reg_expr1, reg_expr2, reg_expr3, reg_expr4};
 
-#define MAX_STR_LENGTH 65535
+#define MAX_STR_LENGTH 2048
 
 struct waf_flow_state {
     // A pointer to the start of the method string
@@ -42,7 +42,6 @@ struct waf_flow_state {
     // Total number of the parsed headers
     size_t num_headers;
     // A char array which is used to store a string for matching.
-    char str[MAX_STR_LENGTH];
     // Whether we have detected a match for a particular request
     bool is_reg_matched;
 };
@@ -72,6 +71,7 @@ public:
 		const char* method;
 		const char* path;
 		int ret;
+		char str[MAX_STR_LENGTH];
 
 		// First, parse the HTTP request
 		ret = phr_parse_request(req_buf,
@@ -98,30 +98,30 @@ public:
 		assert(buf_len <= (MAX_STR_LENGTH-1));
 
 		// Copy the request buffer, prepare a string.
-		memcpy(state->str, req_buf, buf_len);
-		state->str[buf_len] = '\0';
+		memcpy(str, req_buf, buf_len);
+		str[buf_len] = '\0';
 
 		// Start regular expression matching
 		state->is_reg_matched = false;
 		
 		// Copy the following text to apply regular expression
 		// matching for different regular expressions.
-		ret = match(reg_expr1, state->str);
+		ret = match(reg_expr1, str);
 		if(ret) {
 			state->is_reg_matched = true;
 			return;
 		}
-		ret = match(reg_expr2, state->str);
+		ret = match(reg_expr2, str);
 		if(ret) {
 			state->is_reg_matched = true;
 			return;
 		}
-		ret = match(reg_expr3, state->str);
+		ret = match(reg_expr3, str);
 		if(ret) {
 			state->is_reg_matched = true;
 			return;
 		}
-		ret = match(reg_expr4, state->str);
+		ret = match(reg_expr4, str);
 		if(ret) {
 			state->is_reg_matched = true;
 			return;
