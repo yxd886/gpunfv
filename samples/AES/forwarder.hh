@@ -665,9 +665,9 @@ public:
                     started[lcore_id] = steady_clock_type::now();
 
                     // Forward GPU packets[current_idx]
-                    latency_stoped[!index] = steady_clock_type::now();
-                    auto latency_elapsed = latency_stoped[!index] - latency_started[!index];
-                    printf("latency: %f\n",static_cast<double>(latency_elapsed.count() / 1.0));
+                    //latency_stoped[!index] = steady_clock_type::now();
+                    //auto latency_elapsed = latency_stoped[!index] - latency_started[!index];
+                    //printf("latency: %f\n",static_cast<double>(latency_elapsed.count() / 1.0));
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
                         _flows[!index][i]->forward_pkts(!index);
                     }
@@ -844,9 +844,9 @@ public:
                     for(unsigned int i = 0; i < _flows[!index].size(); i++){
                         _flows[!index][i]->forward_pkts(!index);
                     }
-                    latency_stoped[!index] = steady_clock_type::now();
-                    auto latency_elapsed = latency_stoped[!index] - latency_started[!index];
-                    printf("latency: %f\n",static_cast<double>(latency_elapsed.count() / 1.0));
+                    //latency_stoped[!index] = steady_clock_type::now();
+                    //auto latency_elapsed = latency_stoped[!index] - latency_started[!index];
+                    //printf("latency: %f\n",static_cast<double>(latency_elapsed.count() / 1.0));
 
                   /*  if(gpu_pkts[!index]){
                         free(gpu_pkts[!index]);
