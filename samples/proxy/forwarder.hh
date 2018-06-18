@@ -474,7 +474,7 @@ public:
                 printf("lcore_id: %d, Profiling......\n",lcore_id);
             }else{
                 if(_profileing&&lcore_id ==0&& dynamic_adjust){
-                    _batch_size = 1024;
+                    _batch_size = 32;
 
                 }
                 _profileing = false;
