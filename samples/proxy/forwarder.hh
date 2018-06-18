@@ -27,6 +27,8 @@ std::chrono::time_point<std::chrono::steady_clock> started[10];
 std::chrono::time_point<std::chrono::steady_clock> stoped[10];
 std::chrono::time_point<std::chrono::steady_clock> simple_started[10];
 std::chrono::time_point<std::chrono::steady_clock> simple_stoped[10];
+std::chrono::time_point<std::chrono::steady_clock> latency_started[2];
+std::chrono::time_point<std::chrono::steady_clock> latency_stoped[2];
 using namespace std::chrono;
 using steady_clock_type = std::chrono::steady_clock;
 
@@ -128,6 +130,9 @@ public:
 
 
         void forward_pkts(uint64_t index){
+            latency_stoped[index] = steady_clock_type::now();
+            auto latency_elapsed = latency_stoped[index] - latency_started[index];
+            printf("latency: %f\n",static_cast<double>(latency_elapsed.count() / 1.0));
             for(unsigned int i=0;i<packets[index].size();i++){
                 _f->send_pkt(std::move(packets[index][i]),_dst);
             }
@@ -461,6 +466,7 @@ public:
         }
 
         void schedule_task(uint64_t index, uint64_t total_byte){
+            latency_started[index] = steady_clock_type::now();
             //To do list:
             //schedule the task, following is the strategy offload all to GPU
         	 //schedule_timer_tsc[lcore_id] = 0;
