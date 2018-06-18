@@ -455,7 +455,7 @@ public:
             _period_profile_num ++;
             if(_period_profile_num==500){
                 _period_profile_num = 0;
-                printf("periodical profile\n");
+                //printf("periodical profile\n");
                 return true;
 
 
