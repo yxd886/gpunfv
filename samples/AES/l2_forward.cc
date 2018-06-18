@@ -57,7 +57,7 @@ uint64_t g_throughput[10];
 uint64_t pre_g_throughput[10];
 int throughput;
 int max_pre_throughput = 0;
-int step = 5;
+int step = 32;
 int direction = 1;
 
 static SSL_CTX *ssl_ctx = NULL;
@@ -371,15 +371,15 @@ public:
 };
 int drop_counter=0;
 void adjust_threshold(){
-    if(max_pre_throughput==0){
+    if(max_pre_throughput==0||_batch_size<=0){
         _batch_size += step;
         return;
     }
     float r = (throughput-max_pre_throughput)/(float)max_pre_throughput;
-    printf("r: %f\n",r);
+    //printf("r: %f\n",r);
     if(r< 0){
         drop_counter++;
-        if(drop_counter == 4){
+        if(drop_counter == 2){
             drop_counter =0;
             direction = (direction==1)?-1:1;
         }
@@ -400,13 +400,14 @@ static void timeout_cb(evutil_socket_t fd, short events, void *arg) {
         for(int i = 0; i<core_num;i++){
             uint64_t per_throughput=0;
             per_throughput= g_throughput[i] - pre_g_throughput[i];
-            printf("core_id: %d throughput: %d reqs/s  ",i, per_throughput);
+            //printf("core_id: %d throughput: %d reqs/s  ",i, per_throughput);
             throughput += per_throughput;
             pre_g_throughput[i] = g_throughput[i];
         }
-        printf("Total throughput: %d reqs/s\n", throughput);
-        max_pre_throughput = throughput;
+        //printf("Total throughput: %d reqs/s\n", throughput);
+        printf("%d\n", throughput);
         if(dynamic_adjust) adjust_threshold();
+        max_pre_throughput = throughput;
     }
 
 
