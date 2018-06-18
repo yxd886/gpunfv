@@ -402,8 +402,9 @@ static void timeout_cb(evutil_socket_t fd, short events, void *arg) {
             pre_g_throughput[i] = g_throughput[i];
         }
         printf("Total throughput: %d reqs/s\n", throughput);
-        max_pre_throughput = throughput;
+
         if(dynamic_adjust) adjust_threshold();
+        max_pre_throughput = throughput;
     }
 
 
