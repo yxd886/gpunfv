@@ -368,7 +368,7 @@ public:
 };
 int drop_counter=0;
 void adjust_threshold(){
-    if(max_pre_throughput==0){
+    if(max_pre_throughput==0||_batch_size<=0){
         _batch_size += step;
         return;
     }
