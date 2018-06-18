@@ -373,7 +373,7 @@ void adjust_threshold(){
         return;
     }
     float r = (throughput-max_pre_throughput)/(float)max_pre_throughput;
-    printf("r: %f\n",r);
+    //printf("r: %f\n",r);
     if(r< 0){
         drop_counter++;
         if(drop_counter == 2){
