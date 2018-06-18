@@ -57,7 +57,7 @@ uint64_t g_throughput[10];
 uint64_t pre_g_throughput[10];
 int throughput;
 int max_pre_throughput = 0;
-int step = 5;
+int step = 32;
 int direction = 1;
 
 static SSL_CTX *ssl_ctx = NULL;
