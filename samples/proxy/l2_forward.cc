@@ -373,7 +373,7 @@ void adjust_threshold(){
         return;
     }
     float r = (throughput-max_pre_throughput)/(float)max_pre_throughput;
-    printf("r: %f, batch_size: %d\n",r,_batch_size);
+   // printf("r: %f, batch_size: %d\n",r,_batch_size);
     if(r< 0){
         drop_counter++;
         if(drop_counter == 2){
@@ -397,11 +397,12 @@ static void timeout_cb(evutil_socket_t fd, short events, void *arg) {
         for(int i = 0; i<core_num;i++){
             uint64_t per_throughput=0;
             per_throughput= g_throughput[i] - pre_g_throughput[i];
-            printf("core_id: %d throughput: %d reqs/s  ",i, per_throughput);
+            //printf("core_id: %d throughput: %d reqs/s  ",i, per_throughput);
             throughput += per_throughput;
             pre_g_throughput[i] = g_throughput[i];
         }
-        printf("Total throughput: %d reqs/s\n", throughput);
+        //printf("Total throughput: %d reqs/s\n", throughput);
+        printf("%d\n", throughput);
 
         if(dynamic_adjust) adjust_threshold();
         max_pre_throughput = throughput;
