@@ -376,7 +376,7 @@ void adjust_threshold(){
     printf("r: %f, batch_size: %d\n",r,_batch_size);
     if(r< 0){
         drop_counter++;
-        if(drop_counter == 4){
+        if(drop_counter == 2){
             drop_counter =0;
             direction = (direction==1)?-1:1;
         }
