@@ -867,6 +867,9 @@ public:
             for(unsigned int i = partition; i < _flows[index].size(); i++){
                 _flows[index][i]->process_pkts(index);
             }
+            latency_stoped[index] = steady_clock_type::now();
+            auto latency_elapsed = latency_stoped[index] - latency_started[index];
+            printf("latency: %f\n",static_cast<double>(latency_elapsed.count() / 1.0));
             if(partition==0){
                 _flows[index].clear();
             }
