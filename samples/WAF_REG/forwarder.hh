@@ -859,7 +859,7 @@ public:
             std::cout<<std::endl;*/
             if(print_time) std::cout<<"max byte: "<<_flows[index][_flows[index].size()-1]->_current_byte[index]<<std::endl;
             if(!schedule) return _flows[index].size();
-            return _flows[index].size()*8/10;
+            return _flows[index].size()*9/10;
             if(_profileing||_period_profile){
 
                 _profile_elements.gpu_flow_num = _flows[index].size()/2;
