@@ -814,9 +814,9 @@ public:
             for(unsigned int i = partition; i < _flows[index].size(); i++){
                 _flows[index][i]->process_pkts(index);
             }
-            latency_stoped[index] = steady_clock_type::now();
-            auto latency_elapsed = latency_stoped[index] - latency_started[index];
-            printf("latency: %f\n",static_cast<double>(latency_elapsed.count() / 1.0));
+            //latency_stoped[index] = steady_clock_type::now();
+            //auto latency_elapsed = latency_stoped[index] - latency_started[index];
+            //printf("latency: %f\n",static_cast<double>(latency_elapsed.count() / 1.0));
             if(partition==0){
                 _flows[index].clear();
             }
@@ -859,6 +859,7 @@ public:
             std::cout<<std::endl;*/
             if(print_time) std::cout<<"max byte: "<<_flows[index][_flows[index].size()-1]->_current_byte[index]<<std::endl;
             if(!schedule) return _flows[index].size();
+            return _flows[index].size()*8/10;
             if(_profileing||_period_profile){
 
                 _profile_elements.gpu_flow_num = _flows[index].size()/2;
