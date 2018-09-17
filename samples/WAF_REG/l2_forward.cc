@@ -410,7 +410,7 @@ static void timeout_cb(evutil_socket_t fd, short events, void *arg) {
 
 
     if( ctx->f->_batch._timer_reactivate==false){
-       // ctx->f->time_trigger_schedule();
+        ctx->f->time_trigger_schedule();
     }else{
         ctx->f->_batch._timer_reactivate=false;
     }
