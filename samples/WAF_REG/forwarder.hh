@@ -542,7 +542,7 @@ public:
                     size_t len=0;
 
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
-
+                        printf("len: %d\n",_flows[index][i]->packets[index][j].len());
                         memcpy(gpu_pkts[index]+i*max_pkt_num_per_flow+len,(char*)(_flows[index][i]->packets[index][j].msg),_flows[index][i]->packets[index][j].len());
                         len += _flows[index][i]->packets[index][j].len();
                     }
