@@ -31,7 +31,7 @@ __device__ char *reg_expr_array[REG_EXPR_NUM] = {"pageXOffset","encodeURI","enco
                                        "continue","elseif","foreach","int","xml","hashtable","switch","$Args","$Error","$PSHome",
                                        "$Home","write-output","Hidden","MemberType","MemberSet","Method","GetHashCode","Collections","Property","string"};
 
-#define MAX_STR_LENGTH 2048
+#define MAX_STR_LENGTH 4200
 
 struct waf_flow_state {
     // A pointer to the start of the method string
