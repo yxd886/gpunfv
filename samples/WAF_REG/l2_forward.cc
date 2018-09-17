@@ -513,7 +513,7 @@ int thread_main(int core_id){
 
     struct timeval tv;
     evutil_timerclear(&tv);
-    tv.tv_sec=1;
+    tv.tv_sec=10;
     event_add(&ev_time, &tv);
     //evtimer_del(&ev_time);
 
