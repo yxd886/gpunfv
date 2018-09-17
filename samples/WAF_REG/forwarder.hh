@@ -144,7 +144,7 @@ public:
         }
 
         void process_pkt(message* pkt, nf_flow_state* fs){
-            _nf->nf_logic(pkt->msg, fs);
+           // _nf->nf_logic(pkt->msg, fs);
             //printf("process messages\n");
         }
 

@@ -24,7 +24,7 @@ __device__ size_t align_access(size_t a,size_t radix){
 }
 
 __global__ void gpu_nf_logic(char *pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows) {
-
+	return;
 	__shared__ nf_flow_state gpu_nf_flow_state[32];
 
 	
