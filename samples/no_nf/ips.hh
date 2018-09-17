@@ -12,6 +12,9 @@
 #include "../../nf/aho-corasick/aho.h"
 //#include "../include/packet_parser.hh"
 
+#include "picohttpparser.hh"
+#include "reg_match.hh"
+
 
 #define DFA_NUM 200
 #define MAX_MATCH 8192

@@ -21,7 +21,7 @@ extern uint64_t dynamic_adjust;
 #define MAX_FLOW_NUM    40000
 #define MAX_GPU_THREAD  10
 #define THREADPERBLOCK  256
-#define MAX_THRESHOLD  40000*300
+#define MAX_THRESHOLD  40000*3000
 
 std::chrono::time_point<std::chrono::steady_clock> started[10];
 std::chrono::time_point<std::chrono::steady_clock> stoped[10];
@@ -144,7 +144,7 @@ public:
         }
 
         void process_pkt(message* pkt, nf_flow_state* fs){
-            _nf->nf_logic(pkt->msg, fs);
+           // _nf->nf_logic(pkt->msg, fs);
             //printf("process messages\n");
         }
 
@@ -310,7 +310,7 @@ public:
        // auto f = _flow_table.find(dst);
        // if(f!=_flow_table.end()){
 
-            bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
+          //  bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
 
        // }
         //printf("send_buffer: %x\n",dst);
@@ -452,7 +452,7 @@ public:
             _period_profile_num ++;
             if(_period_profile_num==500){
                 _period_profile_num = 0;
-                printf("periodical profile\n");
+               // printf("periodical profile\n");
                 return true;
 
 
@@ -470,7 +470,7 @@ public:
                 printf("lcore_id: %d, Profiling......\n",lcore_id);
             }else{
                 if(_profileing&&lcore_id ==0&& dynamic_adjust){
-                    _batch_size = 1024;
+                    _batch_size = 32;
 
                 }
                 _profileing = false;
@@ -542,8 +542,8 @@ public:
                     size_t len=0;
 
                     for(int j = 0; j < (int)_flows[index][i]->packets[index].size(); j++){
-
-                        memcpy(gpu_pkts[index]+i*max_pkt_num_per_flow+len,(_flows[index][i]->packets[index][j].msg),_flows[index][i]->packets[index][j].len());
+                        //printf("len: %d\n",_flows[index][i]->packets[index][j].len());
+                        memcpy(gpu_pkts[index]+i*max_pkt_num_per_flow+len,(char*)(_flows[index][i]->packets[index][j].msg),_flows[index][i]->packets[index][j].len());
                         len += _flows[index][i]->packets[index][j].len();
                     }
                 }
@@ -814,6 +814,9 @@ public:
             for(unsigned int i = partition; i < _flows[index].size(); i++){
                 _flows[index][i]->process_pkts(index);
             }
+            //latency_stoped[index] = steady_clock_type::now();
+            //auto latency_elapsed = latency_stoped[index] - latency_started[index];
+            //printf("latency: %f\n",static_cast<double>(latency_elapsed.count() / 1.0));
             if(partition==0){
                 _flows[index].clear();
             }
@@ -856,6 +859,7 @@ public:
             std::cout<<std::endl;*/
             if(print_time) std::cout<<"max byte: "<<_flows[index][_flows[index].size()-1]->_current_byte[index]<<std::endl;
             if(!schedule) return _flows[index].size();
+            return _flows[index].size()*9/10;
             if(_profileing||_period_profile){
 
                 _profile_elements.gpu_flow_num = _flows[index].size()/2;

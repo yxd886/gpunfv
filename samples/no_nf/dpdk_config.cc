@@ -83,7 +83,7 @@ int parse_args(int argc, char **argv){
                 //printf("invalid _batch_size\n");
                 //print_usage(prgname);
                 //return -1;
-                _batch_size = 10000;
+                _batch_size = 1024;
                 dynamic_adjust = true;
             }
             break;

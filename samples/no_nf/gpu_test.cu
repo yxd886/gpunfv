@@ -24,7 +24,7 @@ __device__ size_t align_access(size_t a,size_t radix){
 }
 
 __global__ void gpu_nf_logic(char *pkt_batch, char *state_batch, char *extra_info, int flowDim, int nflows) {
-
+	return;
 	__shared__ nf_flow_state gpu_nf_flow_state[32];
 
 	
@@ -41,7 +41,7 @@ __global__ void gpu_nf_logic(char *pkt_batch, char *state_batch, char *extra_inf
 	//printf("gpuside len:%d\n",len);
 	size_t total_len = 0;
 	while(len) {
-		NF::nf_logic(messages, &gpu_nf_flow_state[id % 32], ((struct gpu_IPS *)extra_info)->dfa_arr);
+		NF::nf_logic(messages, &gpu_nf_flow_state[id % 32], info);
 		//printf("gpu process messages\n");
 		messages+=len;
 		total_len+=len;
