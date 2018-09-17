@@ -76,6 +76,7 @@ public:
 
 	// WAF entry point
 	static __device__ inline void nf_logic(void *pkt, struct waf_flow_state* state, void* info) {
+		return;
 		size_t buf_len = *(size_t*)pkt;
 		char* req_buf = reinterpret_cast<char*>(pkt+sizeof(size_t));
 		const char* method;
@@ -116,26 +117,6 @@ public:
 		
 		// Copy the following text to apply regular expression
 		// matching for different regular expressions.
-		/*ret = match(reg_expr1, str);
-		if(ret) {
-			state->is_reg_matched = true;
-			return;
-		}
-		ret = match(reg_expr2, str);
-		if(ret) {
-			state->is_reg_matched = true;
-			return;
-		}
-		ret = match(reg_expr3, str);
-		if(ret) {
-			state->is_reg_matched = true;
-			return;
-		}
-		ret = match(reg_expr4, str);
-		if(ret) {
-			state->is_reg_matched = true;
-			return;
-		}*/
 		state->is_reg_matched = false;
 		for(int i=0; i<REG_EXPR_NUM; i++) {
 			int ret = match(reg_expr_array[i], str);
