@@ -21,7 +21,7 @@ extern uint64_t dynamic_adjust;
 #define MAX_FLOW_NUM    40000
 #define MAX_GPU_THREAD  10
 #define THREADPERBLOCK  256
-#define MAX_THRESHOLD  40000*300
+#define MAX_THRESHOLD  40000*3000
 
 std::chrono::time_point<std::chrono::steady_clock> started[10];
 std::chrono::time_point<std::chrono::steady_clock> stoped[10];
