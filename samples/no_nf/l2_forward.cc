@@ -104,7 +104,7 @@ readcb(struct bufferevent *bev, void *ctx)
     size_t len;
     src = bufferevent_get_input(bev);
     len = evbuffer_get_length(src);
-    printf("recv buffer len:%d\n",len);
+    //printf("recv buffer len:%d\n",len);
     if (!partner) {
         evbuffer_drain(src, len);
         return;
