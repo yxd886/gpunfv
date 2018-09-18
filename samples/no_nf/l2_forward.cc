@@ -324,8 +324,8 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     }
 
     assert(b_in && b_out);
-    bufferevent_set_max_single_read(b_in,MAX_READ_WRITE);
-    bufferevent_set_max_single_read(b_out,MAX_READ_WRITE);
+   // bufferevent_set_max_single_read(b_in,MAX_READ_WRITE);
+    //bufferevent_set_max_single_read(b_out,MAX_READ_WRITE);
 
     if (bufferevent_socket_connect(b_out,
         (struct sockaddr*)connect_to_addr, connect_to_addrlen)<0) {
