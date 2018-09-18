@@ -114,7 +114,7 @@ readcb(struct bufferevent *bev, void *ctx)
     char* msg=(char*)malloc((MAX_READ_WRITE+sizeof(size_t))*sizeof(char));
     size_t leng = 0;
     leng=bufferevent_read(bev,msg+sizeof(size_t),MAX_READ_WRITE);
-  //  printf("recv %d bytes\n",leng);
+    printf("recv %d bytes\n",leng);
     //bufferevent_write(partner,msg+sizeof(size_t),leng);
     //if(arg->is_client)
      g_throughput[arg->f->_lcore_id]++;
