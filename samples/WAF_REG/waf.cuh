@@ -19,7 +19,7 @@
 //static __device__ char *reg_expr3 = "4+5+6";
 //static __device__ char *reg_expr4 = "H+a+H";
 
-#define REG_EXPR_NUM 29
+#define REG_EXPR_NUM 10
 /*__device__ char *reg_expr_array[REG_EXPR_NUM] = {"pageXOffset","encodeURI","encodeURIComponent","1+2+3", "w+t+f", "4+5+6", "H+a+H","outerHeight","setInterval","decodeURIComponent",
                                       "offscreenBuffering","innerWidth","pageYOffset","onmouseup","propertyIsEnum","clearTimeout","isPrototypeOf","hasOwnProperty","isPrototypeOf","isFinite",
                                        "shift","export","exit","unset","AllowGroups","AllowTcpForwarding","AllowUsers","AuthorizedKeysFile","Banner","Batchmode",
@@ -31,9 +31,7 @@
                                        "continue","elseif","foreach","int","xml","hashtable","switch","$Args","$Error","$PSHome",
                                        "$Home","write-output","Hidden","MemberType","MemberSet","Method","GetHashCode","Collections","Property","string"};
 */
-__device__ char *reg_expr_array[REG_EXPR_NUM] = {"pageXOffset","encodeURI","encodeURIComponent","1+2+3", "w+t+f", "4+5+6", "H+a+H","outerHeight","setInterval","decodeURIComponent",
-                                      "offscreenBuffering","innerWidth","pageYOffset","onmouseup","propertyIsEnum","clearTimeout","isPrototypeOf","hasOwnProperty","isPrototypeOf","isFinite",
-                                       "shift","export","exit","unset","AllowGroups","AllowTcpForwarding","AllowUsers","AuthorizedKeysFile","Banner"};
+__device__ char *reg_expr_array[REG_EXPR_NUM] = {"pageXOffset","encodeURI","encodeURIComponent","1+2+3", "w+t+f", "4+5+6", "H+a+H","outerHeight","setInterval","decodeURIComponent"};
 
 
 #define MAX_STR_LENGTH 7*1024*10
