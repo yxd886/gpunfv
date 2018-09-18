@@ -63,7 +63,7 @@ int direction = 1;
 static SSL_CTX *ssl_ctx = NULL;
 
 #define MAX_OUTPUT (512*1024)
-#define MAX_READ_WRITE 16*1024
+#define MAX_READ_WRITE 16*1024*10
 
 static void drained_writecb(struct bufferevent *bev, void *ctx);
 static void eventcb(struct bufferevent *bev, short what, void *ctx);
@@ -300,7 +300,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     /* Create two linked bufferevent objects: one to connect, one for the
      * new connection */
     set_keepalive(fd,1,1,5,5);
-    int nRecvBufLen = 16*1024;
+    int nRecvBufLen = MAX_READ_WRITE;
     setsockopt(fd,SOL_SOCKET,SO_RCVBUF,(const char*)&nRecvBufLen,sizeof(int));
     setsockopt(fd,SOL_SOCKET,SO_SNDBUF,(const char*)&nRecvBufLen,sizeof(int));
     accept_arg* arg = (accept_arg*)p;
