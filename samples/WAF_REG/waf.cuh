@@ -105,7 +105,7 @@ public:
 
 		// Make sure that the length of the buffer does not exceed
 		// the limit.
-		assert(buf_len <= (MAX_STR_LENGTH-1));
+		//assert(buf_len <= (MAX_STR_LENGTH-1));
 
 		// Copy the request buffer, prepare a string.
 		memcpy(str, req_buf, buf_len);
