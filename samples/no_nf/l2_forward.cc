@@ -63,7 +63,7 @@ int direction = 1;
 static SSL_CTX *ssl_ctx = NULL;
 
 #define MAX_OUTPUT (512*1024)
-#define MAX_READ_WRITE 16*1024*10
+#define MAX_READ_WRITE 6*1024*10
 
 static void drained_writecb(struct bufferevent *bev, void *ctx);
 static void eventcb(struct bufferevent *bev, short what, void *ctx);
