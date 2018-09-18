@@ -13,8 +13,8 @@
 #include "picohttpparser.hh"
 #include "reg_match.hh"
 
-#define REG_EXPR_NUM 100
-char *reg_expr_array[REG_EXPR_NUM] = {"pageXOffset","encodeURI","encodeURIComponent","1+2+3", "w+t+f", "4+5+6", "H+a+H","outerHeight","setInterval","decodeURIComponent",
+#define REG_EXPR_NUM 29
+/*char *reg_expr_array[REG_EXPR_NUM] = {"pageXOffset","encodeURI","encodeURIComponent","1+2+3", "w+t+f", "4+5+6", "H+a+H","outerHeight","setInterval","decodeURIComponent",
                                       "offscreenBuffering","innerWidth","pageYOffset","onmouseup","propertyIsEnum","clearTimeout","isPrototypeOf","hasOwnProperty","isPrototypeOf","isFinite",
                                        "shift","export","exit","unset","AllowGroups","AllowTcpForwarding","AllowUsers","AuthorizedKeysFile","Banner","Batchmode",
                                        "BindAddress","CheckHostIP","ChrootDirectory","Cipher","Ciphers","ClearAllForwardings","ClientAliveCountMax","ClientAliveInterval","Compression","CompressionLevel",
@@ -24,7 +24,11 @@ char *reg_expr_array[REG_EXPR_NUM] = {"pageXOffset","encodeURI","encodeURICompon
                                        "TIMEOUT","SYSLOG_FAILED_LOGINS","CONSOLE","function","Get-Service","Get-Process","Parameter","Mandatory","set-variable","break",
                                        "continue","elseif","foreach","int","xml","hashtable","switch","$Args","$Error","$PSHome",
                                        "$Home","write-output","Hidden","MemberType","MemberSet","Method","GetHashCode","Collections","Property","string"};
+*/
 
+char *reg_expr_array[REG_EXPR_NUM] = {"pageXOffset","encodeURI","encodeURIComponent","1+2+3", "w+t+f", "4+5+6", "H+a+H","outerHeight","setInterval","decodeURIComponent",
+                                      "offscreenBuffering","innerWidth","pageYOffset","onmouseup","propertyIsEnum","clearTimeout","isPrototypeOf","hasOwnProperty","isPrototypeOf","isFinite",
+                                       "shift","export","exit","unset","AllowGroups","AllowTcpForwarding","AllowUsers","AuthorizedKeysFile","Banner"};
 #define MAX_STR_LENGTH 7*1024*10
 
 struct waf_flow_state {
