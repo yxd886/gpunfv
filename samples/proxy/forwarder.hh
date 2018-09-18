@@ -313,7 +313,7 @@ public:
        // auto f = _flow_table.find(dst);
        // if(f!=_flow_table.end()){
 
-            bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
+            //bufferevent_write(dst,pkt.msg+sizeof(size_t),*((size_t*)(pkt.msg)));
 
        // }
         //printf("send_buffer: %x\n",dst);
