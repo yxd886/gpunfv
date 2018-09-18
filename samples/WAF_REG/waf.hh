@@ -25,7 +25,7 @@ char *reg_expr_array[REG_EXPR_NUM] = {"pageXOffset","encodeURI","encodeURICompon
                                        "continue","elseif","foreach","int","xml","hashtable","switch","$Args","$Error","$PSHome",
                                        "$Home","write-output","Hidden","MemberType","MemberSet","Method","GetHashCode","Collections","Property","string"};
 
-#define MAX_STR_LENGTH 4200
+#define MAX_STR_LENGTH 6*1024*10
 
 struct waf_flow_state {
     // A pointer to the start of the method string
@@ -99,7 +99,7 @@ public:
 
 		// Make sure that the length of the buffer does not exceed
 		// the limit.
-		//assert(buf_len <= (MAX_STR_LENGTH-1));
+		assert(buf_len <= (MAX_STR_LENGTH-1));
 
 		// Copy the request buffer, prepare a string.
 		memcpy(str, req_buf, buf_len);
