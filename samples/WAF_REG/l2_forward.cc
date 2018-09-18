@@ -299,6 +299,9 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     /* Create two linked bufferevent objects: one to connect, one for the
      * new connection */
     set_keepalive(fd,1,1,5,5);
+    int nRecvBufLen = 8*1024;
+    setsockopt(fd,SOL_SOCKET,SO_RCVBUF,(const char*)&nRecvBufLen,sizeof(int));
+    setsockopt(fd,SOL_SOCKET,SO_SNDBUF,(const char*)&nRecvBufLen,sizeof(int));
     accept_arg* arg = (accept_arg*)p;
     forwarder* f0 =arg->f;
     struct event_base *base = arg->base;

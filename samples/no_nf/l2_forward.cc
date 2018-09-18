@@ -63,6 +63,7 @@ int direction = 1;
 static SSL_CTX *ssl_ctx = NULL;
 
 #define MAX_OUTPUT (512*1024)
+#define MAX_READ_WRITE 8*1024
 
 static void drained_writecb(struct bufferevent *bev, void *ctx);
 static void eventcb(struct bufferevent *bev, short what, void *ctx);
@@ -308,6 +309,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     b_in = bufferevent_socket_new(base, fd,
             BEV_OPT_CLOSE_ON_FREE|BEV_OPT_DEFER_CALLBACKS);
 
+
     if (!ssl_ctx || use_wrapper)
         b_out = bufferevent_socket_new(base, -1,
                 BEV_OPT_CLOSE_ON_FREE|BEV_OPT_DEFER_CALLBACKS);
@@ -319,6 +321,8 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     }
 
     assert(b_in && b_out);
+    bufferevent_set_max_single_read(b_in,MAX_READ_WRITE);
+    bufferevent_set_max_single_read(b_out,MAX_READ_WRITE);
 
     if (bufferevent_socket_connect(b_out,
         (struct sockaddr*)connect_to_addr, connect_to_addrlen)<0) {
