@@ -51,7 +51,7 @@ extern"C"{
 #include "forwarder.hh"
 using namespace std;
 extern int core_num;
-
+#define MAX_READ_WRITE 6*1024*10
 static int use_wrapper = 1;
 uint64_t g_throughput[10];
 uint64_t pre_g_throughput[10];
@@ -86,7 +86,6 @@ public:
     forwarder* f;
 };
 
-char msg_tmp[4096+sizeof(size_t)];
 static void
 readcb(struct bufferevent *bev, void *ctx)
 {
@@ -110,9 +109,9 @@ readcb(struct bufferevent *bev, void *ctx)
     }
     dst = bufferevent_get_output(partner);
     //evbuffer_add_buffer(dst, src);
-    char* msg=(char*)malloc((4096+sizeof(size_t))*sizeof(char));
+    char* msg=(char*)malloc((MAX_READ_WRITE+sizeof(size_t))*sizeof(char));
     size_t leng = 0;
-    leng=bufferevent_read(bev,msg+sizeof(size_t),4096);
+    leng=bufferevent_read(bev,msg+sizeof(size_t),MAX_READ_WRITE);
   //  printf("recv %d bytes\n",leng);
     //bufferevent_write(partner,msg+sizeof(size_t),leng);
     //if(arg->is_client)
@@ -299,7 +298,7 @@ accept_cb(struct evconnlistener *listener, evutil_socket_t fd,
     /* Create two linked bufferevent objects: one to connect, one for the
      * new connection */
     set_keepalive(fd,1,1,5,5);
-    int nRecvBufLen = 8*1024;
+    int nRecvBufLen = MAX_READ_WRITE;
     setsockopt(fd,SOL_SOCKET,SO_RCVBUF,(const char*)&nRecvBufLen,sizeof(int));
     setsockopt(fd,SOL_SOCKET,SO_SNDBUF,(const char*)&nRecvBufLen,sizeof(int));
     accept_arg* arg = (accept_arg*)p;
