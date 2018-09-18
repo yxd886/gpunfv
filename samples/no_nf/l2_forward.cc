@@ -87,7 +87,7 @@ public:
     forwarder* f;
 };
 
-char msg_tmp[4096+sizeof(size_t)];
+char msg_tmp[MAX_READ_WRITE+sizeof(size_t)];
 static void
 readcb(struct bufferevent *bev, void *ctx)
 {
@@ -111,9 +111,9 @@ readcb(struct bufferevent *bev, void *ctx)
     }
     dst = bufferevent_get_output(partner);
     //evbuffer_add_buffer(dst, src);
-    char* msg=(char*)malloc((4096+sizeof(size_t))*sizeof(char));
+    char* msg=(char*)malloc((MAX_READ_WRITE+sizeof(size_t))*sizeof(char));
     size_t leng = 0;
-    leng=bufferevent_read(bev,msg+sizeof(size_t),4096);
+    leng=bufferevent_read(bev,msg+sizeof(size_t),MAX_READ_WRITE);
   //  printf("recv %d bytes\n",leng);
     //bufferevent_write(partner,msg+sizeof(size_t),leng);
     //if(arg->is_client)
